@@ -11,15 +11,15 @@ interface Props {
 const { image, alt, caption } = Astro.props;
 ---
 
-<section class="py-16 md:py-24 px-4">
+<section class="py-4 md:py-8 px-4">
   <div class="mx-auto flex flex-col items-center">
-    <div class="screenshot-glow w-[95%] md:w-[80%] max-w-6xl">
+    <div class="screenshot-glow w-[85%] md:w-[50%] max-w-3xl">
       <Image
         src={image}
         alt={alt}
         class="w-full h-auto rounded-lg border border-border/50"
-        widths={[640, 960, 1280, 1920]}
-        sizes="(max-width: 768px) 95vw, 80vw"
+        widths={[480, 768, 1024]}
+        sizes="(max-width: 768px) 85vw, 50vw"
       />
     </div>
     <p class="mt-6 text-text-secondary text-sm italic text-center">

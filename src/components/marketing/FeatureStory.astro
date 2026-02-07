@@ -13,9 +13,9 @@ interface Props {
 const { image, alt, title, body, reversed = false } = Astro.props;
 ---
 
-<section class="py-20 md:py-32 px-4">
+<section class="py-8 md:py-12 px-4">
   <div class:list={[
-    "mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-16 items-center",
+    "mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-12 items-center",
     reversed && "md-reversed"
   ]}>
     <!-- Image column (3/5 width on desktop) -->
