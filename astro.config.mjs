@@ -17,39 +17,7 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Getting Started',
-          autogenerate: { directory: 'docs/getting-started' },
-        },
-        {
-          label: 'User Guide',
-          autogenerate: { directory: 'docs/user-guide' },
-        },
-        {
-          label: 'Calibration & Tuning',
-          autogenerate: { directory: 'docs/calibration' },
-        },
-        {
-          label: 'Multi-Material',
-          autogenerate: { directory: 'docs/multi-material' },
-        },
-        {
-          label: 'Configuration',
-          autogenerate: { directory: 'docs/configuration' },
-        },
-        {
-          label: 'Troubleshooting',
-          autogenerate: { directory: 'docs/troubleshooting' },
-        },
-        {
-          label: 'FAQ',
-          autogenerate: { directory: 'docs/faq' },
-        },
-        {
-          label: 'Development',
-          autogenerate: { directory: 'docs/development' },
-        },
-        {
-          label: 'Reference',
-          autogenerate: { directory: 'docs/reference' },
+          autogenerate: { directory: 'getting-started' },
         },
       ],
     }),
