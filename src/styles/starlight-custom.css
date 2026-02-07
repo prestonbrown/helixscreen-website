@@ -1,0 +1,13 @@
+@layer base, starlight, theme, components, utilities;
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Override Starlight's accent colors to match brand */
+:root {
+  --sl-color-accent-low: #002828;
+  --sl-color-accent: #008585;
+  --sl-color-accent-high: #8dd8d8;
+  --sl-font-system: 'IBM Plex Sans', system-ui, sans-serif;
+  --sl-font-system-mono: 'IBM Plex Mono', monospace;
+}

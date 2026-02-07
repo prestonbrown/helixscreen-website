@@ -1,0 +1,37 @@
+---
+const stats = [
+  { value: '~10 MB', label: 'RAM footprint' },
+  { value: '30+', label: 'Panels' },
+  { value: '3', label: 'Platforms' },
+  { value: '59+', label: 'Printer profiles' },
+];
+---
+
+<section class="bg-surface border-t border-b border-border py-14 md:py-16">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
+      {stats.map((stat) => (
+        <div class="flex flex-col items-center text-center">
+          <span class="font-heading text-4xl md:text-5xl font-bold text-text-primary">
+            {stat.value}
+          </span>
+          <span class="stat-underline"></span>
+          <span class="text-text-secondary text-sm uppercase tracking-widest mt-3">
+            {stat.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .stat-underline {
+    display: block;
+    width: 30px;
+    height: 2px;
+    background-color: var(--color-accent);
+    margin-top: 0.5rem;
+    border-radius: 1px;
+  }
+</style>

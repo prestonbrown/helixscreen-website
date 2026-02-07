@@ -1,0 +1,69 @@
+---
+const installCommand = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh';
+---
+
+<section class="py-20 md:py-32 px-4">
+  <div class="max-w-3xl mx-auto">
+    <!-- Section heading -->
+    <h2 class="font-heading text-2xl md:text-4xl font-medium text-text-primary text-center mb-10">
+      Get started in one command
+    </h2>
+
+    <!-- Terminal block -->
+    <div class="bg-surface border border-border rounded-xl overflow-hidden">
+      <!-- Terminal top bar -->
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <span class="w-2 h-2 rounded-full bg-[#FF5F57]"></span>
+        <span class="w-2 h-2 rounded-full bg-[#FEBC2E]"></span>
+        <span class="w-2 h-2 rounded-full bg-[#28C840]"></span>
+        <span class="font-mono text-text-muted text-xs ml-2">bash</span>
+      </div>
+
+      <!-- Command area -->
+      <div class="relative p-5 md:p-6">
+        <pre class="font-mono text-sm md:text-base text-text-primary whitespace-pre-wrap break-all"><span class="text-accent select-none">$ </span><code id="install-command">{installCommand}</code></pre>
+
+        <!-- Copy button -->
+        <button
+          id="copy-btn"
+          type="button"
+          class="absolute top-4 right-4 btn-ghost !px-3 !py-1.5 !text-xs"
+          aria-label="Copy install command"
+        >
+          Copy
+        </button>
+      </div>
+    </div>
+
+    <!-- Docs link -->
+    <p class="text-center mt-6">
+      <a
+        href="/docs/docs/getting-started/overview/"
+        class="text-text-secondary hover:text-accent transition-colors text-sm font-heading"
+      >
+        Or read the full installation guide &rarr;
+      </a>
+    </p>
+  </div>
+</section>
+
+<script>
+  const btn = document.getElementById('copy-btn');
+  const command = document.getElementById('install-command');
+  if (btn && command) {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(command.textContent ?? '');
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+        }, 2000);
+      } catch {
+        btn.textContent = 'Failed';
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+        }, 2000);
+      }
+    });
+  }
+</script>

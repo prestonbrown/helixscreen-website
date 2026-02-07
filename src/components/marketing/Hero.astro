@@ -1,0 +1,95 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../../assets/images/logo/helixscreen-logo-3d-dark.png';
+---
+
+<section class="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
+  <!-- Background layers -->
+  <div class="absolute inset-0 hero-gradient"></div>
+  <div class="absolute inset-0 mesh-bg mesh-animate"></div>
+
+  <!-- Content -->
+  <div class="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
+    <!-- Logo -->
+    <Image
+      src={logo}
+      alt="HelixScreen"
+      width={220}
+      class="h-auto mb-10 drop-shadow-lg"
+      widths={[160, 220, 440]}
+      sizes="(max-width: 640px) 160px, 220px"
+    />
+
+    <!-- Tagline -->
+    <h1 class="font-heading font-medium text-3xl sm:text-4xl md:text-5xl leading-tight text-text-primary mb-5">
+      All the good stuff from your browser, now on your printer's touchscreen.
+    </h1>
+
+    <!-- Subline -->
+    <p class="text-text-secondary text-base sm:text-lg mb-10 max-w-xl">
+      The modern Klipper UI. Currently in public beta.
+    </p>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-16">
+      <a href="/docs/docs/getting-started/overview/" class="btn-primary">
+        Get Started
+      </a>
+      <a
+        href="https://github.com/prestonbrown/helixscreen"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-ghost"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="shrink-0">
+          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-text-muted">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Bottom fade -->
+  <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-canvas to-transparent pointer-events-none z-10"></div>
+</section>
+
+<style>
+  .hero-gradient {
+    background: radial-gradient(ellipse at 50% 40%, rgba(22, 22, 25, 0.7) 0%, rgba(12, 12, 14, 1) 70%);
+  }
+
+  @keyframes mesh-drift {
+    0% {
+      background-position: 0px 0px;
+    }
+    100% {
+      background-position: 60px 30px;
+    }
+  }
+
+  .mesh-animate {
+    animation: mesh-drift 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes fade-bounce {
+    0%, 100% {
+      opacity: 0.3;
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      opacity: 0.7;
+      transform: translateX(-50%) translateY(6px);
+    }
+  }
+
+  .scroll-indicator {
+    animation: fade-bounce 2.5s ease-in-out infinite;
+  }
+</style>

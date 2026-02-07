@@ -1,0 +1,99 @@
+---
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Hero from '../components/marketing/Hero.astro';
+import ProductReveal from '../components/marketing/ProductReveal.astro';
+import FeatureStory from '../components/marketing/FeatureStory.astro';
+import StatsStrip from '../components/marketing/StatsStrip.astro';
+import VisualComparison from '../components/marketing/VisualComparison.astro';
+import PrinterConstellation from '../components/marketing/PrinterConstellation.astro';
+import InstallBlock from '../components/marketing/InstallBlock.astro';
+import Footer from '../components/marketing/Footer.astro';
+
+// Screenshots
+import homeImg from '../assets/images/screenshots/home.png';
+import bedMeshImg from '../assets/images/screenshots/controls-bed-mesh.png';
+import printSelectImg from '../assets/images/screenshots/print-select.png';
+import amsImg from '../assets/images/screenshots/screenshot-ams-panel.png';
+import shaperImg from '../assets/images/screenshots/advanced-shaper.png';
+
+// AMS multi-material system icons (SVG imports resolve to URL strings)
+import ercfIcon from '../assets/images/ams/ercf.svg';
+import boxTurtleIcon from '../assets/images/ams/box_turtle.svg';
+import tradrackIcon from '../assets/images/ams/tradrack.svg';
+import threeMsIcon from '../assets/images/ams/3ms.svg';
+import nightOwlIcon from '../assets/images/ams/night_owl.svg';
+import kmsIcon from '../assets/images/ams/kms.svg';
+import quattroBoxIcon from '../assets/images/ams/quattro_box.svg';
+import bttVividIcon from '../assets/images/ams/btt_vivid.svg';
+import mmxIcon from '../assets/images/ams/mmx.svg';
+
+const amsIcons = [
+  { src: ercfIcon, alt: 'ERCF' },
+  { src: boxTurtleIcon, alt: 'Box Turtle' },
+  { src: tradrackIcon, alt: 'TradRack' },
+  { src: threeMsIcon, alt: '3MS' },
+  { src: nightOwlIcon, alt: 'Night Owl' },
+  { src: kmsIcon, alt: 'KMS' },
+  { src: quattroBoxIcon, alt: 'Quattro Box' },
+  { src: bttVividIcon, alt: 'BTT Vivid' },
+  { src: mmxIcon, alt: 'MMX' },
+];
+---
+<MarketingLayout title="HelixScreen — The Modern Klipper Touchscreen UI">
+  <SiteNav />
+  <Hero />
+
+  <!-- Product reveal: large home panel screenshot -->
+  <ProductReveal
+    image={homeImg}
+    alt="HelixScreen home panel showing printer status at a glance"
+    caption="The home panel. Everything you need at a glance."
+  />
+
+  <!-- Feature story: Bed mesh -->
+  <FeatureStory
+    image={bedMeshImg}
+    alt="3D bed mesh visualization with interactive rotation"
+    title="See your bed like never before"
+    body="Full 3D bed mesh visualization with touch rotation. Not a flat heatmap — an actual interactive 3D surface you can spin and zoom. See exactly where your bed dips and peaks."
+  />
+
+  <!-- Feature story: Print select -->
+  <FeatureStory
+    image={printSelectImg}
+    alt="File browser with 3D thumbnail previews and metadata"
+    title="Every file, ready to print"
+    body="Browse your print files with live 3D thumbnail previews, metadata at a glance, and instant printing. Sorted, searchable, and fast — even with hundreds of files."
+    reversed
+  />
+
+  <!-- Feature story: Multi-material -->
+  <FeatureStory
+    image={amsImg}
+    alt="AMS multi-material panel with filament slots and status"
+    title="Multi-material, simplified"
+    body="First-class support for every multi-material system in the Klipper ecosystem. Happy Hare, AFC Box Turtle, TradRack, and more — all with dedicated UI panels."
+  >
+    <div class="flex flex-wrap gap-4 items-center">
+      {amsIcons.map((icon) => (
+        <img src={typeof icon.src === 'string' ? icon.src : icon.src.src} alt={icon.alt} class="w-10 h-10 opacity-70 hover:opacity-100 transition-opacity" />
+      ))}
+    </div>
+  </FeatureStory>
+
+  <!-- Feature story: Calibration -->
+  <FeatureStory
+    image={shaperImg}
+    alt="Input shaper frequency response graph with calibration data"
+    title="Calibrate everything"
+    body="Input shaper frequency response, bed mesh, screws tilt adjust, Z-offset, PID tuning — the full calibration suite, all with real-time visualizations directly on the touchscreen."
+    reversed
+  />
+
+  <StatsStrip />
+  <VisualComparison bedMeshImage={bedMeshImg} />
+  <PrinterConstellation />
+  <InstallBlock />
+  <Footer />
+</MarketingLayout>

@@ -1,0 +1,53 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+  title: string;
+  body: string;
+  reversed?: boolean;
+}
+
+const { image, alt, title, body, reversed = false } = Astro.props;
+---
+
+<section class="py-20 md:py-32 px-4">
+  <div class:list={[
+    "mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-16 items-center",
+    reversed && "md-reversed"
+  ]}>
+    <!-- Image column (3/5 width on desktop) -->
+    <div class:list={[
+      "md:col-span-3",
+      reversed ? "md:order-2" : "md:order-1"
+    ]}>
+      <div class="screenshot-glow">
+        <Image
+          src={image}
+          alt={alt}
+          class="w-full h-auto rounded-lg border border-border/50"
+          widths={[480, 768, 1024, 1440]}
+          sizes="(max-width: 768px) 95vw, 55vw"
+        />
+      </div>
+    </div>
+
+    <!-- Text column (2/5 width on desktop) -->
+    <div class:list={[
+      "md:col-span-2",
+      reversed ? "md:order-1" : "md:order-2"
+    ]}>
+      <h2 class="font-heading text-2xl md:text-3xl font-medium text-text-primary">
+        {title}
+      </h2>
+      <p class="text-text-secondary text-base leading-relaxed mt-4">
+        {body}
+      </p>
+      <div class="mt-6">
+        <slot />
+      </div>
+    </div>
+  </div>
+</section>
