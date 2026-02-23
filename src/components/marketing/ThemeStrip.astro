@@ -1,0 +1,24 @@
+---
+const themes = [
+  { name: 'Nord', color: '#81A1C1' },
+  { name: 'Catppuccin', color: '#CBA6F7' },
+  { name: 'Dracula', color: '#BD93F9' },
+  { name: 'Gruvbox', color: '#D79921' },
+  { name: 'Tokyo Night', color: '#7AA2F7' },
+  { name: 'Rose Pine', color: '#C4A7E7' },
+  { name: 'Solarized', color: '#268BD2' },
+  { name: 'Everforest', color: '#A7C080' },
+];
+---
+
+<div class="flex flex-col items-center mt-8">
+  <p class="text-text-muted text-sm mb-4">16 built-in themes, dark &amp; light</p>
+  <div class="flex flex-wrap justify-center gap-3">
+    {themes.map((theme) => (
+      <div class="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border rounded-full">
+        <span class="w-2.5 h-2.5 rounded-full" style={`background-color: ${theme.color};`}></span>
+        <span class="text-text-secondary text-xs font-heading">{theme.name}</span>
+      </div>
+    ))}
+  </div>
+</div>

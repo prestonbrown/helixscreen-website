@@ -5,9 +5,9 @@
   --color-canvas: #0C0C0E;
   --color-surface: #161619;
   --color-border: #2A2A2F;
-  --color-accent: #008585;
-  --color-accent-light: #00a5a5;
-  --color-accent-glow: rgba(0, 133, 133, 0.15);
+  --color-accent: #3A7CC8;
+  --color-accent-light: #6A9CC8;
+  --color-accent-glow: rgba(58, 124, 200, 0.15);
 
   --color-text-primary: #E8E8EC;
   --color-text-secondary: #8E8E96;
@@ -51,13 +51,13 @@
     letter-spacing: 0.025em;
     transition: all 0.2s;
     background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light));
-    color: var(--color-canvas);
+    color: #FFFFFF;
     text-decoration: none;
   }
   .btn-primary:hover {
-    background: linear-gradient(135deg, #009999, #00b8b8);
+    background: linear-gradient(135deg, #4A8CD8, #7AACD8);
     transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(0, 133, 133, 0.3);
+    box-shadow: 0 4px 20px rgba(58, 124, 200, 0.3);
   }
 
   .btn-ghost {
@@ -96,7 +96,46 @@
   }
 
   .mesh-bg {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L30 0 L60 30 L30 60Z' fill='none' stroke='%23008585' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L30 0 L60 30 L30 60Z' fill='none' stroke='%233A7CC8' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
     background-size: 60px 60px;
   }
+
+  .screenshot-hover {
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+  .screenshot-hover:hover {
+    transform: scale(1.02);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-light) 50%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
+
+/* ── Scroll animations ── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.animate-on-scroll.is-visible {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-on-scroll.delay-1 { animation-delay: 0.1s; }
+.animate-on-scroll.delay-2 { animation-delay: 0.2s; }
+.animate-on-scroll.delay-3 { animation-delay: 0.3s; }

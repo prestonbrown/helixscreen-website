@@ -3,11 +3,53 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-/* Override Starlight's accent colors to match brand */
+/* Load custom fonts for docs pages */
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+
+/* Match marketing dark theme: canvas #0C0C0E, surface #161619, border #2A2A2F */
 :root {
-  --sl-color-accent-low: #002828;
-  --sl-color-accent: #008585;
-  --sl-color-accent-high: #8dd8d8;
+  /* Accent (brand blue) */
+  --sl-color-accent-low: #1A3050;
+  --sl-color-accent: #3A7CC8;
+  --sl-color-accent-high: #8DB8E8;
+
+  /* Gray scale mapped to marketing tokens */
+  --sl-color-gray-1: #E8E8EC; /* text-primary */
+  --sl-color-gray-2: #C4C4CC;
+  --sl-color-gray-3: #8E8E96; /* text-secondary */
+  --sl-color-gray-4: #5A5A64; /* text-muted */
+  --sl-color-gray-5: #2A2A2F; /* border */
+  --sl-color-gray-6: #161619; /* surface */
+  --sl-color-gray-7: #0C0C0E; /* canvas */
+
+  /* Fonts */
+  --sl-font: 'IBM Plex Sans', system-ui, sans-serif;
   --sl-font-system: 'IBM Plex Sans', system-ui, sans-serif;
   --sl-font-system-mono: 'IBM Plex Mono', monospace;
+
+  /* Heading font */
+  --__sl-font-heading: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* Apply heading font to Starlight headings */
+:root .sl-markdown-content h1,
+:root .sl-markdown-content h2,
+:root .sl-markdown-content h3,
+:root .sl-markdown-content h4,
+:root .sl-markdown-content h5,
+:root .sl-markdown-content h6,
+.site-title {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* Smoother font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

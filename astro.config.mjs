@@ -13,11 +13,30 @@ export default defineConfig({
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/prestonbrown/helixscreen' },
       ],
+      components: {
+        ThemeProvider: './src/components/ForceDarkTheme.astro',
+        ThemeSelect: './src/components/EmptyComponent.astro',
+      },
       customCss: ['./src/styles/starlight-custom.css'],
       sidebar: [
         {
-          label: 'Getting Started',
-          autogenerate: { directory: 'getting-started' },
+          label: 'Installation',
+          items: [
+            { label: 'Install', slug: 'installation' },
+            { label: 'Upgrading', slug: 'upgrading' },
+          ],
+        },
+        {
+          label: 'User Guide',
+          autogenerate: { directory: 'guide' },
+        },
+        {
+          label: 'Reference',
+          autogenerate: { directory: 'reference' },
+        },
+        {
+          label: 'Legal',
+          autogenerate: { directory: 'legal' },
         },
       ],
     }),

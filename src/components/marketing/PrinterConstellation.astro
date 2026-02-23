@@ -39,13 +39,16 @@ printers.sort((a, b) => {
 });
 
 const platforms = [
-  { name: 'Raspberry Pi', arch: 'armv7l / aarch64' },
-  { name: 'Creality K1 Series', arch: 'aarch64' },
-  { name: 'FlashForge AD5M', arch: 'armv7l' },
+  { name: 'Raspberry Pi 3/4/5', arch: 'armhf / aarch64' },
+  { name: 'FlashForge AD5M', arch: 'armv7-a' },
+  { name: 'Creality K1 Series', arch: 'MIPS32' },
+  { name: 'QIDI', arch: 'aarch64' },
+  { name: 'SOVOL', arch: 'aarch64' },
+  { name: 'Elegoo Centauri Carbon', arch: 'armv7-a' },
 ];
 ---
 
-<section class="py-10 md:py-16 px-4">
+<section class="py-10 md:py-16 px-4 animate-on-scroll">
   <div class="max-w-5xl mx-auto">
     <!-- Section heading -->
     <h2 class="font-heading text-2xl md:text-4xl font-medium text-text-primary text-center mb-14">
@@ -77,7 +80,7 @@ const platforms = [
     </div>
 
     <!-- Platform badges -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
       {platforms.map((platform) => (
         <div class="bg-surface border border-border border-l-2 border-l-accent rounded-lg px-5 py-4">
           <span class="font-heading text-text-primary text-sm font-medium block">{platform.name}</span>

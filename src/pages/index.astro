@@ -4,18 +4,23 @@ import SiteNav from '../components/marketing/SiteNav.astro';
 import Hero from '../components/marketing/Hero.astro';
 import ProductReveal from '../components/marketing/ProductReveal.astro';
 import FeatureStory from '../components/marketing/FeatureStory.astro';
+import ThemeStrip from '../components/marketing/ThemeStrip.astro';
 import StatsStrip from '../components/marketing/StatsStrip.astro';
-import VisualComparison from '../components/marketing/VisualComparison.astro';
 import PrinterConstellation from '../components/marketing/PrinterConstellation.astro';
 import InstallBlock from '../components/marketing/InstallBlock.astro';
+import Community from '../components/marketing/Community.astro';
 import Footer from '../components/marketing/Footer.astro';
 
 // Screenshots
 import homeImg from '../assets/images/screenshots/home.png';
 import bedMeshImg from '../assets/images/screenshots/controls-bed-mesh.png';
 import printSelectImg from '../assets/images/screenshots/print-select.png';
-import amsImg from '../assets/images/screenshots/screenshot-ams-panel.png';
+import amsImg from '../assets/images/screenshots/ams.png';
 import shaperImg from '../assets/images/screenshots/advanced-shaper.png';
+import settingsThemeImg from '../assets/images/screenshots/settings-theme.png';
+import controlsImg from '../assets/images/screenshots/controls.png';
+import advancedHistoryImg from '../assets/images/screenshots/advanced-history.png';
+import advancedSpoolmanImg from '../assets/images/screenshots/advanced-spoolman.png';
 
 // AMS multi-material system icons (SVG imports resolve to URL strings)
 import ercfIcon from '../assets/images/ams/ercf.svg';
@@ -51,6 +56,8 @@ const amsIcons = [
     caption="The home panel. Everything you need at a glance."
   />
 
+  <ThemeStrip />
+
   <!-- Feature story: Bed mesh -->
   <FeatureStory
     image={bedMeshImg}
@@ -72,8 +79,8 @@ const amsIcons = [
   <FeatureStory
     image={amsImg}
     alt="AMS multi-material panel with filament slots and status"
-    title="Multi-material, simplified"
-    body="First-class support for every multi-material system in the Klipper ecosystem. Happy Hare, AFC Box Turtle, TradRack, and more — all with dedicated UI panels."
+    title="Multi-material, mastered"
+    body="The most complete multi-material support in any touchscreen UI. Five backends — Happy Hare, AFC Box Turtle, tool changers, ValgACE, and more. 3D tube rendering for filament paths, animated toolheads, buffer health monitoring, and per-slot context menus. Every system, one beautiful interface."
   >
     <div class="flex flex-wrap gap-4 items-center">
       {amsIcons.map((icon) => (
@@ -87,13 +94,47 @@ const amsIcons = [
     image={shaperImg}
     alt="Input shaper frequency response graph with calibration data"
     title="Calibrate everything"
-    body="Input shaper frequency response, bed mesh, screws tilt adjust, Z-offset, PID tuning — the full calibration suite, all with real-time visualizations directly on the touchscreen."
+    body="Input shaper with interactive frequency response charts, PID tuning with live temperature graphs, Prusa-style Z-offset with animated visual meter, screws tilt with color-coded turn directions, and automatic probe detection for Cartographer, Beacon, Tap, BLTouch, and more."
+    reversed
+  />
+
+  <!-- Feature story: Themes -->
+  <FeatureStory
+    image={settingsThemeImg}
+    alt="Theme selector showing 16 color themes with dark and light variants"
+    title="Make it yours"
+    body="16 built-in color themes — Nord, Catppuccin, Dracula, Gruvbox, and more — each with dark and light variants. Switch themes live with no restart. Adjust brightness, customize your home panel widgets, and make HelixScreen feel like home."
+  />
+
+  <!-- Feature story: LED & Lighting -->
+  <FeatureStory
+    image={controlsImg}
+    alt="Controls panel showing LED lighting options and device management"
+    title="Light up your build"
+    body="Five lighting backends: Klipper native LEDs, output pins, WLED network strips, animated led_effects, and macro-controlled devices. Set up auto-state lighting so your LEDs change with your printer — idle, heating, printing, paused, error, and complete — all configurable per state."
+    reversed
+  />
+
+  <!-- Feature story: Spoolman & Filament -->
+  <FeatureStory
+    image={advancedSpoolmanImg}
+    alt="Spoolman spool management with filament database"
+    title="Know your filament"
+    body="Full Spoolman integration with a 3-step spool creation wizard, 48 built-in material profiles with temperature ranges and drying parameters, weight polling, and a 3D spool visualization. Assign spools to AMS slots, track consumption, and get material compatibility warnings."
+  />
+
+  <!-- Feature story: Print History & Timelapse -->
+  <FeatureStory
+    image={advancedHistoryImg}
+    alt="Print history dashboard showing statistics and trends"
+    title="Track every print"
+    body="A full print history dashboard with total prints, success rate, print time, and filament usage statistics. Moonraker-Timelapse integration with per-layer and hyperlapse modes, auto-rendering, and video management — all from the touchscreen."
     reversed
   />
 
   <StatsStrip />
-  <VisualComparison bedMeshImage={bedMeshImg} />
   <PrinterConstellation />
   <InstallBlock />
+  <Community />
   <Footer />
 </MarketingLayout>

@@ -1,0 +1,82 @@
+---
+title: "Temperature"
+sidebar:
+  order: 4
+---
+
+
+![Temperature Controls](../../../assets/images/docs/controls-temperature.png)
+
+---
+
+## Nozzle Temperature Panel
+
+- **Current temperature**: Live reading from thermistor
+- **Target input**: Tap to enter exact temperature
+- **Presets**: Quick buttons for common temperatures
+- **Temperature graph**: History over time
+
+---
+
+## Bed Temperature Panel
+
+Same layout as nozzle control:
+
+- Current and target temperature
+- Presets for common materials
+- Temperature graph
+
+---
+
+## Temperature Presets
+
+Built-in presets:
+
+| Material | Nozzle | Bed |
+|----------|--------|-----|
+| Off | 0°C | 0°C |
+| PLA | 210°C | 60°C |
+| PETG | 240°C | 80°C |
+| ABS | 250°C | 100°C |
+
+Tap a preset to set both current and target. Custom presets can be configured via Klipper macros.
+
+---
+
+## Multi-Extruder Temperature Control
+
+On printers with multiple extruders, an extruder selector appears at the top of the Temperature Control panel:
+
+- **Tap an extruder** to switch which one you are controlling
+- Each extruder has independent temperature targets and presets
+- Toolchanger printers show tool names (T0, T1) rather than "Nozzle 1", "Nozzle 2"
+- The selector only appears when Klipper reports more than one extruder
+
+Single-extruder printers are unaffected — the panel works exactly as before.
+
+---
+
+## Chamber Temperature Panel
+
+If your printer has a chamber heater or chamber temperature sensor configured in Klipper, you can access the Chamber Temperature panel by tapping the chamber row in the **Temperatures** widget on the Home Panel.
+
+- **Heated chambers** (`heater_generic chamber`): Full control panel with current/target temperature, presets, and a live temperature graph with a green trace
+- **Sensor-only chambers** (`temperature_sensor chamber`): Monitoring mode — shows the current chamber temperature and graph, with a "Monitoring" status instead of heating controls. Presets and target input are hidden since there's no heater to control.
+
+The chamber panel works identically to the nozzle and bed panels, just with chamber-specific presets and colors.
+
+---
+
+## Temperature Graphs
+
+Live graphs show:
+
+- **Current temperature** (solid line)
+- **Target temperature** (dashed line)
+- **History** scrolling over time
+
+Useful for diagnosing heating issues or verifying PID tuning.
+
+---
+
+**Next:** [Motion & Positioning](/docs/guide/motion/) | **Prev:** [Printing](/docs/guide/printing/) | [Back to User Guide](/docs/guide/getting-started/)
