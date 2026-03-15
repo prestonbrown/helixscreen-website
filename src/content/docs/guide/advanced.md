@@ -11,18 +11,42 @@ Access via the **More** icon in the navigation bar.
 
 ---
 
-## Console *(beta feature)*
+## G-code Console
 
-View G-code command history and Klipper responses. Requires [beta features](/docs/guide/beta-features/) to be enabled.
+![Console Panel](../../../assets/images/docs/advanced-console.png)
 
-1. Navigate to **Advanced > Console**
-2. Scroll through recent commands
+A full-featured G-code terminal for sending commands directly to your printer and viewing Klipper responses in real time.
+
+**Opening the console:**
+
+- Navigate to **Advanced > G-code Console**, or
+- Add the **G-code Console** widget to your home panel for one-tap access
+
+**Sending commands:**
+
+1. Type a G-code command in the input field at the bottom (e.g., `G28`, `M104 S210`)
+2. Press **Enter** on the keyboard or tap the **send button**
+3. The command appears with a `>` prefix, and Klipper's response streams in below
+
+**Command history:**
+
+- Press **Up/Down arrow keys** to recall previously sent commands
+- Up to 20 recent commands are remembered within the session
 
 **Color coding:**
 
-- **White**: Commands sent
-- **Green**: Successful responses
-- **Red**: Errors and warnings
+- **White**: Commands you sent (prefixed with `>`)
+- **Green**: Successful responses from Klipper
+- **Red**: Errors and warnings (lines starting with `!!` or `Error`)
+- **Colored spans**: AFC and Happy Hare plugins send colored output that renders inline
+
+**Other features:**
+
+- **Auto-scroll**: The console scrolls to show new messages automatically. Scroll up to pause auto-scroll and read history — it resumes when you send a new command
+- **Timestamps**: On medium and larger screens, each line shows an `HH:MM:SS` timestamp
+- **Clear button**: Tap the trash icon to clear the display (with confirmation)
+- **Monospace font**: Console text uses Source Code Pro for easier reading of G-code output
+- Temperature status messages (`T:210.0 /210.0 B:60.0 /60.0`) are automatically filtered out to reduce noise
 
 ---
 
@@ -30,17 +54,52 @@ View G-code command history and Klipper responses. Requires [beta features](/doc
 
 ![Macro Panel](../../../assets/images/docs/advanced-macros.png)
 
-Execute custom Klipper macros:
+Browse and execute all of your Klipper macros.
 
-1. Navigate to **Advanced > Macros**
-2. Browse available macros (alphabetically sorted)
-3. Tap a macro to execute
+**Opening the Macros panel:**
 
-**Notes:**
+- Navigate to **Advanced > Macros**, or
+- Add the **Macros** widget to your home panel for one-tap access
 
-- System macros (starting with `_`) are hidden by default
-- Names are prettified: `CLEAN_NOZZLE` becomes "Clean Nozzle"
-- Dangerous macros (`SAVE_CONFIG`, etc.) require confirmation
+**Browsing macros:**
+
+1. All macros from your Klipper configuration are listed alphabetically
+2. Names are prettified for readability: `CLEAN_NOZZLE` becomes "Clean Nozzle"
+3. System macros (starting with `_`) are hidden by default — use the toggle to show them
+4. Tap any macro to execute it
+
+**Macro parameters:**
+
+Some macros accept parameters (variables or arguments defined in your Klipper config). When you tap a macro that has parameters:
+
+- A **parameter input form** appears showing each parameter with its default value
+- Edit the values you want to change, then tap **Run** to execute
+- Parameters are pre-detected when HelixScreen connects to your printer, so there's no loading delay
+
+If HelixScreen can't determine the parameters (e.g., complex Jinja2 templates), a freeform text field lets you type raw parameters.
+
+**Dangerous macro protection:**
+
+These macros show a confirmation dialog before executing:
+
+- `SAVE_CONFIG` — writes configuration changes to disk
+- `FIRMWARE_RESTART` / `RESTART` — restarts Klipper
+- `SHUTDOWN` — shuts down the printer host
+- `M112` / `EMERGENCY_STOP` — emergency stop
+
+---
+
+## Probe Management
+
+View and control your Z probe. HelixScreen auto-detects your probe type (Cartographer, Beacon, BLTouch, BTT Eddy, Mellow Fly Eddy, Voron Tap, Klicky, or standard probe) and shows type-specific controls.
+
+1. Navigate to **Advanced > Probe Management** (only visible when a probe is detected)
+2. View probe type, Z-offset, and sensor readings (coil temperature for Cartographer, sensor temperature for Beacon)
+3. Use type-specific buttons (Calibrate, Touch Cal, Scan Cal, Auto-Cal, Deploy/Dock, etc.)
+4. Access universal actions: Accuracy Test, Z-Offset Calibration, Bed Mesh
+5. Edit probe configuration values (offsets, samples, speed, tolerance)
+
+For full details, see [Calibration & Tuning — Probe Management](calibration.md#probe-management).
 
 ---
 
@@ -58,7 +117,7 @@ A **power-cycle button** appears on the home panel when power devices are config
 
 ### Full Power Panel
 
-1. Navigate to **Advanced > Power Devices** (hidden when no power devices are detected)
+1. Navigate to **Advanced > Power Devices**, or **Settings > System > Power Devices** (hidden when no power devices are detected)
 2. Toggle individual devices on/off with switches
 
 **Main Power Button section:**
@@ -122,41 +181,57 @@ Review past system notifications:
 
 ---
 
-## Timelapse Settings
+## Timelapse
 
-Configure Moonraker-Timelapse (beta feature):
+Record timelapse videos of your prints automatically using the [moonraker-timelapse](https://github.com/mainsail-crew/moonraker-timelapse) plugin.
 
-1. Navigate to **Advanced > Timelapse**
-2. If the timelapse plugin is not installed, HelixScreen detects this and offers an **Install Wizard** to set it up
-3. Once installed, configure settings:
-   - Enable/disable timelapse recording
-   - Select mode: **Layer Macro** (snapshot at each layer) or **Hyperlapse** (time-based)
-   - Set framerate (15/24/30/60 fps)
-   - Enable auto-render for automatic video creation
+### Setup
 
-### Render Controls
+If the timelapse plugin is not installed, HelixScreen detects this and offers a guided **Install Wizard**:
 
-Below the settings, a **Render Now** section shows:
+1. Navigate to **Settings > Timelapse Setup**
+2. Follow the on-screen instructions to install the plugin via SSH
+3. HelixScreen will configure your `moonraker.conf` automatically
+4. After installation, the setup row is replaced by timelapse settings and video browser
 
-- **Frame count**: How many frames have been captured during the current print
-- **Render progress bar**: Appears during rendering with a percentage indicator
-- **Render Now button**: Manually trigger video rendering from captured frames
+### Settings
 
-### Recorded Videos
+Navigate to **Settings > Timelapse** to configure:
 
-The bottom of the timelapse settings shows all rendered timelapse videos:
+- **Enable/disable** timelapse recording
+- **Recording mode**: Layer Macro (snapshot at each layer) or Hyperlapse (time-based)
+- **Framerate**: 15, 24, 30, or 60 fps
+- **Auto-render**: Automatically create videos when prints finish
 
-- View file names and sizes
-- Delete individual videos (with confirmation)
+A quick **toggle button** also appears on the print status panel to enable/disable timelapse without leaving the print view.
+
+### Video Browser
+
+Navigate to **Settings > Timelapse Videos** to browse your recorded timelapses:
+
+- **Thumbnail grid** with responsive card sizing that adapts to your screen
+- Each card shows a **video thumbnail**, filename, file size, and date
+- **Tap** a card to play the video fullscreen (requires mpv or ffplay on your device)
+- **Long-press** a card to delete it (with confirmation)
 - Videos are stored on your printer and managed by the timelapse plugin
+
+### Rendering
+
+When frames have been captured during a print, a **render section** appears above the video grid:
+
+- Shows the number of captured frames, print filename, and capture date
+- A **progress bar** appears during rendering with status text
+- Tap **Render Now** to manually create a video from captured frames
+- When rendering completes, the video list refreshes automatically to show the new video
+- A toast notification appears at the start and end of rendering
 
 ### Notifications
 
-During rendering, HelixScreen shows toast notifications:
-
-- Progress updates at 25%, 50%, 75%, and 100%
-- Success notification when rendering completes
-- Error notification if rendering fails
+| Event | Notification |
+|-------|-------------|
+| Rendering starts | "Rendering timelapse..." |
+| Rendering completes | "Timelapse rendered successfully" |
+| Rendering fails | "Timelapse render failed" with error details |
 
 ---
 

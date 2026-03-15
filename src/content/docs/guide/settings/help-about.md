@@ -15,7 +15,7 @@ Three quick links at the bottom of the Settings panel:
 |--------|--------------|
 | **Upload Debug Bundle** | Collects logs and system info for support (see below) |
 | **Discord Community** | Join **discord.gg/helixscreen** for community help and feedback |
-| **Documentation** | Visit **docs.helixscreen.org** for guides and reference |
+| **Documentation** | Visit **helixscreen.org/docs** for guides and reference |
 
 ### Debug Bundles
 
@@ -41,10 +41,11 @@ Debug bundles contain only technical information needed for troubleshooting — 
 
 ## About
 
-The About section at the bottom of the Settings panel shows system information and update management.
+Tap the **About** row at the bottom of the Settings panel to open the About overlay. This sub-overlay shows system information, update management, and HelixScreen branding.
 
 | Item | Description |
 |------|-------------|
+| **HelixScreen Logo & Branding** | HelixScreen logo, "by Preston Brown", copyright notice, and a scrolling contributor marquee |
 | **Printer Name** | The name of your connected printer (set during setup wizard) |
 | **Current Version** | Your installed HelixScreen version |
 | **Update Channel** | Stable, Beta, or Dev — only visible when beta features are enabled |
@@ -54,13 +55,18 @@ The About section at the bottom of the Settings panel shows system information a
 | **OS** | Operating system version |
 | **Print Hours** | Total print hours tracked — tap to open the [History Dashboard](/docs/guide/advanced/) |
 
+### Easter Eggs
+
+- Tap the **Printer Name** row **seven times** to launch a hidden Snake game
+- Tap the **Current Version** row **seven times** to toggle beta features — works like Android's "tap build number" developer mode
+
 ### Enabling Beta Features
 
-Tap the **Current Version** row seven times to toggle beta features — works like Android's "tap build number" developer mode.
+Tap the **Current Version** row seven times in Settings → About to toggle beta features.
 
 When beta features are enabled:
 - **Update Channel** selector appears (Stable / Beta / Dev)
-- Additional items appear in the Advanced panel (Macro Browser, Input Shaping, Z-Offset Calibration, Timelapse, etc.)
+- Additional items appear in the Advanced panel (Macro Browser, Timelapse, etc.)
 - **Plugins** section appears in Settings
 - Tap seven more times to disable
 

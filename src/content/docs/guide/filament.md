@@ -7,6 +7,22 @@ sidebar:
 
 ---
 
+## External Spool Configuration
+
+If you're not using an AMS or multi-material system, you can tell HelixScreen what filament is loaded by configuring an **external spool**. Tap the spool icon on the Filament panel to set the material, color, and brand. If Spoolman is configured, you can also link to a specific Spoolman spool.
+
+Once configured, the external spool information is used throughout the UI:
+
+- **Spool preset button** — A dynamic preset button appears on the Filament panel with your spool's material name and recommended temperatures. Tap it to pre-heat both the nozzle and bed to the correct temperatures for your loaded filament.
+- **Temperature panel presets** — The Nozzle and Bed temperature panels also show a spool preset button for quick one-tap heating.
+- **Purge temperature** — When you tap **Purge**, HelixScreen automatically passes the recommended nozzle temperature to the purge macro (as the `PURGE_TEMP` parameter), so macros that support it can heat to the right temperature.
+
+The spool preset button only appears when the loaded material differs from the standard presets (PLA, PETG, ABS, TPU). For standard materials, just use the built-in preset buttons.
+
+> **Tip:** The spool preset updates automatically when you change the external spool configuration — no need to close and reopen panels.
+
+---
+
 ## Extrusion Panel
 
 ![Extrusion Panel](../../../assets/images/docs/controls-extrusion.png)
@@ -61,6 +77,8 @@ For multi-material systems (Happy Hare, AFC-Klipper):
 
 Tap a slot to select it before load/unload operations.
 
+When an AMS slot is actively loaded, its material information drives the same spool preset behavior described in [External Spool Configuration](#external-spool-configuration) — you'll see the spool preset button on the Filament and Temperature panels, and purge macros receive the correct temperature automatically.
+
 ---
 
 ## Multiple Filament Systems
@@ -78,10 +96,13 @@ When multiple backends are detected:
 
 | System | Description |
 |--------|-------------|
-| **Happy Hare** | MMU2, ERCF, 3MS, Tradrack |
-| **AFC** | Box Turtle with per-lane control |
+| **Happy Hare** | MMU2, ERCF, 3MS, Tradrack, EMU |
+| **AFC** | Box Turtle, OpenAMS, ViViD |
 | **ValgACE** | ValgACE filament changer |
 | **Tool Changer** | Toolchanger-based filament routing |
+| **AD5X IFS** *(testing)* | FlashForge Adventurer 5X Intelligent Filament Switching |
+
+Each system displays its own logo in the AMS panel header. Happy Hare and AFC show their firmware logos; specific hardware variants (ERCF, Box Turtle, ViViD, etc.) show hardware-specific logos when detected.
 
 Single-backend setups are unaffected — the panel works exactly as before with no selector shown.
 
@@ -115,6 +136,8 @@ Tap **+ Add** in the Spoolman panel to create a new spool in 3 steps:
 
 The wizard creates all records (vendor, filament, spool) atomically in Spoolman.
 
+> **Tip:** You can print physical spool labels with a QR code linking to Spoolman. See [Label Printing](/docs/guide/label-printing/) for setup instructions.
+
 ---
 
 ## Dryer Control
@@ -127,4 +150,4 @@ If your AMS has an integrated dryer:
 
 ---
 
-**Next:** [Calibration & Tuning](/docs/guide/calibration/) | **Prev:** [Motion & Positioning](/docs/guide/motion/) | [Back to User Guide](/docs/guide/getting-started/)
+**Next:** [Label Printing](/docs/guide/label-printing/) | **Prev:** [Motion & Positioning](/docs/guide/motion/) | [Back to User Guide](/docs/guide/getting-started/)

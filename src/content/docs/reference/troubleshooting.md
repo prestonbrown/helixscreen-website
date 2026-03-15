@@ -22,7 +22,7 @@ Solutions to common problems with HelixScreen.
 - [Calibration Issues](#calibration-issues)
 - [Performance Issues](#performance-issues)
 - [Configuration Issues](#configuration-issues)
-- [Adventurer 5M Issues](#adventurer-5m-issues)
+- [Flashforge Adventurer 5M Issues](#flashforge-adventurer-5m-issues)
 - [Gathering Diagnostic Information](#gathering-diagnostic-information)
   - [Enabling Debug Logging](#enabling-debug-logging)
   - [Collecting Logs](#collecting-logs)
@@ -87,7 +87,7 @@ sudo journalctl -u helixscreen -f
 
    # Pi 4 typically uses /dev/dri/card1
    # Pi 5 may use /dev/dri/card1 or card2
-   # AD5M uses framebuffer /dev/fb0
+   # Flashforge Adventurer 5M (AD5M) uses framebuffer /dev/fb0
    ```
 
 3. **Permission issues**
@@ -276,6 +276,54 @@ sudo nmcli device wifi connect "HiddenSSID" password "Password" hidden yes
 
 > **Note:** Older guides may reference `wpa_supplicant` directly, but MainsailOS and most modern systems use NetworkManager. Use `nmcli` commands instead.
 
+### WiFi permission denied
+
+**Symptoms:**
+- WiFi scan shows no networks (but WiFi works from command line)
+- "Permission denied" error when connecting
+- WiFi worked before an update but stopped working
+
+**Cause:**
+HelixScreen needs permission (via polkit rules) to manage WiFi through NetworkManager. These rules are installed automatically, but can be missing if:
+- HelixScreen was installed before NetworkManager was set up
+- A self-update couldn't install permission rules (runs with restricted privileges)
+- The polkit rules file was deleted or corrupted
+
+**Solutions:**
+
+**Re-run the installer** (recommended — installs correct polkit rules):
+```bash
+curl -fsSL https://install.helixscreen.org | bash
+```
+
+**Verify polkit rules are installed:**
+```bash
+# Check for HelixScreen polkit rules (one of these should exist)
+ls -la /etc/polkit-1/rules.d/50-helixscreen-network.rules
+ls -la /etc/polkit-1/localauthority/50-local.d/helixscreen-network.pkla
+```
+
+**Check NetworkManager permissions:**
+```bash
+nmcli general permissions
+```
+If most entries show "no" instead of "yes", polkit rules are missing.
+
+**Manual fix** (if re-running installer isn't possible):
+
+Create `/etc/NetworkManager/conf.d/any-user.conf`:
+```ini
+[main]
+auth-polkit=false
+```
+Then restart NetworkManager:
+```bash
+sudo systemctl restart NetworkManager
+sudo systemctl restart helixscreen
+```
+
+> **Note:** The manual fix disables permission checks for all users. The installer method is preferred as it only grants access to the HelixScreen service user.
+
 ---
 
 ### SSL/TLS certificate errors
@@ -324,7 +372,7 @@ sudo journalctl -u helixscreen -n 50
 
 **Identify your display hardware:**
 ```bash
-# Framebuffer devices (older displays, AD5M)
+# Framebuffer devices (older displays, Flashforge AD5M)
 ls -la /dev/fb*
 
 # DRM devices (Pi 4/5, modern displays)
@@ -382,11 +430,29 @@ sudo systemctl restart helixscreen
 - Content displayed at wrong angle
 - Touch offset from visual
 
-**Solutions:**
+**Automatic detection:**
 
-**Set rotation in config:**
+HelixScreen automatically detects display orientation on first boot using the kernel's panel orientation setting. If your display is physically mounted upside down and the kernel knows about it (via `panel_orientation=upside_down` in the kernel command line), HelixScreen detects this and applies the correct rotation automatically — both the splash screen and the main UI will appear right-side up.
+
+On framebuffer displays only (e.g., AD5M, Allwinner-based devices — **not** Raspberry Pi), an interactive rotation wizard runs on first boot: it cycles through 0°, 90°, 180°, and 270° — tap the screen when the text appears right-side up, then tap again to confirm. This wizard is not available on Raspberry Pi or other DRM-based displays — use the kernel `panel_orientation` parameter or manual config instead.
+
+The detected rotation is saved to the config file and applied on all subsequent boots.
+
+**Setting panel orientation in the kernel (Raspberry Pi):**
+
+Edit `/boot/firmware/cmdline.txt` and add a `video=` parameter for your display connector:
+
+```
+video=DSI-1:panel_orientation=upside_down
+```
+
+Valid orientations: `normal`, `upside_down`, `left_side_up`, `right_side_up`. HelixScreen reads this on startup and applies the corresponding rotation.
+
+**Manual rotation:**
+
+Edit your config file (typically `~/helixscreen/config/helixconfig.json` or `/opt/helixscreen/config/helixconfig.json`):
+
 ```json
-// /opt/helixscreen/config/helixconfig.json
 {
   "display": {
     "rotate": 180
@@ -394,14 +460,132 @@ sudo systemctl restart helixscreen
 }
 ```
 
-Valid values: `0`, `90`, `180`, `270`
+Valid values: `0`, `90`, `180`, `270`. Restart HelixScreen after changing this value. Touch coordinates are automatically adjusted to match — no separate touch configuration is needed.
 
-**For DSI displays on Pi, you may also need `/boot/config.txt`:**
+**How rotation works under the hood:**
+
+When you set a rotation value, HelixScreen checks whether your display hardware supports rotating the image directly (hardware rotation). Most embedded displays — including DSI screens on Raspberry Pi — do not support hardware rotation for 180°.
+
+When hardware rotation is not available, HelixScreen automatically switches from the GPU-accelerated DRM backend to the framebuffer (fbdev) backend, which handles software rotation flicker-free. This happens transparently — you don't need to configure anything. You'll see this in the logs:
+
+```
+DRM lacks hardware rotation for 180°, falling back to fbdev (flicker-free software rotation)
+```
+
+The fbdev backend with software rotation works well for normal UI usage. If you notice any issues, you can also force the fbdev backend manually:
+
+```bash
+sudo systemctl edit helixscreen
+```
+
+Add:
 ```ini
-lcd_rotate=2
+[Service]
+Environment="HELIX_DISPLAY_BACKEND=fbdev"
+```
+
+Then restart: `sudo systemctl restart helixscreen`
+
+**To re-run automatic detection:**
+
+Remove the `rotate` and `rotation_probed` keys from your config file's `display` section, then restart HelixScreen:
+
+```json
+{
+  "display": {
+    // remove "rotate" and "rotation_probed" from here
+  }
+}
 ```
 
 > **Note:** Old configs may have `"display_rotate": 180` at the root level. This is automatically migrated to the new format on startup.
+
+---
+
+### Colors are wrong (red and blue swapped)
+
+**Symptoms:**
+- Red images appear blue and blue images appear red
+- Green colors display correctly
+- UI elements with red/blue tints look "off"
+
+**Cause:**
+Your display's framebuffer uses BGR pixel order instead of RGB, but the kernel driver reports the wrong format. This is common on some Allwinner SoCs (H616, R818, etc.) with RGB parallel (40-pin) display interfaces.
+
+HelixScreen auto-detects BGR layout from the kernel's `fb_var_screeninfo`, but some display drivers report incorrect pixel offsets. You can verify with:
+
+```bash
+fbset -i -fb /dev/fb0
+```
+
+Look at the `rgba` line. If it shows `8/16,8/8,8/0,0/24` (red at offset 16), the kernel claims RGB. If your colors are swapped despite this, the kernel is wrong and you need a manual override.
+
+**Solution:**
+
+Add this line to your `helixscreen.env` file (typically `~/helixscreen/config/helixscreen.env`):
+
+```bash
+HELIX_COLOR_SWAP_RB=1
+```
+
+Then restart HelixScreen:
+```bash
+sudo systemctl restart helixscreen
+```
+
+To disable the swap (if auto-detection is wrong in the other direction), use `HELIX_COLOR_SWAP_RB=0`.
+
+**Verifying the fix:**
+After restart, flags on the language selection screen should show correct colors (e.g., the French flag should be blue-white-red, not red-white-blue).
+
+---
+
+### 5GHz WiFi networks not showing
+
+**Symptoms:**
+- Only 2.4GHz WiFi networks appear in the network list
+- 5GHz networks visible in KlipperScreen or other tools but not in HelixScreen
+- WiFi adapter supports 5GHz (e.g., AP6256) but only 2.4GHz networks shown
+
+**Cause:**
+HelixScreen displays all networks returned by the WiFi subsystem (`wpa_supplicant` or `NetworkManager`). If 5GHz networks are missing, the issue is typically in the underlying WiFi configuration rather than HelixScreen itself.
+
+**Solutions:**
+
+**Check if your WiFi adapter sees 5GHz networks at the OS level:**
+```bash
+# For NetworkManager systems:
+nmcli device wifi list
+
+# For wpa_supplicant systems:
+sudo wpa_cli scan
+sudo wpa_cli scan_results
+```
+
+If 5GHz networks don't appear here either, the issue is in the WiFi driver or configuration.
+
+**Verify 5GHz support is detected:**
+```bash
+iw phy phy0 info | grep -A 20 "Frequencies"
+```
+Look for frequencies above 5000 MHz (e.g., 5180, 5240).
+
+**Check wpa_supplicant configuration:**
+If your `wpa_supplicant.conf` has a `freq_list=` parameter that only lists 2.4GHz frequencies, 5GHz networks won't be scanned. Remove the `freq_list` line or add 5GHz frequencies.
+
+**Check country code is set:**
+5GHz channels require a regulatory domain. Without it, the kernel may block 5GHz scanning:
+```bash
+sudo iw reg get
+```
+If it shows "country 00", set your country code:
+```bash
+sudo iw reg set US   # Replace US with your country code
+```
+
+To make permanent, add `country=US` to `/etc/wpa_supplicant/wpa_supplicant.conf` or set `wifi.powersave = 2` in NetworkManager.
+
+**After changing WiFi hardware** (e.g., swapping from AP6212 to AP6256), a reboot is recommended to ensure the correct driver and firmware are loaded.
 
 ---
 
@@ -453,6 +637,58 @@ sudo usermod -aG input $USER
 
 ---
 
+### Taps Register as Swipes
+
+**Symptoms:**
+- Tapping buttons doesn't work — the screen scrolls instead
+- Most or all taps are interpreted as swipe/scroll gestures
+- Buttons only work when tapped very quickly and precisely
+
+**Cause:** Noisy touch controller (common with Goodix GT9xx and similar capacitive controllers) reports jittery coordinates even when the finger is stationary. The small coordinate changes exceed LVGL's scroll detection threshold.
+
+**Solution:** HelixScreen includes a jitter filter (enabled by default, 15px dead zone) that suppresses this noise. If taps still register as swipes, increase the threshold:
+
+```json
+// /opt/helixscreen/config/helixconfig.json
+{
+  "input": {
+    "jitter_threshold": 25
+  }
+}
+```
+
+Or test temporarily with an environment variable:
+```bash
+HELIX_TOUCH_JITTER=25 helix-screen
+```
+
+Set to `0` to disable the filter if it interferes with intentional touch gestures.
+
+---
+
+### Touch Input is Inaccurate
+
+If taps are landing in the wrong place on screen:
+
+1. **Visualize touch points:** To see exactly where the system registers your taps, enable debug touch visualization:
+   ```bash
+   helix-screen --debug-touches
+   ```
+   This draws a ripple effect at each touch point, making it easy to see if touches are offset.
+2. **Recalibrate:** Go to **Settings > System > Touch Calibration**
+3. **If the option isn't visible:** Your screen may not normally need calibration. SSH in and run:
+   ```bash
+   helix-screen --calibrate-touch
+   ```
+4. **If the screen is too broken to navigate:** SSH in and use any of these methods:
+   - Run `helix-screen --calibrate-touch`
+   - Set the environment variable: `HELIX_TOUCH_CALIBRATE=1` in your `helixscreen.env` and restart
+   - Edit your config file: set `"force_calibration": true` in the `input` section and restart HelixScreen
+
+See the full [Touch Calibration Guide](/docs/guide/touch-calibration/) for details.
+
+---
+
 ### Touch is offset from visual elements
 
 **Symptoms:**
@@ -468,7 +704,7 @@ sudo usermod -aG input $USER
 
 **1. Ensure rotation is set correctly:**
 
-The `display.rotate` setting affects both display AND touch. Make sure it matches your physical display orientation:
+The `display.rotate` setting affects both display AND touch automatically. Make sure it matches your physical display orientation:
 
 ```json
 {
@@ -477,6 +713,8 @@ The `display.rotate` setting affects both display AND touch. Make sure it matche
   }
 }
 ```
+
+Restart HelixScreen after changing. Touch coordinates rotate automatically to match — you should not need any separate touch axis configuration.
 
 **2. Run touch calibration:**
 
@@ -487,9 +725,48 @@ The `display.rotate` setting affects both display AND touch. Make sure it matche
 
 > **Note:** Touch Calibration option only appears on actual touchscreen hardware, not in desktop/SDL mode.
 
-**3. If calibration doesn't help:**
+**3. Visualize touch points to diagnose:**
 
-The issue may be a display/touch rotation mismatch. Try different `rotate` values (0, 90, 180, 270) until touch aligns with visuals.
+Enable `--debug-touches` to see exactly where touches register, then compare with where you're tapping:
+```bash
+helix-screen --debug-touches
+```
+Or set `HELIX_DEBUG_TOUCHES=1` in your environment for persistent debugging.
+
+**4. If calibration doesn't help:**
+
+Try different `rotate` values (0, 90, 180, 270) until touch aligns with visuals. Or remove the rotation config entirely and restart to re-trigger automatic detection (see "Display upside down or rotated" above).
+
+### Calibration doesn't help — touches still wildly off
+
+**Symptoms:**
+- Calibration wizard completes but touches still land far from where you tap
+- Accuracy varies wildly across different screen regions
+- Recalibrating multiple times doesn't improve things
+
+**Cause:**
+Some touchscreen controllers report X/Y axes that don't match the display orientation. The calibration math tries to compensate but produces a numerically unstable matrix — it technically "works" at the calibration points but falls apart everywhere else.
+
+This is common on devices where the touch controller is mounted at a different orientation than the display panel (e.g., some Sonic Pad configurations).
+
+**Solutions:**
+
+**1. Update to the latest version (recommended):**
+
+HelixScreen v0.9+ automatically detects swapped touch axes during calibration and corrects them. Update and recalibrate:
+```bash
+# Update HelixScreen, then recalibrate:
+# Settings > System > Recalibrate Touch
+```
+
+**2. Manual workaround (older versions):**
+
+Set the axis swap environment variable, then recalibrate:
+```bash
+# Add to your helixscreen.env:
+HELIX_TOUCH_SWAP_AXES=1
+```
+Then restart HelixScreen and run the calibration wizard again. The swap is applied before calibration, so the resulting matrix will be clean and stable.
 
 ---
 
@@ -679,6 +956,18 @@ Navigate away from and back to the AMS panel to trigger refresh.
 ```bash
 sudo journalctl -u moonraker | grep -i spoolman
 ```
+
+### Only some spools showing in Spoolman lists
+
+**Symptoms:**
+- Spool picker or Spoolman panel only shows a subset of your spools
+- Missing spools that exist in Spoolman
+
+**Cause:**
+HelixScreen currently fetches up to 1,000 spools from Spoolman in a single request. If you have more than 1,000 spools, the rest will not appear.
+
+**Workaround:**
+Archive or delete unused spools in Spoolman to stay under 1,000 active spools. A future release will add continuous scroll pagination to handle larger collections.
 
 ---
 
@@ -900,9 +1189,9 @@ Edit `~/helixscreen/config/helixconfig.json` to set correct printer type and fea
 
 ---
 
-## Adventurer 5M Issues
+## Flashforge Adventurer 5M Issues
 
-The AD5M has unique characteristics due to its embedded Linux environment and ForgeX/Klipper Mod firmware.
+The Flashforge Adventurer 5M (AD5M) has unique characteristics due to its embedded Linux environment and ForgeX/Klipper Mod firmware.
 
 ### Screen dims after a few seconds
 
@@ -1085,7 +1374,7 @@ Add to the service file:
 Environment="HELIX_LOG_LEVEL=debug"
 ```
 
-#### Adventurer 5M / Forge-X (SysV init)
+#### Flashforge Adventurer 5M / Forge-X (SysV init)
 
 ```bash
 # Stop the running service
@@ -1144,7 +1433,7 @@ sudo journalctl -u helixscreen -p err --no-pager
 sudo journalctl -u helixscreen -f
 ```
 
-**Adventurer 5M (SysV init):**
+**Flashforge Adventurer 5M (SysV init):**
 ```bash
 # Full log file
 cat /tmp/helixscreen.log

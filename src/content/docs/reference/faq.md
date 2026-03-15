@@ -43,6 +43,7 @@ HelixScreen is a touchscreen interface for Klipper 3D printers. It connects to y
 - Snapmaker U1 — cross-compile target with 480x320 display support exists but has not been tested on hardware
 
 **Active testing underway:**
+- FlashForge Adventurer 5X — dedicated build target (`ad5x`); requires [ZMOD](https://github.com/ghzserg/zmod) firmware modification
 - SOVOL SV06 — uses Klipper on a Raspberry Pi; install with the [MainsailOS instructions](#raspberry-pi--mainsailos-installation)
 - SOVOL SV08 — uses Klipper on a Raspberry Pi; install with the [MainsailOS instructions](#raspberry-pi--mainsailos-installation)
 - Elegoo Centauri Carbon 1 — dedicated build target (`cc1`); prebuilt binaries included in releases but no installer support yet (manual deployment only)
@@ -62,6 +63,9 @@ If you test on a printer not listed above, please let us know your results!
 - BTT 5" HDMI/DSI touchscreen
 - BTT 7" HDMI/DSI touchscreen
 - FlashForge AD5M built-in 4.3" display (800x480)
+
+**Active testing underway:**
+- FlashForge AD5X built-in 4.3" display (800x480)
 
 **Should work but not yet tested:**
 - Official Raspberry Pi 7" DSI touchscreen
@@ -202,7 +206,15 @@ The web frontend you use (Mainsail, Fluidd, etc.) doesn't matter - HelixScreen t
 
 ### Can I use my webcam?
 
-**Coming soon.** Camera/webcam support is on the roadmap but not yet implemented.
+**Yes.** HelixScreen shows your webcam feed on the home dashboard and during printing. It automatically detects webcams configured in Moonraker (crowsnest, camera-streamer, etc.) and displays the MJPEG stream.
+
+For the best camera performance on Raspberry Pi, install `libturbojpeg0`:
+
+```bash
+sudo apt install libturbojpeg0
+```
+
+This enables SIMD-accelerated (hardware-optimized) JPEG decoding, which is 3-5x faster than the built-in software decoder. HelixScreen automatically uses it if available — no configuration needed. Without it, everything still works, just with slightly higher CPU usage during camera streaming.
 
 ### Does it work with Spoolman?
 
@@ -210,6 +222,15 @@ The web frontend you use (Mainsail, Fluidd, etc.) doesn't matter - HelixScreen t
 - **Advanced panel** → **Spoolman** to browse your spool inventory
 - **Settings** → **Spoolman** for weight sync settings
 - Assign spools to AMS slots and track filament usage
+
+### Can I print spool labels?
+
+**Yes.** HelixScreen supports printing physical spool labels to thermal label printers:
+- **Brother QL** — via Network or Bluetooth
+- **Phomemo** — via USB or Bluetooth
+- **Niimbot** — via Bluetooth (B21, D11, D110)
+
+Labels include spool name, material, color swatch, temperatures, and a QR code. See the [Label Printing Guide](/docs/guide/label-printing/) for setup.
 
 ### Does it support Happy Hare or AFC-Klipper?
 
@@ -258,7 +279,7 @@ For layout customization, you can edit XML files in `ui_xml/` (no recompilation 
 
 ### Does it support power device control?
 
-**Yes.** If you have Moonraker power devices configured, the Power panel lets you control them. Access via **Advanced** → **Power**.
+**Yes.** If you have Moonraker power devices configured, the Power panel lets you control them. Access via **Settings** → **System** → **Power Devices**, or **Advanced** → **Power**, or long-press the home panel power button.
 
 ### Can I view and run bed mesh?
 
@@ -282,17 +303,23 @@ For layout customization, you can edit XML files in `ui_xml/` (no recompilation 
 
 - **Auto-Detect** (default) — HelixScreen picks an image based on your printer type from Klipper
 - **Shipped Images** — Choose from 25+ pre-rendered images (Voron, Creality, FlashForge, Anycubic, RatRig, etc.)
-- **Custom Images** — Drop a PNG or JPEG file into `config/custom_images/` and it appears automatically the next time you open the picker. Files must be under 5MB and 2048x2048 pixels max.
+- **Custom Images** — Drop a PNG or JPEG file into `config/custom_images/` and it appears automatically the next time you open the picker. You can also import images directly from a USB drive. Files must be under 5MB and 2048x2048 pixels max.
 
-Your selection is saved to the `display.printer_image` config key and persists across restarts.
+Your selection is saved to the `display.printer_image` config key and persists across restarts. See the [Printer Manager guide](guide/home-panel.md#changing-the-printer-image) for step-by-step instructions.
 
 ### Can I rename my printer?
 
-**Yes.** Tap the printer image on the Home Panel to open the Printer Manager. Then tap the printer name (shown with a pencil icon) to enable inline editing. Type the new name and press **Enter** to save, or **Escape** to cancel. The name is stored in the `printer.name` config key.
+**Yes.** Tap the printer image on the Home Panel to open the Printer Manager. Then tap the printer name (shown with a pencil icon) to enable inline editing. Type the new name and press **Enter** to save, or **Escape** to cancel. The name is stored in the `printer.name` config key. See the [Printer Manager guide](guide/home-panel.md#changing-the-printer-name) for details.
 
 ---
 
 ## Usage
+
+### Can I use a USB mouse or keyboard?
+
+**Yes.** HelixScreen automatically detects USB mice and keyboards connected at startup. Both work alongside the touchscreen — you don't have to choose one or the other. A small white cursor appears when a mouse is detected. Combo devices like the Logitech K400 (keyboard + trackpad) also work.
+
+Devices must be plugged in before HelixScreen starts. If auto-detection doesn't find your device, set `HELIX_MOUSE_DEVICE` or `HELIX_KEYBOARD_DEVICE` in `helixscreen.env` to the device path (run `cat /proc/bus/input/devices` to find it).
 
 ### How do I calibrate my touchscreen?
 
