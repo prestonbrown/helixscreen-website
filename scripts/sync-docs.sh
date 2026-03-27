@@ -47,6 +47,7 @@ mkdir -p "$DEST_IMAGES"
 #   2 = guide/settings/
 
 FILES=(
+  "USER_GUIDE.md|index.md|User Guide|0|0"
   "INSTALL.md|installation.md|Installation|1|0"
   "UPGRADING.md|upgrading.md|Upgrading|2|0"
   "guide/getting-started.md|guide/getting-started.md|Getting Started|1|1"
@@ -59,6 +60,10 @@ FILES=(
   "guide/advanced.md|guide/advanced.md|Advanced|8|1"
   "guide/tips.md|guide/tips.md|Tips|9|1"
   "guide/beta-features.md|guide/beta-features.md|Beta Features|10|1"
+  "guide/bluetooth-setup.md|guide/bluetooth-setup.md|Bluetooth Setup|12|1"
+  "guide/label-printing.md|guide/label-printing.md|Label Printing|13|1"
+  "guide/touch-calibration.md|guide/touch-calibration.md|Touch Calibration|14|1"
+  "guide/creality-k1c-setup.md|guide/creality-k1c-setup.md|Creality K1C Setup|15|1"
   "guide/settings.md|guide/settings/index.md|Settings|1|2"
   "guide/settings/appearance.md|guide/settings/appearance.md|Appearance|2|2"
   "guide/settings/printer.md|guide/settings/printer.md|Printer|3|2"
@@ -120,7 +125,7 @@ process_file() {
   body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md\)|(/docs/reference/faq/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md\)|(/docs/legal/privacy/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md\)|(/docs/legal/telemetry/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/docs/guide/getting-started/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/docs/)|g')
 
   # guide/settings/*.md links (must come before guide/*.md)
   # From guide/ files linking to settings/foo.md
