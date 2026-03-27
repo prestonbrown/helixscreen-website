@@ -92,7 +92,7 @@ The Print Status panel shows:
 |--------|--------|
 | **Pause** | Parks nozzle safely, pauses print |
 | **Resume** | Continues from paused state |
-| **Cancel** | Stops print (confirmation required). By default, waits for the printer's cancel routine to finish. If **Cancel Escalation** is enabled in **Settings > Safety**, an emergency stop triggers automatically after the configured timeout. |
+| **Cancel** | Stops print (confirmation required). By default, waits for the printer's cancel routine to finish. If **Cancel Escalation** is enabled in **Settings > Motion**, an emergency stop triggers automatically after the configured timeout. |
 | **Tune** | Opens Print Tune overlay for real-time adjustments |
 
 ### Timelapse Toggle
@@ -202,4 +202,14 @@ When a print completes, a **completion modal** appears showing:
 
 ---
 
-**Next:** [Temperature Control](/docs/guide/temperature/) | **Prev:** [Home Panel](/docs/guide/home-panel/) | [Back to User Guide](/docs/guide/getting-started/)
+---
+
+## See Also
+
+- [Calibration & Tuning](/docs/guide/calibration/) — Bed mesh, input shaper, and Z-offset affect print quality
+- [Advanced Features](/docs/guide/advanced/) — G-code console for manual commands during printing
+- [Temperature Control](/docs/guide/temperature/) — Detailed temperature management and presets
+
+---
+
+**Next:** [Temperature Control](/docs/guide/temperature/) | **Prev:** [Home Panel](/docs/guide/home-panel/) | [Back to User Guide](/docs/)

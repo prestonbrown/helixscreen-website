@@ -58,4 +58,4 @@ For detailed troubleshooting, see [TROUBLESHOOTING.md](/docs/reference/troublesh
 
 ---
 
-**Prev:** [Beta Features](/docs/guide/beta-features/) | [Back to User Guide](/docs/guide/getting-started/)
+**Prev:** [Beta Features](/docs/guide/beta-features/) | [Back to User Guide](/docs/)

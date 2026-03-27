@@ -7,7 +7,7 @@ sidebar:
 
 This guide walks you through installing HelixScreen on your 3D printer's touchscreen display.
 
-**Target Audience:** Klipper users who want to use pre-built packages. If you're a developer building from source, see [DEVELOPMENT.md](../DEVELOPMENT.md).
+**Target Audience:** Klipper users who want to use pre-built packages. If you're a developer building from source, see [DEVELOPMENT.md](../devel/DEVELOPMENT.md).
 
 ---
 
@@ -70,7 +70,7 @@ After installation, the setup wizard will guide you through initial configuratio
 
 ### MainsailOS (Raspberry Pi)
 
-This covers any Klipper printer with a Raspberry Pi running MainsailOS (or similar), including SOVOL SV06, SOVOL SV08, Voron, RatRig, and other printers where Klipper runs on a separate Pi.
+This covers any Klipper printer with a Raspberry Pi running MainsailOS (or similar), including SOVOL SV06, SOVOL SV08, Voron, RatRig, and other printers where Klipper runs on a separate Pi. Also works on x86 Linux PCs (e.g., mini ITX) running Debian/Ubuntu with Klipper and a touchscreen.
 
 - **Hardware:**
   - Raspberry Pi 3, 4, or 5 (Pi 3 is minimum, Pi 4/5 recommended)
@@ -600,7 +600,7 @@ HelixScreen should detect and use these automatically.
 
 ### Screen Rotation
 
-To rotate the display (e.g., if your screen is mounted upside-down), add to your `helixconfig.json` (typically at `~/helixscreen/config/helixconfig.json`):
+To rotate the display (e.g., if your screen is mounted upside-down), add to your `settings.json` (typically at `~/helixscreen/config/settings.json`):
 
 ```json
 {
@@ -828,11 +828,11 @@ curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/script
 
 ### Preserving Configuration
 
-The update process preserves your `helixconfig.json` settings. If you want to reset to defaults:
+The update process preserves your `settings.json` settings. If you want to reset to defaults:
 
 ```bash
 # Use your actual install path (~/helixscreen or /opt/helixscreen)
-sudo rm ~/helixscreen/config/helixconfig.json
+sudo rm ~/helixscreen/config/settings.json
 sudo systemctl restart helixscreen
 ```
 
@@ -853,7 +853,7 @@ repo: prestonbrown/helixscreen
 path: ~/helixscreen
 managed_services: helixscreen
 persistent_files:
-    config/helixconfig.json
+    config/settings.json
     config/.disabled_services
 ```
 
@@ -1032,7 +1032,7 @@ See [TROUBLESHOOTING.md](/docs/reference/troubleshooting/) for solutions to:
 Pi 5 has multiple DRM devices. HelixScreen auto-detects the correct one, but if you have issues:
 
 ```json
-// helixconfig.json
+// settings.json
 {
   "display": {
     "drm_device": "/dev/dri/card1"
@@ -1084,4 +1084,4 @@ If you experience memory issues:
 
 ---
 
-*Next: [User Guide](/docs/guide/getting-started/) - Learn how to use HelixScreen*
+*Next: [User Guide](/docs/) - Learn how to use HelixScreen*

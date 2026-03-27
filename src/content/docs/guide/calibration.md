@@ -279,4 +279,14 @@ If you are running Kalico firmware and have [beta features enabled](/docs/guide/
 
 ---
 
-**Next:** [Settings](/docs/guide/settings/) | **Prev:** [Filament Management](/docs/guide/filament/) | [Back to User Guide](/docs/guide/getting-started/)
+---
+
+## See Also
+
+- [Motion & Positioning](/docs/guide/motion/) — Jog controls used during manual calibration
+- [Settings: Motion](/docs/guide/settings/motion/) — Machine limits and Z movement configuration
+- [Printing](/docs/guide/printing/) — Z-offset fine-tuning during active prints
+
+---
+
+**Next:** [Settings](/docs/guide/settings/) | **Prev:** [Label Printing](/docs/guide/label-printing/) | [Back to User Guide](/docs/)

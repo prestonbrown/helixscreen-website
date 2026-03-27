@@ -12,9 +12,6 @@ Access via the **More** icon in the navigation bar.
 ---
 
 ## G-code Console
-
-![Console Panel](../../../assets/images/docs/advanced-console.png)
-
 A full-featured G-code terminal for sending commands directly to your printer and viewing Klipper responses in real time.
 
 **Opening the console:**
@@ -235,4 +232,4 @@ When frames have been captured during a print, a **render section** appears abov
 
 ---
 
-**Next:** [Beta Features](/docs/guide/beta-features/) | **Prev:** [Settings](/docs/guide/settings/) | [Back to User Guide](/docs/guide/getting-started/)
+**Next:** [Beta Features](/docs/guide/beta-features/) | **Prev:** [Settings](/docs/guide/settings/) | [Back to User Guide](/docs/)

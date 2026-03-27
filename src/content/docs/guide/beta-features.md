@@ -24,7 +24,7 @@ Repeat the same process to disable beta features.
 
 **Method 2: Config file**
 
-Set `"beta_features": true` in your `helixconfig.json`.
+Set `"beta_features": true` in your `settings.json`.
 
 **Method 3: Test mode**
 
@@ -67,4 +67,4 @@ The update channel can also be set via `update.channel` in the config file (0=St
 
 ---
 
-**Next:** [Tips & Best Practices](/docs/guide/tips/) | **Prev:** [Advanced Features](/docs/guide/advanced/) | [Back to User Guide](/docs/guide/getting-started/)
+**Next:** [Tips & Best Practices](/docs/guide/tips/) | **Prev:** [Advanced Features](/docs/guide/advanced/) | [Back to User Guide](/docs/)

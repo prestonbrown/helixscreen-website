@@ -45,21 +45,21 @@ Complete reference for HelixScreen configuration options.
 
 | Platform | Location |
 |----------|----------|
-| MainsailOS (Pi) | `~/helixscreen/config/helixconfig.json` (or `/opt/helixscreen/config/` if no Klipper ecosystem) |
-| AD5M Forge-X | `/opt/helixscreen/config/helixconfig.json` |
-| AD5M Klipper Mod | `/root/printer_software/helixscreen/config/helixconfig.json` |
-| K1 Simple AF | `/usr/data/helixscreen/config/helixconfig.json` |
-| Development | `./config/helixconfig.json` (in config/ directory) |
+| MainsailOS (Pi) | `~/helixscreen/config/settings.json` (or `/opt/helixscreen/config/` if no Klipper ecosystem) |
+| AD5M Forge-X | `/opt/helixscreen/config/settings.json` |
+| AD5M Klipper Mod | `/root/printer_software/helixscreen/config/settings.json` |
+| K1 Simple AF | `/usr/data/helixscreen/config/settings.json` |
+| Development | `./config/settings.json` (in config/ directory) |
 
 > **Note:** On Pi, the installer auto-detects your Klipper ecosystem. If `~/klipper`, `~/moonraker`, or `~/printer_data` exists, HelixScreen installs to `~/helixscreen`. Otherwise it falls back to `/opt/helixscreen`. You can override with `INSTALL_DIR=/path ./install.sh`.
 
 The configuration file is created automatically by the first-run wizard. You can also copy from the template:
 
 ```bash
-cp config/helixconfig.json.template config/helixconfig.json
+cp config/settings.json.template config/settings.json
 ```
 
-**Note:** Legacy config locations (`helixconfig.json` in app root or `/opt/helixscreen/helixconfig.json`) are automatically migrated to the new location on startup.
+**Note:** Legacy config locations (`settings.json` in app root or `/opt/helixscreen/settings.json`) are automatically migrated to the new location on startup.
 
 ---
 
@@ -137,6 +137,9 @@ Each printer entry contains all printer-specific settings (connection details, h
 
 ---
 
+> **Looking for a walkthrough of each setting?** See the detailed guides:
+> [Appearance](guide/settings/appearance.md) · [Printer](guide/settings/printer.md) · [Notifications](guide/settings/notifications.md) · [Motion](guide/settings/motion.md) · [System](guide/settings/system.md) · [LED Settings](guide/settings/led-settings.md) · [Help & About](guide/settings/help-about.md)
+
 ## General Settings
 
 ### `dark_mode`
@@ -204,8 +207,29 @@ Located in the `theme` section:
 ### `preset`
 **Type:** integer
 **Default:** `0`
-**Values:** `0` (Nord)
 **Description:** Theme accent color preset. **Requires restart to take effect.**
+
+| Value | Theme |
+|-------|-------|
+| 0 | Ayu |
+| 1 | Catppuccin |
+| 2 | ChatGPT |
+| 3 | Cupertino |
+| 4 | Dracula |
+| 5 | Everforest |
+| 6 | Gruvbox |
+| 7 | HelixScreen |
+| 8 | Kanagawa |
+| 9 | Material Design |
+| 10 | Midnight |
+| 11 | Nord (default) |
+| 12 | One Dark |
+| 13 | Rose Pine |
+| 14 | Solarized |
+| 15 | Tokyo Night |
+| 16 | Yami |
+
+> **Tip:** You can also browse and apply themes visually in **Settings > Appearance > Display Settings > Theme Colors**.
 
 ---
 
@@ -665,7 +689,9 @@ Configured via **Settings > LED Settings > Macro Devices**.
 
 ### `default_macros`
 **Type:** object
-**Description:** Custom macros for quick actions:
+**Description:** G-code macros for quick-action buttons throughout the UI. Each macro can be a plain G-code string or an object with `label` and `gcode` fields.
+
+**Default values:**
 
 ```json
 {
@@ -679,9 +705,27 @@ Configured via **Settings > LED Settings > Macro Devices**.
 }
 ```
 
-- `cooldown` - G-code string for the cooldown button
-- `load_filament` / `unload_filament` - Object with `label` and `gcode` for filament operations
-- `macro_1` / `macro_2` - Custom macro buttons with `label` and `gcode`
+| Key | Format | Where it's used |
+|-----|--------|-----------------|
+| `cooldown` | G-code string | Preheat widget (auto-shows "Cool Down" when heaters are on), Filament panel cooldown button |
+| `load_filament` | `{ "label", "gcode" }` | Filament panel Load button |
+| `unload_filament` | `{ "label", "gcode" }` | Filament panel Unload button |
+| `macro_1` | `{ "label", "gcode" }` | Controls panel custom button 1 |
+| `macro_2` | `{ "label", "gcode" }` | Controls panel custom button 2 |
+
+**Customizing cooldown for enclosed printers:**
+
+If your printer has a chamber heater, bed fans, or recirculation fans that should turn off during cooldown, override the `cooldown` macro:
+
+```json
+{
+  "cooldown": "SET_HEATER_TEMPERATURE HEATER=extruder TARGET=0\nSET_HEATER_TEMPERATURE HEATER=heater_bed TARGET=0\nSET_HEATER_TEMPERATURE HEATER=chamber_heater TARGET=0\nSET_FAN_SPEED FAN=bed_fan SPEED=0"
+}
+```
+
+Multi-line G-code is separated by `\n`. You can also reference a Klipper macro by name (e.g., `"cooldown": "MY_COOLDOWN_MACRO"`).
+
+Configured via **Settings > Printer > Macro Buttons**, or by editing `settings.json` directly.
 
 ---
 
@@ -845,40 +889,58 @@ Located in the `ams` section:
 
 ## Panel Widget Settings
 
-Located under the `panel_widgets` key, grouped by panel ID:
+Located under the `panel_widgets` key, grouped by panel ID. The Home panel uses a multi-page format with explicit grid positions:
 
 ```json
 {
   "panel_widgets": {
-    "home": [
-      {"id": "power", "enabled": true},
-      {"id": "network", "enabled": false},
-      {"id": "firmware_restart", "enabled": false},
-      {"id": "ams", "enabled": true},
-      {"id": "temperature", "enabled": true},
-      {"id": "temp_stack", "enabled": false, "config": {"display_mode": "stack"}},
-      {"id": "led", "enabled": true},
-      {"id": "humidity", "enabled": true},
-      {"id": "width_sensor", "enabled": true},
-      {"id": "probe", "enabled": true},
-      {"id": "filament", "enabled": true},
-      {"id": "fan_stack", "enabled": true, "config": {"display_mode": "stack"}},
-      {"id": "thermistor", "enabled": false},
-      {"id": "notifications", "enabled": true}
-    ]
+    "home": {
+      "pages": [
+        {
+          "id": "main",
+          "widgets": [
+            {"id": "printer_image", "enabled": true, "col": 0, "row": 0, "colspan": 2, "rowspan": 2},
+            {"id": "print_status", "enabled": true, "col": 0, "row": 2, "colspan": 2, "rowspan": 2},
+            {"id": "tips", "enabled": true, "col": 2, "row": 0, "colspan": 4, "rowspan": 2},
+            {"id": "temperature", "enabled": true, "col": 6, "row": 0, "colspan": 1, "rowspan": 1},
+            {"id": "fan_stack", "enabled": true, "col": 7, "row": 0, "colspan": 1, "rowspan": 1}
+          ]
+        },
+        {
+          "id": "page_1",
+          "widgets": [
+            {"id": "temp_graph", "enabled": true, "col": 0, "row": 0, "colspan": 4, "rowspan": 3},
+            {"id": "camera", "enabled": true, "col": 4, "row": 0, "colspan": 4, "rowspan": 3}
+          ]
+        }
+      ],
+      "main_page_index": 0,
+      "next_page_id": 2
+    }
   }
 }
 ```
 
-> **Migration note:** If your config has the older `home_widgets` key, HelixScreen automatically migrates it to `panel_widgets.home` on first launch.
+> **Migration note:** If your config has the older flat-array format (a simple list of widgets without pages) or the legacy `home_widgets` key, HelixScreen automatically migrates it to the multi-page format on first launch. Your existing widgets are placed on a single page.
 
 ### `panel_widgets.home`
-**Type:** array of objects
-**Default:** See defaults in table below
-**Description:** Controls which widgets appear on the Home Panel and in what order. Each object has:
+**Type:** object
+**Description:** Controls the Home Panel's pages and widgets. Contains:
+
+- `pages` — Array of page objects. Each page has:
+  - `id` — Unique page identifier (e.g., `"main"`, `"page_1"`)
+  - `widgets` — Array of widget objects on this page (see below)
+- `main_page_index` — Which page is the "main" page (shown on first connect and when double-tapping Home). `0` = first page.
+- `next_page_id` — Internal counter for generating unique page IDs. Do not modify manually.
+
+Each widget object has:
 
 - `id` — Widget identifier (see table below)
 - `enabled` — Whether the widget is shown (`true`/`false`)
+- `col` — Grid column position (0-based, left to right)
+- `row` — Grid row position (0-based, top to bottom)
+- `colspan` — Number of columns the widget spans
+- `rowspan` — Number of rows the widget spans
 - `config` — (optional) Per-widget settings object. Currently used by `temp_stack` and `fan_stack` for display mode:
   - `display_mode` — `"stack"` (default) or `"carousel"`. Stack shows compact rows; carousel shows swipeable full-size pages. Toggle via long-press on the widget.
 
@@ -898,16 +960,17 @@ Located under the `panel_widgets` key, grouped by panel ID:
 | `probe` | Z probe status and offset | Enabled | Yes (requires probe) |
 | `filament` | Filament runout detection | Enabled | Yes (requires sensor) |
 | `fan_stack` | Part, hotend, and auxiliary fan speeds (supports carousel mode with arc dials) | Enabled | No |
-| `thermistor` | Custom temperature sensor (chamber, etc.) | Disabled | Yes (requires sensor) |
+| `thermistor` | Temperature sensors (chamber, enclosure, etc.) | Disabled | Yes (requires sensor) |
 | `notifications` | Pending alerts with severity badge | Enabled | No |
 
 **Notes:**
-- The array order determines display order on the Home Panel
+- Widget grid positions (`col`, `row`, `colspan`, `rowspan`) determine where each widget appears on its page
 - Hardware-gated widgets are hidden on the Home Panel if their hardware isn't detected, even when enabled
 - New widgets added in future versions are automatically appended with their default enabled state
 - Unknown widget IDs (from older versions) are silently ignored
+- Up to 8 pages are supported
 
-This is best configured via **Settings > Home Widgets** rather than editing the JSON directly.
+This is best configured via **Edit Mode** on the Home Panel (long-press the widget grid) rather than editing the JSON directly. See the [Home Panel guide](/docs/guide/home-panel/) for details on adding pages and arranging widgets.
 
 ---
 
@@ -1176,9 +1239,9 @@ Located in `printer.capability_overrides`:
 Delete the config file and restart (use your actual install path):
 ```bash
 # Pi with Klipper ecosystem:
-rm ~/helixscreen/config/helixconfig.json
+rm ~/helixscreen/config/settings.json
 # Pi without ecosystem (or if installed to /opt):
-sudo rm /opt/helixscreen/config/helixconfig.json
+sudo rm /opt/helixscreen/config/settings.json
 
 sudo systemctl restart helixscreen
 ```
@@ -1188,13 +1251,51 @@ This triggers the first-run wizard.
 ### Partial Reset
 Edit the config file directly:
 ```bash
-nano ~/helixscreen/config/helixconfig.json
+nano ~/helixscreen/config/settings.json
 ```
 
 Or copy fresh from template:
 ```bash
-cp ~/helixscreen/config/helixconfig.json.template ~/helixscreen/config/helixconfig.json
+cp ~/helixscreen/config/settings.json.template ~/helixscreen/config/settings.json
 ```
+
+---
+
+## Config Safety & Recovery
+
+HelixScreen protects your configuration against corruption and data loss:
+
+### Atomic Saves
+Configuration writes use atomic file operations — data is written to a temporary
+file first, then renamed into place. This prevents partial writes from corrupting
+your config if power is lost during a save.
+
+### Corruption Detection
+If `settings.json` contains invalid JSON (e.g., from manual editing errors),
+HelixScreen detects the parse failure and:
+1. Renames the corrupt file to `settings.json.corrupt` (preserved for diagnosis)
+2. Loads safe defaults
+3. Logs the error with details about what went wrong
+
+### Rolling Backups
+Every successful config save maintains rolling backups in two locations:
+- `/var/lib/helixscreen/settings.json.backup` (primary — survives app reinstalls)
+- `~/.helixscreen/settings.json.backup` (fallback)
+
+If `settings.json` is missing at startup (e.g., after a Moonraker update wipe),
+HelixScreen automatically restores from the most recent backup.
+
+### Recovery Steps
+If your config is lost or corrupted:
+1. **Automatic:** HelixScreen restores from rolling backup on next launch
+2. **Manual:** Check for `settings.json.corrupt` in your config directory — this
+   contains your previous (invalid) config that you can manually fix
+3. **Fresh start:** Copy `settings.json.template` to `settings.json` and re-run
+   the setup wizard
+
+### Migration from helixconfig.json
+Older versions used `helixconfig.json`. HelixScreen automatically renames this to
+`settings.json` on startup — no manual action needed.
 
 ---
 
@@ -1273,16 +1374,29 @@ helix-screen --screenshot 5
 
 These can be set in the systemd service file or before running the binary:
 
+**Display & Input:**
+
 | Variable | Description |
 |----------|-------------|
 | `HELIX_DRM_DEVICE` | Override DRM device path (e.g., `/dev/dri/card1`) |
+| `HELIX_DISPLAY_BACKEND` | Override display backend (`drm`, `fbdev`, `sdl`) |
+| `HELIX_DISPLAY_ROTATION` | Override display rotation in degrees (`0`, `90`, `180`, `270`) |
+| `HELIX_COLOR_SWAP_RB` | Swap red/blue channels (`1` to enable) — fixes inverted colors on some displays |
 | `HELIX_TOUCH_DEVICE` | Override touch input device (e.g., `/dev/input/event1`) |
+| `HELIX_TOUCH_SWAP_AXES` | Swap X/Y touch axes (`1` to enable) |
+| `HELIX_TOUCH_CALIBRATE` | Force touch calibration on next launch (`1` to enable) |
 | `HELIX_MOUSE_DEVICE` | Override USB mouse device (e.g., `/dev/input/event4`) |
 | `HELIX_KEYBOARD_DEVICE` | Override USB keyboard device (e.g., `/dev/input/event5`) |
-| `HELIX_DISPLAY_BACKEND` | Override display backend (`drm`, `fbdev`, `sdl`) |
+
+**Theme & Rendering:**
+
+| Variable | Description |
+|----------|-------------|
+| `HELIX_THEME` | Override theme (e.g., `dracula`, `nord`, `gruvbox`) |
 | `HELIX_GCODE_MODE` | Override G-code render mode (`3D` or `2D`) |
 | `HELIX_GCODE_STREAMING` | Override G-code streaming mode |
 | `HELIX_FORCE_STREAMING` | Force streaming for all file operations (`1` to enable) |
+| `HELIX_HOT_RELOAD` | Enable XML hot reload for development (`1` to enable) |
 
 **Example in service file:**
 ```ini
@@ -1498,4 +1612,4 @@ Environment="HELIX_TOUCH_DEVICE=/dev/input/event0"
 
 ---
 
-*Back to: [User Guide](/docs/guide/getting-started/) | [Troubleshooting](/docs/reference/troubleshooting/)*
+*Back to: [User Guide](/docs/) | [Troubleshooting](/docs/reference/troubleshooting/)*

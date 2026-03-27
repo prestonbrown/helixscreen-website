@@ -116,4 +116,4 @@ From the right column:
 
 ---
 
-**Next:** [Motion & Positioning](/docs/guide/motion/) | **Prev:** [Printing](/docs/guide/printing/) | [Back to User Guide](/docs/guide/getting-started/)
+**Next:** [Motion & Positioning](/docs/guide/motion/) | **Prev:** [Printing](/docs/guide/printing/) | [Back to User Guide](/docs/)

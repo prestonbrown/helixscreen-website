@@ -19,43 +19,31 @@ HelixScreen is a touchscreen interface for Klipper 3D printers. It connects to y
 - 30 panels and 48 overlays covering all printer operations
 - 3D G-code preview, bed mesh visualization, frequency response charts
 - First-run wizard with telemetry opt-in
-- Theme editor with 14 presets (dark and light)
+- Theme editor with 17 presets (dark and light)
 - Sound system, timelapse integration, filament tracking
 - Auto-detecting layout system for multiple display sizes
 - Designed for embedded displays (low memory, no desktop required)
 
 ### Which printers are supported?
 
-**Any printer running Klipper + Moonraker** should work. HelixScreen connects to Moonraker's API, not directly to Klipper.
+HelixScreen works with any Klipper-based printer running Moonraker. Tested and supported platforms:
 
-**Tested and confirmed working:**
-- Voron 0.1, Voron 2.4
-- Doron Velta
-- RatRig V-Core
-- FlashForge Adventurer 5M / 5M Pro (with [Forge-X](https://github.com/DrA1ex/ff5m)) — most thoroughly tested on ForgeX 1.4.0 with FlashForge firmware 3.1.5; other versions may work fine
+| Platform | Status | Notes |
+|----------|--------|-------|
+| Voron 0.1, 2.4, Trident | **Tested** | Primary development platforms |
+| Doron Velta / RatRig V-Core | **Tested** | |
+| FlashForge AD5M / 5M Pro | **Tested** | Requires Forge-X or Klipper Mod firmware |
+| QIDI Q2, Max 4 | **Supported** | Requires FreeDi firmware for Moonraker access |
+| Creality K1 / K1C / K1 Max / K1 SE | **Supported** | Requires rooting or Guilouz firmware |
+| Creality K2 / K2 Plus | **Untested** | Binaries available, community testing welcome |
+| Creality Sonic Pad | **Supported** | 32-bit ARM, dedicated build |
+| Snapmaker U1 | **Untested** | Binaries available |
+| FlashForge AD5X | **Testing** | Active testing, IFS integration in progress |
+| SOVOL SV06 / SV08 | **Testing** | Community reports welcome |
+| Elegoo Centauri Carbon 1 | **Testing** | Dedicated build target |
+| Other Klipper printers | **Should work** | Any printer with Moonraker API access |
 
-**Supported with auto-detection:**
-- QIDI printers — detection heuristics and print start profile included
-
-**Binaries available but untested:**
-- Creality K1 series (K1, K1C, K1 Max) — requires [Simple AF](https://github.com/pellcorp/creality) community firmware
-- Creality K2 series (K2, K2 Pro, K2 Plus) — stock firmware has Moonraker on port 4408, no community firmware needed
-- Snapmaker U1 — cross-compile target with 480x320 display support exists but has not been tested on hardware
-
-**Active testing underway:**
-- FlashForge Adventurer 5X — dedicated build target (`ad5x`); requires [ZMOD](https://github.com/ghzserg/zmod) firmware modification
-- SOVOL SV06 — uses Klipper on a Raspberry Pi; install with the [MainsailOS instructions](#raspberry-pi--mainsailos-installation)
-- SOVOL SV08 — uses Klipper on a Raspberry Pi; install with the [MainsailOS instructions](#raspberry-pi--mainsailos-installation)
-- Elegoo Centauri Carbon 1 — dedicated build target (`cc1`); prebuilt binaries included in releases but no installer support yet (manual deployment only)
-
-**Should work but not yet tested:**
-- Other Voron models
-- Prusa (with Klipper mod)
-- Creality Ender (with Klipper)
-- Bambu (with Klipper mod)
-- Any custom Klipper build
-
-If you test on a printer not listed above, please let us know your results!
+> **Note:** "Tested" means the HelixScreen team has verified the platform. "Untested" means binaries exist but haven't been verified on real hardware. See the [Installation Guide](/docs/installation/) for platform-specific instructions.
 
 ### Which displays are supported?
 
@@ -100,7 +88,7 @@ If you test on hardware not listed above, please let us know your results!
 
 ### Is HelixScreen production-ready?
 
-HelixScreen is currently in **beta** (closer to alpha). This means:
+HelixScreen is currently in **beta**. This means:
 
 - ✅ Core features are complete and tested
 - ✅ Daily use on real printers works well
@@ -229,6 +217,7 @@ This enables SIMD-accelerated (hardware-optimized) JPEG decoding, which is 3-5x 
 - **Brother QL** — via Network or Bluetooth
 - **Phomemo** — via USB or Bluetooth
 - **Niimbot** — via Bluetooth (B21, D11, D110)
+- **MakeID** — via Bluetooth (E1, L1, M1 — 9/12/16mm continuous tape)
 
 Labels include spool name, material, color swatch, temperatures, and a QR code. See the [Label Printing Guide](/docs/guide/label-printing/) for setup.
 
@@ -255,11 +244,11 @@ Up to 10 widgets can be shown. Some widgets (like AMS, humidity sensor, or probe
 
 ### Can I customize the colors or layout?
 
-**Yes!** HelixScreen includes a built-in theme editor with 14 preset themes:
+**Yes!** HelixScreen includes a built-in theme editor with 17 preset themes:
 
 1. Go to **Settings** → **Display Settings**
 2. Tap **Theme** to open the theme editor
-3. Choose from presets: Nord (default), Catppuccin, Dracula, Gruvbox, Tokyo Night, One Dark, Solarized, Material Design, Rose Pine, Everforest, Kanagawa, Ayu, Yami, or ChatGPT
+3. Choose from presets: Ayu, Catppuccin, ChatGPT, Cupertino, Dracula, Everforest, Gruvbox, HelixScreen, Kanagawa, Material Design, Midnight, Nord (default), One Dark, Rose Pine, Solarized, Tokyo Night, or Yami
 4. Toggle dark/light mode
 5. Customize individual colors if desired - changes are saved to `config/themes/`
 
@@ -373,7 +362,7 @@ The wizard runs when no valid configuration exists. Causes:
 2. Config file has invalid JSON
 3. Permissions prevent reading config
 
-**Fix:** Check `/opt/helixscreen/config/helixconfig.json` exists and is valid JSON.
+**Fix:** Check `/opt/helixscreen/config/settings.json` exists and is valid JSON.
 
 ### How do I change the Moonraker address?
 
@@ -381,7 +370,7 @@ There's currently no UI to change this after initial setup. Your options:
 
 **Edit the config file directly:**
 ```bash
-sudo nano /opt/helixscreen/config/helixconfig.json
+sudo nano /opt/helixscreen/config/settings.json
 # Edit moonraker_host and moonraker_port in the "printer" section
 sudo systemctl restart helixscreen
 ```
@@ -389,7 +378,7 @@ sudo systemctl restart helixscreen
 **Or re-run the setup wizard:**
 ```bash
 # Either delete the config to trigger wizard on next start:
-sudo rm /opt/helixscreen/config/helixconfig.json
+sudo rm /opt/helixscreen/config/settings.json
 sudo systemctl restart helixscreen
 
 # Or force wizard with command-line flag:
@@ -432,7 +421,7 @@ Yes! HelixScreen is licensed under **GPL v3**. Source code is on GitHub.
 
 ### How can I contribute?
 
-See the [Contributing Guide](../DEVELOPMENT.md#contributing) for:
+See the [Contributing Guide](../devel/DEVELOPMENT.md#contributing) for:
 - Code standards
 - Development setup
 - Pull request process
@@ -445,7 +434,7 @@ We welcome:
 
 ### How do I build from source?
 
-See the [Development Guide](../DEVELOPMENT.md) for build instructions, dependencies, and development setup.
+See the [Development Guide](../devel/DEVELOPMENT.md) for build instructions, dependencies, and development setup.
 
 ### What programming language is HelixScreen?
 
@@ -497,6 +486,6 @@ cat ~/.local/share/helix-screen/helix.log
 
 *For more details, see:*
 - *[Installation Guide](/docs/installation/)*
-- *[User Guide](/docs/guide/getting-started/)*
+- *[User Guide](/docs/)*
 - *[Configuration Reference](/docs/reference/configuration/)*
 - *[Troubleshooting](/docs/reference/troubleshooting/)*

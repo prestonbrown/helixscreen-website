@@ -21,4 +21,4 @@ Access via the **Gear icon** in the navigation bar. Settings are organized into 
 
 ---
 
-**Next:** [Advanced Features](/docs/guide/advanced/) | **Prev:** [Calibration & Tuning](/docs/guide/calibration/) | [Back to User Guide](/docs/guide/getting-started/)
+**Next:** [Advanced Features](/docs/guide/advanced/) | **Prev:** [Calibration & Tuning](/docs/guide/calibration/) | [Back to User Guide](/docs/)
