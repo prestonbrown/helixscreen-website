@@ -1,0 +1,52 @@
+---
+const painPoints = [
+  {
+    problem: "Your touchscreen can't show you a bed mesh.",
+    solution: "HelixScreen renders it in 3D. Rotate it with your finger.",
+  },
+  {
+    problem: "Your touchscreen can't show input shaper results.",
+    solution: "Frequency response charts, right on screen. No laptop needed.",
+  },
+  {
+    problem: "Your touchscreen can't exclude a failed object mid-print.",
+    solution: "Tap the bad part on an overhead map to skip it. Save the rest of the plate.",
+  },
+  {
+    problem: "Your touchscreen doesn't know your multi-material system.",
+    solution: "Six backends: AFC, Happy Hare, ACE, CFS, IFS, tool changers. With dryer controls and Spoolman.",
+  },
+  {
+    problem: "Your touchscreen gives you someone else's fixed layout.",
+    solution: "Drag-and-drop widget dashboard. Multiple pages. You decide what's on screen.",
+  },
+  {
+    problem: "Your touchscreen eats 50 MB of RAM for Python and GTK.",
+    solution: "HelixScreen uses ~15 MB. No X11, no browser, no desktop environment.",
+  },
+];
+---
+
+<section class="py-14 md:py-20 px-4 animate-on-scroll">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="font-heading text-2xl md:text-4xl font-medium text-text-primary text-center mb-4">
+      Why switch?
+    </h2>
+    <p class="text-text-secondary text-center text-base md:text-lg mb-12 max-w-2xl mx-auto">
+      If your current touchscreen UI works, great. But here's what you're missing.
+    </p>
+
+    <div class="grid gap-6">
+      {painPoints.map((point) => (
+        <div class="pain-point grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 py-4 border-b border-border/40 last:border-0">
+          <p class="text-text-muted text-sm md:text-base leading-relaxed">
+            {point.problem}
+          </p>
+          <p class="text-text-primary text-sm md:text-base leading-relaxed font-medium">
+            {point.solution}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

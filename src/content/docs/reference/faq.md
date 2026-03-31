@@ -16,13 +16,14 @@ Quick answers to common questions about HelixScreen.
 HelixScreen is a touchscreen interface for Klipper 3D printers. It connects to your Moonraker instance and provides a modern, touch-friendly UI for controlling your printer.
 
 **Key features:**
-- 30 panels and 48 overlays covering all printer operations
+- 30+ panels, 20+ overlays, and a customizable multi-page widget dashboard
 - 3D G-code preview, bed mesh visualization, frequency response charts
-- First-run wizard with telemetry opt-in
-- Theme editor with 17 presets (dark and light)
-- Sound system, timelapse integration, filament tracking
-- Auto-detecting layout system for multiple display sizes
-- Designed for embedded displays (low memory, no desktop required)
+- 6 multi-material backends (AFC, Happy Hare, ACE, AD5X IFS, CFS, tool changers) with Spoolman integration
+- First-run wizard with auto-detection of 70+ printer models
+- Theme editor with 17 presets (dark and light), 9 languages
+- Sound system, timelapse integration, label printing, exclude objects
+- Auto-detecting layout system for displays from 480x320 to 1920x480
+- ~15MB RAM — designed for embedded displays, no desktop required
 
 ### Which printers are supported?
 
@@ -35,10 +36,9 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 | FlashForge AD5M / 5M Pro | **Tested** | Requires Forge-X or Klipper Mod firmware |
 | QIDI Q2, Max 4 | **Supported** | Requires FreeDi firmware for Moonraker access |
 | Creality K1 / K1C / K1 Max / K1 SE | **Supported** | Requires rooting or Guilouz firmware |
-| Creality K2 / K2 Plus | **Untested** | Binaries available, community testing welcome |
+| Creality K2 Max / K2 Plus | **Tested** | Runs natively with CFS support |
 | Creality Sonic Pad | **Supported** | 32-bit ARM, dedicated build |
-| Snapmaker U1 | **Untested** | Binaries available |
-| FlashForge AD5X | **Testing** | Active testing, IFS integration in progress |
+| FlashForge AD5X | **Tested** | IFS filament system integrated |
 | SOVOL SV06 / SV08 | **Testing** | Community reports welcome |
 | Elegoo Centauri Carbon 1 | **Testing** | Dedicated build target |
 | Other Klipper printers | **Should work** | Any printer with Moonraker API access |
@@ -61,7 +61,7 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 - Other HDMI displays
 - SPI displays (with proper configuration)
 
-**Display sizes:** HelixScreen auto-detects the best layout for your display. 800x480, 1024x600, and 1920x480 (ultrawide) are fully supported. 480x320 (Snapmaker U1) will run but may have layout overlap issues — improved small-screen support is ongoing.
+**Display sizes:** HelixScreen auto-detects the best layout for your display. 800x480, 1024x600, and 1920x480 (ultrawide) are fully supported. 480x320 displays will run but may have layout overlap issues — improved small-screen support is ongoing.
 
 **Display rotation:** All three binaries (main, splash, watchdog) support 0°, 90°, 180°, and 270° rotation via config or command line.
 
@@ -73,33 +73,20 @@ If you test on hardware not listed above, please let us know your results!
 |---------|-------------|---------------|-------------|
 | **UI Framework** | LVGL 9 XML | GTK 3 (Python) | LVGL 8 (C) |
 | **Declarative UI** | Full XML | Python only | C only |
-| **Disk Size** | ~70-80MB | ~50MB | ~60-80MB |
-| **RAM Usage** | ~10MB | ~50MB | ~15-20MB |
+| **Disk Size** | ~75-115MB | ~50MB | ~60-80MB |
+| **RAM Usage** | ~15MB | ~50MB | ~15-20MB |
 | **Reactive Binding** | Built-in | Manual | Manual |
 | **3D G-code preview** | Yes | 2D layers | No |
 | **3D bed mesh** | Yes | 2D heatmap | 2D heatmap |
-| **Status** | Beta | Mature (maintenance) | Unmaintained |
+| **Status** | 1.0 (active) | Mature (maintenance) | Unmaintained |
 
 **HelixScreen advantages:**
-- Lowest memory footprint
+- Low memory footprint (~15MB vs ~50MB for KlipperScreen)
 - Declarative XML layouts (change UI without recompiling)
-- Modern reactive architecture
-- 3D visualizations
-
-### Is HelixScreen production-ready?
-
-HelixScreen is currently in **beta**. This means:
-
-- ✅ Core features are complete and tested
-- ✅ Daily use on real printers works well
-- ⚠️ Some edge cases may have bugs
-- ⚠️ Some advanced features still in development
-- ⚠️ Breaking changes may occur between releases
-
-We recommend it for enthusiasts comfortable with:
-- SSH access to their printer
-- Reading logs for troubleshooting
-- Reporting bugs on GitHub
+- Modern reactive architecture with 6 multi-material backends
+- 3D visualizations (G-code preview, bed mesh)
+- 70+ printer auto-detection database
+- 9 languages at 100% string coverage
 
 ---
 
@@ -226,7 +213,7 @@ Labels include spool name, material, color swatch, temperatures, and a QR code. 
 **Yes.** Full multi-material support is available for:
 - **Happy Hare** — MMU2, ERCF, 3MS, Tradrack
 - **AFC-Klipper** — Box Turtle with full data parsing, 11 device actions, per-lane reset, and mock mode
-- **ValgACE** — supported
+- **ACE** (Anycubic ACE Pro, via ValgACE/BunnyACE/DuckACE Klipper drivers) — supported
 - **Tool changers** — supported
 
 Features include visual slot configuration with tool badges, endless spool arrows, tap-to-edit popup, Spoolman integration, and material compatibility validation.
@@ -285,6 +272,10 @@ For layout customization, you can edit XML files in `ui_xml/` (no recompilation 
 ### Can I run macros?
 
 **Yes.** The Macro panel shows your Klipper macros. Access via **Advanced** → **Macros**. You can also configure quick macro buttons in **Settings** → **Macro Buttons**.
+
+### Can I change which macro the Load / Unload / Purge buttons run?
+
+**Yes.** Go to **Settings > Printer > Macro Buttons** and scroll to the **Standard Macros** section. Each button has a dropdown where you can select any macro from your Klipper config, or choose **(Auto)** to let HelixScreen detect it automatically. This works with or without an AMS system — see the [Filament guide](guide/filament.md#customizing-which-macro-runs) for details.
 
 ### Can I customize the printer image on the home screen?
 

@@ -18,7 +18,7 @@ This guide walks you through installing HelixScreen on your 3D printer's touchsc
 - [MainsailOS Installation](#mainsailos-installation)
 - [Flashforge Adventurer 5M Installation](#flashforge-adventurer-5m-installation)
 - [Creality K1 Installation](#creality-k1-series)
-- [Creality K2 Series (Untested)](#creality-k2-series-untested)
+- [Creality K2 Series](#creality-k2-series-untested)
 - [FlashForge Adventurer 5X (Testing)](#flashforge-adventurer-5x-testing)
 - [Elegoo Centauri Carbon 1 (Testing)](#elegoo-centauri-carbon-1-testing)
 - [Creality Sonic Pad](#creality-sonic-pad)
@@ -35,7 +35,7 @@ This guide walks you through installing HelixScreen on your 3D printer's touchsc
 
 > **⚠️ Run these commands on your printer's host, not your local computer.**
 >
-> SSH into your Raspberry Pi, BTT CB1/Manta, or similar host. For all-in-one printers (Creality K1, K2 series, Flashforge Adventurer 5M/Pro), SSH directly into the printer itself as root.
+> SSH into your Raspberry Pi, BTT CB1/CB2/Manta, or similar host. For all-in-one printers (Creality K1, K2 series, Flashforge Adventurer 5M/Pro), SSH directly into the printer itself as root.
 
 **Raspberry Pi (MainsailOS):**
 ```bash
@@ -112,7 +112,7 @@ The installer automatically detects which firmware you're running and configures
 | **Forge-X** | GuppyScreen | `/opt/helixscreen/` | `S90helixscreen` |
 | **Klipper Mod** | KlipperScreen | `/root/printer_software/helixscreen/` | `S80helixscreen` |
 
-**Memory Savings:** On Klipper Mod, HelixScreen (~10MB) replaces KlipperScreen (~50MB), freeing ~40MB RAM on the memory-constrained AD5M.
+**Memory Savings:** On Klipper Mod, HelixScreen (~15MB) replaces KlipperScreen (~50MB), freeing ~35MB RAM on the memory-constrained AD5M.
 
 #### Forge-X Prerequisites
 
@@ -177,12 +177,10 @@ sh /usr/data/install.sh --local /usr/data/helixscreen-k1-vX.Y.Z.tar.gz
 
 Installs to `/usr/data/helixscreen/`, boot service at `/etc/init.d/S99helixscreen`.
 
-### Creality K2 Series (Untested)
-
-> **⚠️ This platform has not been tested on real hardware.** The build target exists and produces a binary, but no one has run it on an actual K2 yet. If you have a K2 with SSH access, we'd love your help validating it!
+### Creality K2 Series
 
 - **Hardware:**
-  - Creality K2, K2 Pro, K2 Plus, or K2 SE
+  - Creality K2 Max, K2 Plus, or K2 Pro
   - Stock 4.3" touchscreen display (480x800)
   - Network connection
 
@@ -191,19 +189,16 @@ Installs to `/usr/data/helixscreen/`, boot service at `/etc/init.d/S99helixscree
   - SSH access (`root@<printer-ip>`, password: `creality_2024`)
   - Moonraker is included in stock firmware on port 4408
 
+**Install:**
+```bash
+wget -O - http://dl.helixscreen.org/install.sh | sh
+```
+
 **What's different from K1:**
 - ARM processor (Allwinner, not MIPS) — standard cross-compilation
-- Stock Moonraker — no community firmware (Simple AF, etc.) required
+- Stock Moonraker — no community firmware required
 - OpenWrt-based init system (procd, not SysV)
-- Display may be portrait orientation (480x800) — rotation support may be needed
-
-**Current status:**
-- Build target: `make k2-docker` produces a static ARM binary
-- Deploy targets exist: `make deploy-k2 K2_HOST=<ip>`
-- No installer script support yet — manual deployment only
-- See `docs/printer-research/CREALITY_K2_PLUS_RESEARCH.md` for full research and open questions
-
-**If you want to help test**, run the diagnostic commands in the research doc (Section 13) and report back via [GitHub Issues](https://github.com/prestonbrown/helixscreen/issues).
+- CFS (Creality Filament System) support for RS-485 filament management
 
 ### FlashForge Adventurer 5X (Testing)
 
@@ -590,9 +585,9 @@ For SPI displays (like many small LCDs):
 
 See the [MainsailOS display documentation](https://docs.mainsail.xyz/) for specific display setup.
 
-### BTT Pad 7 and Similar
+### BTT Pad 7, CB2, and Similar
 
-The BTT Pad 7 and similar "Klipper Pad" devices typically include:
+The BTT Pad 7, CB2, and similar "Klipper Pad" devices typically include:
 - Pre-configured display output
 - Touch input via USB
 
@@ -626,7 +621,7 @@ By default, HelixScreen uses GPU-accelerated rendering via DRM/KMS when availabl
 
 **Supported DRM hardware:**
 - Raspberry Pi 3B+, Pi 4, Pi 5
-- BTT CB1 (and other Allwinner H616 boards)
+- BTT CB1, CB2 (and other Allwinner H616/H618 boards)
 - Display must be connected via HDMI or DSI (SPI displays are not supported)
 
 **To force a specific backend:**
@@ -847,15 +842,16 @@ If you installed manually or the installer couldn't find your `moonraker.conf`, 
 #   K1/Simple AF: /usr/data/helixscreen
 #   AD5M Klipper Mod: /root/printer_software/helixscreen
 [update_manager helixscreen]
-type: zip
+type: web
 channel: stable
 repo: prestonbrown/helixscreen
 path: ~/helixscreen
-managed_services: helixscreen
-persistent_files:
-    config/settings.json
-    config/.disabled_services
 ```
+
+> **Important:** Do not add `install_script`, `managed_services`, or `persistent_files`
+> to this section — these options are not supported with `type: web` and Moonraker will
+> log warnings about unparsed config options. Service restart after updates is handled
+> automatically by a systemd path unit installed during setup.
 
 Then restart Moonraker:
 ```bash

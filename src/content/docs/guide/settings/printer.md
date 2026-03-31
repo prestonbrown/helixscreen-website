@@ -29,7 +29,15 @@ Other detected sensors (accelerometers, probes, humidity, width, color) are list
 
 > Only shown when an AMS (Automatic Material System) is detected.
 
-Tap to open Device Operations for quick actions, calibration, and speed settings for multi-material systems. Supports AFC, Happy Hare, ValgACE, and other Klipper-based filament changers.
+Tap to open Device Operations for quick actions, calibration, and speed settings for multi-material systems. Supports AFC, Happy Hare, ACE, and other Klipper-based filament changers.
+
+---
+
+## Fans
+
+> Only shown when fans are detected.
+
+Tap to open the Fan Settings overlay. This shows all detected fans and their current speeds. You can rename any fan for easier identification — for example, rename "fan_generic exhaust_fan" to "Exhaust". Custom names appear everywhere fans are shown in the UI.
 
 ---
 
@@ -37,7 +45,33 @@ Tap to open Device Operations for quick actions, calibration, and speed settings
 
 > Only shown when Spoolman is configured in Moonraker.
 
-Tap to open weight sync settings for Spoolman spool tracking integration.
+Tap to open Spoolman integration settings. HelixScreen connects to your Spoolman server for spool tracking, weight sync, and barcode scanning.
+
+### Server Setup
+
+If Spoolman is not yet configured, you'll see a setup screen. Enter the IP address and port of your Spoolman server, then tap **Connect**. HelixScreen verifies the connection and configures Moonraker automatically — no manual editing of `moonraker.conf` needed.
+
+### Server Status
+
+When connected, the settings screen shows your Spoolman server URL along with options to **Change** the server address or **Remove** the configuration entirely.
+
+### Sync with Spoolman
+
+Toggle this on to enable automatic weight polling. When enabled, HelixScreen periodically queries Spoolman for spool weight updates and displays the remaining filament on the home panel and filament panel.
+
+### Refresh Interval
+
+Controls how often HelixScreen polls Spoolman for weight updates. Options: **30 seconds**, **1 minute**, **2 minutes**, or **5 minutes**. Shorter intervals give more up-to-date readings but generate more network traffic.
+
+### Barcode Scanner
+
+Configure which USB device to use as a barcode scanner for scanning Spoolman QR codes on spool labels. By default, HelixScreen auto-detects scanners by looking for devices with "barcode" or "scanner" in their name.
+
+If your scanner uses a generic name (e.g., "TMS HIDKeyBoard"), tap this setting to manually select it from a list of connected USB HID devices. The selection is saved and persists across restarts.
+
+### Label Printer
+
+Opens label printer configuration for printing spool labels with QR codes. See [Label Printing](/docs/guide/label-printing/) for full setup instructions and supported printers.
 
 ---
 
@@ -132,6 +166,8 @@ HelixScreen auto-detects common macros from your Klipper configuration (e.g., it
 | **Heat Soak** | Chamber heat soak | HEAT_SOAK |
 
 If your printer doesn't have a matching macro, some slots fall back to HelixScreen helper macros (installed via **Settings > Advanced > Install HelixScreen Macros**). Leave a slot empty to disable that function.
+
+> **Looking for Load/Unload/Purge button customization?** See the [Filament guide](../filament.md#customizing-which-macro-runs) for a step-by-step walkthrough, including how these buttons interact with AMS systems.
 
 ### Per-Material Preheat Macros
 
