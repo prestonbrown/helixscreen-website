@@ -45,10 +45,10 @@ export default defineConfig({
           label: 'Settings',
           items: [
             { label: 'Overview', slug: 'guide/settings' },
-            { label: 'Appearance', slug: 'guide/settings/appearance' },
-            { label: 'Printer', slug: 'guide/settings/printer' },
-            { label: 'Notifications', slug: 'guide/settings/notifications' },
-            { label: 'Motion', slug: 'guide/settings/motion' },
+            { label: 'Display & Sound', slug: 'guide/settings/display-sound' },
+            { label: 'Printing', slug: 'guide/settings/printing' },
+            { label: 'Hardware & Devices', slug: 'guide/settings/hardware' },
+            { label: 'Safety & Notifications', slug: 'guide/settings/safety' },
             { label: 'System', slug: 'guide/settings/system' },
             { label: 'Help & About', slug: 'guide/settings/help-about' },
             { label: 'LED Settings', slug: 'guide/settings/led-settings' },
@@ -59,6 +59,7 @@ export default defineConfig({
           items: [
             { label: 'Creality K1C Setup', slug: 'guide/creality-k1c-setup' },
             { label: 'Bluetooth Setup', slug: 'guide/bluetooth-setup' },
+            { label: 'Barcode Scanner', slug: 'guide/barcode-scanner' },
             { label: 'Label Printing', slug: 'guide/label-printing' },
             { label: 'Touch Calibration', slug: 'guide/touch-calibration' },
           ],

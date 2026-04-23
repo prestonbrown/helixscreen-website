@@ -5,7 +5,7 @@ sidebar:
 ---
 
 
-The System section covers security, network configuration, hardware management, privacy settings, and maintenance actions.
+The System category covers security, network configuration, privacy settings, and maintenance actions.
 
 ---
 
@@ -48,35 +48,11 @@ Tap to open the Network Settings overlay with a two-column layout:
 
 ---
 
-## Power Devices
-
-> Only shown when Moonraker power devices are configured.
-
-Tap to open the Power Devices overlay, where you can toggle individual power relays and smart outlets on or off. This is the same panel accessible from **Advanced > Power Devices** or by long-pressing the home panel power button.
-
-See [Power Device Control](../advanced.md#power-device-control) for full details on device selection and the home panel quick-toggle.
-
----
-
 ## Host
 
 Shows the current Moonraker host address (e.g., `localhost:7125`). Tap to open the **Change Host** dialog where you can enter a new IP address and port to connect to a different printer.
 
 After changing the host, HelixScreen disconnects from the current printer and reconnects to the new one.
-
----
-
-## Printers
-
-> Only shown when [beta features](/docs/guide/beta-features/) are enabled.
-
-Manage all your configured printers. Tap to open the Printer Management overlay where you can:
-
-- **Switch printers** — Tap any printer in the list to switch to it. HelixScreen disconnects from the current printer and connects to the new one.
-- **Add a printer** — Tap "Add Printer" to launch the Setup Wizard for a new printer. You can cancel at any time to return to your current printer.
-- **Delete a printer** — Tap the trash icon next to any non-active printer and confirm. You cannot delete the last remaining printer.
-
-After switching, a toast notification confirms the new connection and you're taken to the Home panel.
 
 ---
 
@@ -135,6 +111,23 @@ When enabled, a **View Telemetry Data** row appears below the toggle. Tap it to 
 
 ---
 
+## Log Level
+
+Control how much detail HelixScreen writes to its logs. This is useful when troubleshooting issues or gathering diagnostic information for a bug report.
+
+| Level | What it captures |
+|-------|-----------------|
+| **Warn** | Errors and warnings only (default — quiet) |
+| **Info** | Connection events, panel changes, milestones |
+| **Debug** | State changes, API calls, component init (use this for bug reports) |
+| **Trace** | Everything including LVGL internals (very verbose, rarely needed) |
+
+Changes take effect immediately — no restart required. Set to **Debug** before reproducing a problem, then set back to **Warn** when done.
+
+> **Tip:** Debug and Trace levels increase CPU usage and log volume. Don't leave them enabled long-term.
+
+---
+
 ## Restart HelixScreen
 
 Restart the display application. Useful after changing settings that require a restart (like theme changes) or if the UI becomes unresponsive. Shows a brief "Restarting..." toast before the app restarts.
@@ -155,12 +148,4 @@ Clears **all** HelixScreen settings and restarts the Setup Wizard. This resets:
 
 ---
 
-## Install Update
-
-> Only shown when an update is available.
-
-Download and install the available HelixScreen update. Shows a confirmation dialog with the version number, then displays download progress with a cancel option. After download completes, prompts to restart.
-
----
-
-[Back to Settings](/docs/guide/settings/) | [Prev: Motion](/docs/guide/settings/motion/) | [Next: Help & About](/docs/guide/settings/help-about/)
+[Back to Settings](/docs/guide/settings/) | [Prev: Safety & Notifications](/docs/guide/settings/safety/) | [Next: Help & About](/docs/guide/settings/help-about/)

@@ -19,9 +19,10 @@ This guide walks you through installing HelixScreen on your 3D printer's touchsc
 - [Flashforge Adventurer 5M Installation](#flashforge-adventurer-5m-installation)
 - [Creality K1 Installation](#creality-k1-series)
 - [Creality K2 Series](#creality-k2-series-untested)
-- [FlashForge Adventurer 5X (Testing)](#flashforge-adventurer-5x-testing)
-- [Elegoo Centauri Carbon 1 (Testing)](#elegoo-centauri-carbon-1-testing)
+- [FlashForge Adventurer 5X](#flashforge-adventurer-5x)
+- [Elegoo Centauri Carbon 1](#elegoo-centauri-carbon)
 - [Creality Sonic Pad](#creality-sonic-pad)
+- [Snapmaker U1](#snapmaker-u1)
 - [First Boot & Setup Wizard](#first-boot--setup-wizard)
 - [Display Configuration](#display-configuration)
 - [Starting on Boot](#starting-on-boot)
@@ -52,7 +53,13 @@ No SSL required — uses plain HTTP. See [Creality K1 Series](#creality-k1-serie
 
 **Flashforge Adventurer 5M:** The easiest option is our [ready-made firmware image](https://github.com/prestonbrown/ff5m) — just flash from a USB drive. For manual installation on existing Forge-X or Klipper Mod setups, see [Flashforge Adventurer 5M Installation](#flashforge-adventurer-5m-installation).
 
-**Flashforge Adventurer 5X:** Install [ZMOD](https://github.com/ghzserg/zmod), which manages HelixScreen installation and updates. See [FlashForge Adventurer 5X (Testing)](#flashforge-adventurer-5x-testing).
+**Flashforge Adventurer 5X:** Install [ZMOD](https://github.com/ghzserg/zmod), which manages HelixScreen installation and updates. See [FlashForge Adventurer 5X](#flashforge-adventurer-5x).
+
+**Snapmaker U1:** Run directly on the printer via SSH (requires [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware)):
+```bash
+curl -sSL https://releases.helixscreen.org/install.sh | sh
+```
+See [Snapmaker U1](#snapmaker-u1) for details.
 
 > **Note:** Both `bash` and `sh` work. The installer is POSIX-compatible for BusyBox environments.
 
@@ -112,7 +119,7 @@ The installer automatically detects which firmware you're running and configures
 | **Forge-X** | GuppyScreen | `/opt/helixscreen/` | `S90helixscreen` |
 | **Klipper Mod** | KlipperScreen | `/root/printer_software/helixscreen/` | `S80helixscreen` |
 
-**Memory Savings:** On Klipper Mod, HelixScreen (~15MB) replaces KlipperScreen (~50MB), freeing ~35MB RAM on the memory-constrained AD5M.
+**Memory Savings:** On Klipper Mod, HelixScreen (~13MB) replaces KlipperScreen (~50MB), freeing ~37MB RAM on the memory-constrained AD5M.
 
 #### Forge-X Prerequisites
 
@@ -157,22 +164,22 @@ If your printer doesn't have internet access, download on another computer first
 **Step 1: Download on your computer**
 
 Go to the [latest release page](https://github.com/prestonbrown/helixscreen/releases/latest) and download:
-- `helixscreen-k1-vX.Y.Z.tar.gz` (the K1 release archive)
+- `helixscreen-k1.zip` (the K1 release archive)
 - `install.sh` (the installer script, under "Assets")
 
 Or use the command line (replace `vX.Y.Z` with the actual version):
 ```bash
 VERSION=vX.Y.Z  # Check latest at https://github.com/prestonbrown/helixscreen/releases/latest
-wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-k1-${VERSION}.tar.gz"
+wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-k1.zip"
 wget https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh
 ```
 
 **Step 2: Copy to your printer and install**
 
 ```bash
-scp helixscreen-k1-vX.Y.Z.tar.gz install.sh root@<printer-ip>:/usr/data/
+scp helixscreen-k1.zip install.sh root@<printer-ip>:/usr/data/
 ssh root@<printer-ip>   # password: creality_2023
-sh /usr/data/install.sh --local /usr/data/helixscreen-k1-vX.Y.Z.tar.gz
+sh /usr/data/install.sh --local /usr/data/helixscreen-k1.zip
 ```
 
 Installs to `/usr/data/helixscreen/`, boot service at `/etc/init.d/S99helixscreen`.
@@ -200,9 +207,9 @@ wget -O - http://dl.helixscreen.org/install.sh | sh
 - OpenWrt-based init system (procd, not SysV)
 - CFS (Creality Filament System) support for RS-485 filament management
 
-### FlashForge Adventurer 5X (Testing)
+### FlashForge Adventurer 5X
 
-> **Active testing is underway on this platform.** Prebuilt binaries are included in releases. Installation is handled through the ZMOD firmware modification.
+> **Tested and working.** Prebuilt binaries are included in releases. Installation is handled through the ZMOD firmware modification.
 
 - **Hardware:**
   - FlashForge Adventurer 5X
@@ -217,28 +224,66 @@ wget -O - http://dl.helixscreen.org/install.sh | sh
 - Dedicated build target: `ad5x` with its own toolchain and release binary
 - Prebuilt `ad5x` binaries are included in GitHub releases
 - ZMOD manages installation and updates via Moonraker update manager
-- IFS (4-channel filament system) support is not yet implemented
+- **Auto-detection:** HelixScreen automatically detects ZMOD firmware (by recognizing ZMOD-specific Klipper device names) and applies ZMOD-optimized presets for display, input, and fan configuration. No manual configuration needed.
+- IFS (4-channel filament system) supported — see [Filament Management](/docs/guide/filament/)
 
-**If you're testing on this printer**, please report your results via [GitHub Issues](https://github.com/prestonbrown/helixscreen/issues) or [Discord](https://discord.gg/RZCT2StKhr).
+### Elegoo Centauri Carbon
 
-### Elegoo Centauri Carbon 1 (Testing)
-
-> **Active testing is underway on this platform.** Prebuilt binaries are included in releases, but there is no installer script support yet — manual deployment only.
+> **Tested and working.** Prebuilt binaries ship in releases and the installer has auto-detection support. Requires the community [OpenCentauri COSMOS firmware](https://docs.opencentauri.cc/klipper-conversion/cosmos/) — stock Elegoo firmware is not supported (no SSH, no Klipper, no Moonraker).
 
 - **Hardware:**
-  - Elegoo Centauri Carbon 1
-  - Stock touchscreen display
-  - Network connection
+  - Elegoo Centauri Carbon (4.3" 480×272 touchscreen, Allwinner R528, armv7l)
+  - Network connection (WiFi or Ethernet)
 
 - **Software:**
-  - Klipper + Moonraker running on the printer
-  - SSH access to the printer
+  - [OpenCentauri COSMOS firmware](https://github.com/OpenCentauri/cosmos/releases) installed (replaces stock Elegoo firmware; ships Klipper + Moonraker + grumpyscreen/atomscreen/guppyscreen)
+  - SSH access: `root` / default password `OpenCentauri` (change it after install)
 
-**Current status:**
-- Build target: `make cc1-docker` produces a static armv7-a binary
-- Deploy targets exist: `make deploy-cc1 CC1_HOST=<ip>`
-- Prebuilt `cc1` binaries are included in GitHub releases
-- No installer script support yet — manual deployment only
+#### Step 1: Install COSMOS firmware
+
+OpenCentauri COSMOS is a full firmware replacement for the Centauri Carbon. It ships with Klipper, Moonraker, Mainsail, and a `gui-switcher` that lets you pick which touch UI to run.
+
+1. Download the latest `update.swu` from https://github.com/OpenCentauri/cosmos/releases
+2. Copy it to the root of a FAT32-formatted USB stick
+3. Insert the USB stick into the printer, power on
+4. From the stock Elegoo UI, navigate to the firmware-update menu and apply the update
+5. **First boot takes 5–10 minutes** while it reflashes the toolhead and bed boards — be patient
+6. After reboot, connect to WiFi from the COSMOS UI and note the printer's IP address
+
+If the update fails or the device won't boot, consult the OpenCentauri [install guide](https://docs.opencentauri.cc/klipper-conversion/cosmos/install/) and [emergency USB recovery](https://docs.opencentauri.cc/software/updates/) docs.
+
+#### Step 2: Install HelixScreen
+
+SSH into the printer (replace `<ip>` with your printer's IP):
+
+```bash
+ssh root@<ip>
+# Default password: OpenCentauri
+```
+
+Then run the installer:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh
+```
+
+The installer auto-detects COSMOS, installs HelixScreen to `/user-resource/helixscreen/`, and registers it with `gui-switcher` as the selected touch UI. It stops the currently active UI (grumpyscreen, atomscreen, or guppyscreen) and starts HelixScreen in its place.
+
+#### Step 3: Switch back to another UI (optional)
+
+COSMOS's `config-manager` tool lets you switch between installed UIs without uninstalling HelixScreen:
+
+```bash
+config-manager ui screen_ui grumpyscreen   # or atomscreen, guppyscreen, helixscreen
+/etc/init.d/gui-switcher restart
+```
+
+**Notes:**
+- Moonraker on COSMOS listens on port `80` directly (no nginx); HelixScreen's `cc1` preset is configured for this
+- Install directory: `/user-resource/helixscreen/` (`/` is read-only squashfs on COSMOS)
+- Init script: `/etc/init.d/helixscreen` (LSB-style, PIDFILE=`/var/run/gui.pid` for gui-switcher compatibility)
+- The `cc1` preset ships with **factory white-balance calibration** (per-channel panel gain) so colors look neutral out of the box on the Centauri Carbon's 4.3" panel — no manual tuning needed
+- COSMOS's `config-manager` has a fixed allowlist for the `screen_ui` slot. The installer handles this automatically via an init-script wrapper so HelixScreen can be selected without patching COSMOS itself; the uninstaller fully reverses it
 
 **If you're testing on this printer**, please report your results via [GitHub Issues](https://github.com/prestonbrown/helixscreen/issues) or [Discord](https://discord.gg/RZCT2StKhr).
 
@@ -271,6 +316,19 @@ The installer detects the Sonic Pad as a 32-bit ARM platform and downloads the `
 - The Sonic Pad has a Goodix GT9xx touchscreen controller — the touch calibration wizard runs automatically on first boot if needed
 - Moonraker runs on `localhost:7125` (default)
 - The `display-sleep` service is automatically stopped to prevent backlight conflicts
+
+### Snapmaker U1
+
+The Snapmaker U1 is an all-in-one printer with a built-in touchscreen. HelixScreen replaces the stock UI and launches automatically on boot.
+
+- **Hardware:**
+  - Snapmaker U1
+  - Built-in touchscreen display
+  - Network connection
+
+- **Software:**
+  - [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware) installed (required for SSH access)
+  - SSH access (`root@<printer-ip>` or `lava@<printer-ip>`, password: `snapmaker`)
 
 ---
 
@@ -343,13 +401,13 @@ The AD5M uses BusyBox which doesn't support HTTPS downloads directly. This is a 
 **Step 1: Download on your computer**
 
 Go to the [latest release page](https://github.com/prestonbrown/helixscreen/releases/latest) and download:
-- `helixscreen-ad5m-vX.Y.Z.tar.gz` (the AD5M release archive)
+- `helixscreen-ad5m.zip` (the AD5M release archive)
 - `install.sh` (the installer script, under "Assets")
 
 Or use the command line (replace `vX.Y.Z` with the actual version):
 ```bash
 VERSION=vX.Y.Z  # Check latest at https://github.com/prestonbrown/helixscreen/releases/latest
-wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m-${VERSION}.tar.gz"
+wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m.zip"
 wget https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh
 ```
 
@@ -358,7 +416,7 @@ wget https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/ins
 ```bash
 # AD5M requires -O flag for scp (BusyBox lacks sftp-server)
 # Note: Use /data/ not /tmp/ - AD5M's /tmp is a tiny tmpfs (~54MB)
-scp -O helixscreen-ad5m-vX.Y.Z.tar.gz install.sh root@<printer-ip>:/data/
+scp -O helixscreen-ad5m.zip install.sh root@<printer-ip>:/data/
 ```
 
 > **Windows users:** The `-O` flag is not supported by Windows 11's built-in OpenSSH.
@@ -366,7 +424,7 @@ scp -O helixscreen-ad5m-vX.Y.Z.tar.gz install.sh root@<printer-ip>:/data/
 > - **WSL** (recommended) — open a WSL terminal and run all commands as shown (Linux tools work natively)
 > - **[WinSCP](https://winscp.net/)** (free, GUI) — set the protocol to **SCP**, then drag and drop files to `/data/` on the printer
 > - **[PuTTY pscp](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)** (free, command-line):
->   `pscp helixscreen-ad5m-vX.Y.Z.tar.gz install.sh root@<printer-ip>:/data/`
+>   `pscp helixscreen-ad5m.zip install.sh root@<printer-ip>:/data/`
 
 **Step 3: SSH into the printer and run the installer**
 
@@ -375,7 +433,7 @@ scp -O helixscreen-ad5m-vX.Y.Z.tar.gz install.sh root@<printer-ip>:/data/
 ssh root@<printer-ip>
 
 # Now on the printer, run the installer
-sh /data/install.sh --local /data/helixscreen-ad5m-vX.Y.Z.tar.gz
+sh /data/install.sh --local /data/helixscreen-ad5m.zip
 ```
 
 The install script automatically detects your firmware (Forge-X or Klipper Mod) and installs to the correct location.
@@ -402,19 +460,19 @@ The install script automatically detects your firmware (Forge-X or Klipper Mod) 
 ```bash
 # Download on your computer (replace vX.Y.Z with actual version)
 VERSION=vX.Y.Z
-wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m-${VERSION}.tar.gz"
+wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m.zip"
 
 # Copy to printer (AD5M requires scp -O for legacy protocol)
 # Note: Use /data/ not /tmp/ - AD5M's /tmp is a tiny tmpfs (~54MB)
 # Windows users: use WinSCP (SCP protocol) or PuTTY's pscp instead — see note above
-scp -O helixscreen-ad5m-${VERSION}.tar.gz root@<printer-ip>:/data/
+scp -O helixscreen-ad5m.zip root@<printer-ip>:/data/
 
 # SSH into printer
 ssh root@<printer-ip>
 
 # Extract to /opt (Forge-X location)
 cd /opt
-gunzip -c /data/helixscreen-ad5m-*.tar.gz | tar xf -
+unzip -q /data/helixscreen-ad5m.zip
 
 # Stop GuppyScreen
 /opt/config/mod/.root/S80guppyscreen stop 2>/dev/null || true
@@ -428,7 +486,7 @@ chmod +x /etc/init.d/S90helixscreen
 /etc/init.d/S90helixscreen start
 
 # Clean up
-rm /data/helixscreen-ad5m-*.tar.gz
+rm /data/helixscreen-ad5m.zip
 ```
 
 </details>
@@ -441,18 +499,18 @@ rm /data/helixscreen-ad5m-*.tar.gz
 ```bash
 # Download on your computer (replace vX.Y.Z with actual version)
 VERSION=vX.Y.Z
-wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m-${VERSION}.tar.gz"
+wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m.zip"
 
 # Copy to printer's data partition (NOT /tmp - it's too small!)
 # Windows users: use WinSCP (SCP protocol) or PuTTY's pscp instead — see note above
-scp -O helixscreen-ad5m-${VERSION}.tar.gz root@<printer-ip>:/mnt/data/
+scp -O helixscreen-ad5m.zip root@<printer-ip>:/mnt/data/
 
 # SSH into printer
 ssh root@<printer-ip>
 
 # Extract to /root/printer_software (Klipper Mod location)
 cd /root/printer_software
-gunzip -c /mnt/data/helixscreen-ad5m-*.tar.gz | tar xf -
+unzip -q /mnt/data/helixscreen-ad5m.zip
 
 # Stop KlipperScreen
 /etc/init.d/S80klipperscreen stop 2>/dev/null || true
@@ -469,13 +527,13 @@ sed -i 's|DAEMON_DIR=.*|DAEMON_DIR="/root/printer_software/helixscreen"|' /etc/i
 /etc/init.d/S80helixscreen start
 
 # Clean up
-rm /mnt/data/helixscreen-ad5m-*.tar.gz
+rm /mnt/data/helixscreen-ad5m.zip
 ```
 
 </details>
 
 > **Note:** AD5M runs as root, so `sudo` is not needed.
-> **Note:** AD5M uses BusyBox utilities. Use `gunzip -c | tar xf -` instead of `tar -xzf`.
+> **Note:** AD5M uses BusyBox utilities. Use `unzip` to extract `.zip` archives.
 > **Note:** AD5M uses SysV init (BusyBox), not systemd.
 
 ### Step 4: Reboot
@@ -489,6 +547,72 @@ After reboot, HelixScreen will start automatically on the touchscreen.
 ### Step 5: Complete Setup
 
 Use the touchscreen to complete the setup wizard. The printer should auto-detect since it's running locally.
+
+---
+
+## Snapmaker U1 Installation
+
+> **Requires [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware).** Stock firmware does not provide SSH access. Install Extended Firmware first before proceeding.
+
+SSH into the printer:
+
+```bash
+ssh root@<printer-ip>
+# or: ssh lava@<printer-ip>
+# password: snapmaker
+```
+
+### Quick Install (Recommended)
+
+```bash
+curl -sSL https://releases.helixscreen.org/install.sh | sh
+```
+
+The installer automatically detects the Snapmaker U1 and installs to `/userdata/helixscreen/`. It configures autostart so HelixScreen launches instead of the stock UI on boot.
+
+### Manual Install
+
+If you prefer to install manually or the one-liner doesn't work on your network:
+
+**Step 1: Download the release archive**
+
+```bash
+wget https://releases.helixscreen.org/stable/helixscreen-snapmaker-u1.zip
+```
+
+**Step 2: Extract to the install directory**
+
+```bash
+mkdir -p /userdata/helixscreen && unzip -q helixscreen-snapmaker-u1.zip -d /userdata/helixscreen
+```
+
+**Step 3: Configure autostart**
+
+```bash
+bash /userdata/helixscreen/scripts/snapmaker-u1-setup-autostart.sh /userdata/helixscreen
+```
+
+This replaces the stock UI (`unisrv`) on boot with HelixScreen.
+
+**Step 4: Start HelixScreen**
+
+```bash
+killall unisrv 2>/dev/null; /userdata/helixscreen/bin/helix-launcher.sh &
+```
+
+### Reverting to Stock UI
+
+```bash
+rm -rf /userdata/helixscreen
+reboot
+```
+
+The stock UI resumes automatically when HelixScreen is not found.
+
+**Notes:**
+- Extended firmware is required — stock firmware does not provide SSH access
+- Display resolution may need manual configuration if the screen appears stretched or misaligned (see [Display Configuration](#display-configuration))
+- The stock UI can be restored at any time by removing `/userdata/helixscreen` and rebooting
 
 ---
 
@@ -788,26 +912,26 @@ curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/script
 ```bash
 # On your computer (replace vX.Y.Z with actual version):
 VERSION=vX.Y.Z  # Check latest at https://github.com/prestonbrown/helixscreen/releases/latest
-wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-k1-${VERSION}.tar.gz"
-scp helixscreen-k1-${VERSION}.tar.gz root@<printer-ip>:/usr/data/
+wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-k1.zip"
+scp helixscreen-k1.zip root@<printer-ip>:/usr/data/
 
 # On the printer (use the bundled install.sh - no need to download it again):
-/usr/data/helixscreen/install.sh --local /usr/data/helixscreen-k1-*.tar.gz --update
+/usr/data/helixscreen/install.sh --local /usr/data/helixscreen-k1.zip --update
 ```
 
 **Flashforge Adventurer 5M** (no HTTPS support - two-step process):
 ```bash
 # On your computer (replace vX.Y.Z with actual version):
 VERSION=vX.Y.Z  # Check latest at https://github.com/prestonbrown/helixscreen/releases/latest
-wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m-${VERSION}.tar.gz"
+wget "https://github.com/prestonbrown/helixscreen/releases/download/${VERSION}/helixscreen-ad5m.zip"
 # Windows users: use WSL, WinSCP (SCP protocol), or PuTTY's pscp instead of scp -O
-scp -O helixscreen-ad5m-${VERSION}.tar.gz root@<printer-ip>:/data/
+scp -O helixscreen-ad5m.zip root@<printer-ip>:/data/
 
 # On the printer (use the bundled install.sh - no need to download it again):
 # Forge-X:
-/opt/helixscreen/install.sh --local /data/helixscreen-ad5m-*.tar.gz --update
+/opt/helixscreen/install.sh --local /data/helixscreen-ad5m.zip --update
 # Klipper Mod:
-/root/printer_software/helixscreen/install.sh --local /data/helixscreen-ad5m-*.tar.gz --update
+/root/printer_software/helixscreen/install.sh --local /data/helixscreen-ad5m.zip --update
 ```
 
 This preserves your configuration and updates to the latest version.
@@ -819,7 +943,7 @@ This preserves your configuration and updates to the latest version.
 curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --update --version v1.2.0
 ```
 
-**Creality K1 / Flashforge Adventurer 5M:** Download the specific version tarball from [GitHub Releases](https://github.com/prestonbrown/helixscreen/releases), then use `--local` as shown above.
+**Creality K1 / Flashforge Adventurer 5M:** Download the specific version archive from [GitHub Releases](https://github.com/prestonbrown/helixscreen/releases), then use `--local` as shown above.
 
 ### Preserving Configuration
 

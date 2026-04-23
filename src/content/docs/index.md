@@ -13,9 +13,9 @@ Your printer's touchscreen should show you more than temperatures and a progress
 - **3D visualization** — Rotate your bed mesh with your finger. Preview G-code layers before printing. See input shaper frequency response charts right on the screen.
 - **Multi-material that works** — AFC, Happy Hare, ACE, CFS, AD5X IFS, tool changers. Six backends, tested on real hardware. Per-unit dryer controls, environment monitoring, Spoolman integration.
 - **Exclude objects** — Tap the failing part on an overhead map to exclude it mid-print. No more scrapping an entire plate for one bad object.
-- **Runs on anything** — ~15MB of RAM, no X11, no browser, no desktop environment. Directly on the framebuffer. From a Creality K1 to a Pi Zero 2 W to a random mini-ITX box with an HDMI touchscreen.
+- **Runs on anything** — ~13MB of RAM, no X11, no browser, no desktop environment. Directly on the framebuffer. From a Creality K1 to a Pi Zero 2 W to a random mini-ITX box with an HDMI touchscreen.
 - **Looks good** — 17 theme presets with a live editor, responsive layouts from 480x320 to ultrawide, GPU-accelerated blur. Light and dark modes.
-- **Smart setup** — A first-run wizard auto-detects your printer from a database of 70+ models and configures everything. 9 languages at 100% coverage.
+- **Smart setup** — A first-run wizard auto-detects your printer from a database of 70+ models and configures everything. 9 languages.
 
 ![Home Panel](../../assets/images/docs/screenshot-home-panel.png)
 
@@ -66,6 +66,9 @@ Enable Bluetooth on Raspberry Pi or BTT Pi when it's disabled for UART, or add a
 
 ### [Label Printing](/docs/guide/label-printing/)
 Print spool labels to Brother QL, Phomemo, Niimbot, or MakeID thermal printers via Network, USB, or Bluetooth. Setup, label sizes, and troubleshooting.
+
+### [Barcode Scanner](/docs/guide/barcode-scanner/)
+Set up a USB or Bluetooth barcode scanner to read Spoolman QR codes. Includes the `ClassicBondedOnly=false` fix for Bluetooth HID scanners that fail the "bonded device" check.
 
 ### [Calibration & Tuning](/docs/guide/calibration/)
 Bed mesh visualization, screws tilt adjust, input shaper resonance testing, Z-offset calibration, and PID tuning.

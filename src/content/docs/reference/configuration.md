@@ -138,7 +138,7 @@ Each printer entry contains all printer-specific settings (connection details, h
 ---
 
 > **Looking for a walkthrough of each setting?** See the detailed guides:
-> [Appearance](guide/settings/appearance.md) · [Printer](guide/settings/printer.md) · [Notifications](guide/settings/notifications.md) · [Motion](guide/settings/motion.md) · [System](guide/settings/system.md) · [LED Settings](guide/settings/led-settings.md) · [Help & About](guide/settings/help-about.md)
+> [Display & Sound](guide/settings/display-sound.md) · [Printing](guide/settings/printing.md) · [Hardware & Devices](guide/settings/hardware.md) · [Safety & Notifications](guide/settings/safety.md) · [System](guide/settings/system.md) · [LED Settings](guide/settings/led-settings.md) · [Help & About](guide/settings/help-about.md)
 
 ## General Settings
 
@@ -168,6 +168,13 @@ Each printer entry contains all printer-specific settings (connection details, h
 - `2` — **Alert**: Full-screen modal with print stats (duration, layers, filament used) and confetti for successful prints
 
 Errors always show the full alert regardless of this setting. To change this in the UI, go to **Settings > Print Complete Alert** and select from the dropdown.
+
+### `disable_sound`
+**Type:** boolean
+**Default:** `false`
+**Description:** Disable all sound output entirely. Prevents the audio backend from initializing, which avoids CPU overhead on hardware where audio drivers are present but unusable (e.g., Artillery M1 Pro). Also available as the `--no-sound` CLI flag.
+
+This is different from `sounds_enabled` — that toggle mutes playback but still initializes the audio backend. `disable_sound` prevents initialization altogether.
 
 ### `wizard_completed`
 **Type:** boolean
@@ -263,7 +270,7 @@ Located in the `theme` section:
 - `debug` - Detailed debugging information
 - `trace` - Extremely verbose, all internal operations
 
-**Note:** CLI `-v` flags override this setting (`-v`=info, `-vv`=debug, `-vvv`=trace).
+**Note:** This can also be changed at runtime via **Settings > System > Log Level** without restarting. CLI `-v` flags override this setting (`-v`=info, `-vv`=debug, `-vvv`=trace).
 
 ---
 
@@ -402,24 +409,33 @@ Located in the `input` section:
   "input": {
     "scroll_throw": 25,
     "scroll_limit": 10,
-    "jitter_threshold": 15,
+    "jitter_threshold": 5,
+    "scroll_guard": false,
+    "scroll_guard_cooldown_ms": 80,
     "touch_device": "",
     "force_calibration": false
   }
 }
 ```
 
+> **Tuning touch feel:** These four settings interact. See **[Touch Feel — Which Setting Do I Tune?](TROUBLESHOOTING.md#touch-feel--which-setting-do-i-tune)** in the troubleshooting guide for a symptom → setting map.
+
 ### `scroll_throw`
 **Type:** integer
 **Default:** `25`
-**Range:** `1` - `99`
-**Description:** Scroll momentum decay rate. Higher values = faster decay (less "throw"). Default LVGL is 10; we use 25 for better touchscreen feel.
+**Range:** `5` - `50` (UI-clamped)
+**Description:** Scroll momentum decay rate — how quickly a flicked list coasts to a stop. Higher values = faster decay (less "throw"). LVGL's native default is 10; we use 25 because touchscreens feel sluggish with long coasting. Lower it if lists feel too "sticky" at the end of a flick.
 
 ### `scroll_limit`
 **Type:** integer
 **Default:** `10`
-**Range:** `1` - `50`
-**Description:** Pixels of movement required before scrolling starts. Lower = more responsive. Matches LVGL's default of 10.
+**Range:** `1` - `20` (UI-clamped)
+**Description:** Pixels of finger movement required before a gesture is treated as a scroll instead of a tap. Below this threshold LVGL still thinks you're pressing a widget, and releasing will fire a click. Above it, the press is cancelled and scroll engages.
+
+- **Lower** = scroll engages sooner. Fixes phantom clicks that fire when scrolling a list with a short, slow swipe.
+- **Higher** = more deliberate gesture required. Reduces accidental scrolls when you meant to tap, but makes short-travel scrolls feel unresponsive.
+
+Matches LVGL's native default of 10.
 
 ### `touch_device`
 **Type:** string
@@ -429,9 +445,25 @@ Located in the `input` section:
 
 ### `jitter_threshold`
 **Type:** integer
-**Default:** `15`
+**Default:** `5`
 **Range:** `0` - `200`
-**Description:** Touch jitter filter dead zone in pixels. Suppresses small coordinate jitter from noisy touch controllers (e.g., Goodix GT9xx) that would cause taps to be misread as swipes. Set to `0` to disable. Can also be overridden with the `HELIX_TOUCH_JITTER` environment variable.
+**Description:** Touch jitter filter dead zone in pixels. Capacitive touch controllers (notably Goodix GT9xx on FlashForge displays) report 2–5 px of coordinate drift even with a stationary finger. Without filtering, that drift accumulates past `scroll_limit` and a stationary tap gets cancelled as if it were a scroll. The filter freezes reported coordinates to the initial press point while movement stays within this radius.
+
+- **Raise** if stationary taps are still being misread as swipes or scrolls on a noisy panel (typical fix: 15–25).
+- **Lower / 0** if the filter is suppressing intentional short-travel gestures.
+
+Can also be overridden with the `HELIX_TOUCH_JITTER` environment variable.
+
+### `scroll_guard`
+**Type:** boolean
+**Default:** `false` (overridden to `true` by AD5M/AD5X presets)
+**Description:** Suppresses the phantom "clicked" event some capacitive touch controllers generate when the finger lifts at the end of a scroll gesture. Common on FlashForge AD5M and AD5X displays — you scroll a list, lift your finger, and whatever button is now under where your finger was fires. When enabled, HelixScreen ignores taps for the cooldown window (default 80 ms — see `scroll_guard_cooldown_ms`) after a scroll ends. Can also be overridden with the `HELIX_SCROLL_GUARD` environment variable (`1` to enable).
+
+### `scroll_guard_cooldown_ms`
+**Type:** integer
+**Default:** `80`
+**Range:** `20` - `500`
+**Description:** How long (in milliseconds) `scroll_guard` suppresses taps after a scroll gesture ends. Only takes effect when `scroll_guard` is enabled. The default handles most capacitive controllers that re-press briefly during lift-off; if you still see phantom clicks right as you lift your finger, try raising to `150` or `200`. Going too high will swallow legitimate taps that closely follow a scroll, so raise gradually. Can also be overridden with the `HELIX_SCROLL_GUARD_COOLDOWN_MS` environment variable.
 
 ### `force_calibration`
 **Type:** boolean
@@ -1312,6 +1344,7 @@ HelixScreen accepts command-line options for overriding configuration and debugg
 | `--dark` | Use dark theme |
 | `--light` | Use light theme |
 | `--skip-splash` | Skip splash screen on startup |
+| `--no-sound` | Disable all sound output (prevents audio backend initialization) |
 
 ### Navigation Options
 
@@ -1452,6 +1485,9 @@ Environment="HELIX_TOUCH_DEVICE=/dev/input/event0"
   "input": {
     "scroll_throw": 25,
     "scroll_limit": 10,
+    "jitter_threshold": 5,
+    "scroll_guard": false,
+    "scroll_guard_cooldown_ms": 80,
     "touch_device": "",
     "force_calibration": false
   },

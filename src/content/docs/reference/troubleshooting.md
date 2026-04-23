@@ -409,11 +409,13 @@ sudo usermod -aG video $USER
 
 **Solutions:**
 
-HelixScreen auto-detects resolution from DRM and framebuffer backends. If auto-detection returns wrong values, override via command line:
+HelixScreen auto-detects resolution from DRM and framebuffer backends. If auto-detection picks the wrong resolution, override it with the `-s` flag:
 
 ```bash
-# In helixscreen.service ExecStart, add flags:
-ExecStart=/opt/helixscreen/bin/helix-launcher.sh --width 800 --height 480
+# In helixscreen.service ExecStart, add -s with a named size or WxH:
+ExecStart=/opt/helixscreen/bin/helix-launcher.sh -s large
+# or: -s 1024x600
+# Named sizes: micro, tiny, small, medium, large, xlarge
 ```
 
 Then reload:
@@ -421,6 +423,45 @@ Then reload:
 sudo systemctl daemon-reload
 sudo systemctl restart helixscreen
 ```
+
+---
+
+### Resolution stuck at the wrong size, or `-s` has no effect
+
+**Symptoms:**
+- HelixScreen shows a "Cannot set HelixScreen to selected resolution" message on startup
+- Display is locked at 800x480 (or similar) even though you passed `-s large` or `-s 1024x600`
+- System journal contains `[DRM Backend]` or `[fbdev Backend]` warnings about the requested size
+
+**Cause:** HelixScreen can only use resolutions the kernel exposes to it. If the kernel display driver is misconfigured, or if a fallback driver like `simpledrm` is active, the display is locked to whatever the bootloader programmed at power-on — HelixScreen cannot override this at runtime.
+
+**Fix on Raspberry Pi / RatOS:**
+
+1. Open the boot config:
+   ```bash
+   sudo nano /boot/firmware/config.txt
+   ```
+
+2. Make sure this line is present and not commented out:
+   ```
+   dtoverlay=vc4-kms-v3d
+   ```
+
+3. If you are using a specific HDMI mode (e.g., 1024x600), add the appropriate `hdmi_cvt` / `hdmi_group` / `hdmi_mode` lines per the Raspberry Pi HDMI documentation.
+
+4. Reboot.
+
+5. After reboot, verify the real DRM driver is now active:
+   ```bash
+   ls /sys/class/drm/
+   ```
+   You should see something like `card0-HDMI-A-1`. If you still see only `card0` and `dmesg | grep -i drm` mentions `simpledrm`, the vc4 overlay did not load — double-check `/boot/firmware/config.txt` for typos and any conflicting `dtoverlay` lines.
+
+**Check what modes the kernel knows about:**
+```bash
+cat /sys/class/drm/card0-HDMI-A-1/modes
+```
+This lists the resolutions the DRM driver will accept for the `-s` flag.
 
 ---
 
@@ -637,6 +678,24 @@ sudo usermod -aG input $USER
 
 ---
 
+### Touch Feel — Which Setting Do I Tune?
+
+Three separate settings control the feel of taps vs. scrolls. Match the symptom to the right knob before changing anything — they have different effects and tuning the wrong one makes things worse.
+
+| Symptom | What's happening | Setting to change | Direction |
+|---|---|---|---|
+| Stationary taps register as swipes/scrolls | Touch controller drifts a few pixels while finger is still, crossing the scroll threshold | `jitter_threshold` | **Raise** (e.g., 15–25) |
+| You scroll a list and a button in it fires mid-gesture | Finger released before moving far enough to commit to scroll, so the press becomes a click | `scroll_limit` | **Lower** (e.g., 5) |
+| You scroll, lift your finger, and a button fires right as you lift | Touch controller reports release→re-press on lift-off | `scroll_guard` | **Set to `true`** |
+| Lists feel sluggish — long coast after a flick | Scroll momentum decays too slowly | `scroll_throw` | **Raise** (e.g., 35) |
+| Short flicks never travel far enough — list barely moves | Momentum decays too fast | `scroll_throw` | **Lower** (e.g., 15) |
+
+All four live under `input` in `/opt/helixscreen/config/settings.json` — see [CONFIGURATION.md § Input Configuration](CONFIGURATION.md#input) for full reference.
+
+FlashForge AD5M and AD5X presets ship with `scroll_guard: true` out of the box. Other platforms default to `false`.
+
+---
+
 ### Taps Register as Swipes
 
 **Symptoms:**
@@ -646,7 +705,7 @@ sudo usermod -aG input $USER
 
 **Cause:** Noisy touch controller (common with Goodix GT9xx and similar capacitive controllers) reports jittery coordinates even when the finger is stationary. The small coordinate changes exceed LVGL's scroll detection threshold.
 
-**Solution:** HelixScreen includes a jitter filter (enabled by default, 15px dead zone) that suppresses this noise. If taps still register as swipes, increase the threshold:
+**Solution:** HelixScreen includes a jitter filter (enabled by default, 5 px dead zone) that suppresses this noise. If taps still register as swipes on your panel, raise the threshold:
 
 ```json
 // /opt/helixscreen/config/settings.json
@@ -662,7 +721,65 @@ Or test temporarily with an environment variable:
 HELIX_TOUCH_JITTER=25 helix-screen
 ```
 
-Set to `0` to disable the filter if it interferes with intentional touch gestures.
+Set to `0` to disable the filter if it interferes with intentional short-travel gestures.
+
+### Unintended Clicks While Scrolling
+
+**Symptoms:**
+- You drag a list to scroll and a button in the middle of it fires instead
+- The list jumps a little, but the click on whatever was under your finger still goes through
+- Happens with short or slow swipes more than long, fast flicks
+
+**Cause:** LVGL treats the first few pixels of finger movement as a "press" on the widget under your finger. Only after you've moved past `scroll_limit` pixels does it cancel the press and commit to a scroll. If you release before reaching that threshold, the press becomes a click.
+
+**Solution:** Lower `scroll_limit` so scrolling engages sooner.
+
+```json
+// /opt/helixscreen/config/settings.json
+{
+  "input": {
+    "scroll_limit": 5
+  }
+}
+```
+
+Default is 10; the UI accepts values from 1 to 20. Going too low will make intentional taps feel twitchy — any slight finger wobble will start a scroll — so settle on the lowest value that feels correct, not the smallest possible.
+
+Note that this is a separate problem from the phantom click *after* a scroll (see below) and from taps being misread as swipes (see above).
+
+### Accidental Button Presses After Scrolling
+
+**Symptoms:**
+- After scrolling a list, a button press fires when you lift your finger
+- Unwanted actions triggered at the end of a scroll gesture
+
+**Cause:** Some capacitive touch controllers generate a phantom "clicked" event when the finger is released after scrolling. Common on FlashForge AD5M/AD5X displays.
+
+**Solution:** Enable the scroll guard, which ignores taps for 80 ms after a scroll ends:
+
+```json
+// /opt/helixscreen/config/settings.json
+{
+  "input": {
+    "scroll_guard": true
+  }
+}
+```
+
+This is enabled by default on AD5M and AD5X via their hardware presets. If you see this on other hardware, enable it manually (or test with `HELIX_SCROLL_GUARD=1 helix-screen`).
+
+**Still getting phantom clicks with the guard enabled?** The 80 ms cooldown works for most capacitive controllers but some need longer. Raise `scroll_guard_cooldown_ms` (range 20–500):
+
+```json
+{
+  "input": {
+    "scroll_guard": true,
+    "scroll_guard_cooldown_ms": 150
+  }
+}
+```
+
+Or test temporarily with `HELIX_SCROLL_GUARD_COOLDOWN_MS=150 helix-screen`. Try 120, 150, then 200; stop at the smallest value that eliminates the phantom tap, since going higher will start swallowing legitimate taps that closely follow a scroll.
 
 ---
 
@@ -1271,8 +1388,8 @@ scp -O localfile root@<printer-ip>:/path/
 # Use IP address, not hostname (mDNS may not resolve)
 ssh root@192.168.1.67
 
-# BusyBox tar doesn't support -z flag
-gunzip -c archive.tar.gz | tar xf -
+# Extract zip archives with unzip
+unzip archive.zip
 
 # Alternative: use rsync if available
 rsync -avz localfile root@<printer-ip>:/path/
@@ -1288,7 +1405,7 @@ Windows 11's built-in OpenSSH does not support the `-O` flag. Use one of these a
 
 3. **PuTTY pscp** (free command-line) — Download from [putty.org](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html). Use `pscp` instead of `scp -O`:
    ```
-   pscp helixscreen-ad5m-vX.Y.Z.tar.gz root@<printer-ip>:/data/
+   pscp helixscreen-ad5m.zip root@<printer-ip>:/data/
    ```
 
 ### ForgeX not installed
@@ -1325,7 +1442,9 @@ When reporting issues, gather this information. **Most importantly, enable debug
 
 ### Enabling Debug Logging
 
-By default, HelixScreen only logs warnings and errors. To capture useful diagnostic information, you need to temporarily enable debug-level logging (`-vv`), reproduce the problem, then collect the logs.
+By default, HelixScreen only logs warnings and errors. To capture useful diagnostic information, you need to temporarily enable debug-level logging, reproduce the problem, then collect the logs.
+
+**Quickest method:** Go to **Settings > System > Log Level** and select **Debug**. This takes effect immediately with no restart needed. Remember to set it back to **Warn** when done.
 
 **Verbosity levels:**
 | Flag | Level | What it captures |

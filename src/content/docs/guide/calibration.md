@@ -284,7 +284,7 @@ If you are running Kalico firmware and have [beta features enabled](/docs/guide/
 ## See Also
 
 - [Motion & Positioning](/docs/guide/motion/) — Jog controls used during manual calibration
-- [Settings: Motion](/docs/guide/settings/motion/) — Machine limits and Z movement configuration
+- [Settings: Printing](/docs/guide/settings/printing/) — Machine limits and Z movement configuration
 - [Printing](/docs/guide/printing/) — Z-offset fine-tuning during active prints
 
 ---
