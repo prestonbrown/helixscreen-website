@@ -1,0 +1,80 @@
+name: Deploy Docs
+
+# Triggered by:
+#   1. repository_dispatch from helixscreen when a release is published
+#      (event type: helixscreen-release, payload: { ref: "vX.Y.Z" })
+#   2. workflow_dispatch — manual run, optionally specify a helixscreen ref
+#   3. push to main — website-only changes (landing pages, theme, sync script)
+#
+# Required repo secrets:
+#   CLOUDFLARE_API_TOKEN  — Pages:Edit permission
+#   CLOUDFLARE_ACCOUNT_ID — from Cloudflare dashboard
+
+on:
+  repository_dispatch:
+    types: [helixscreen-release]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "helixscreen git ref to sync docs from"
+        required: false
+        default: main
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout website repo
+        uses: actions/checkout@v4
+
+      - name: Resolve helixscreen ref
+        id: ref
+        run: |
+          case "${{ github.event_name }}" in
+            repository_dispatch) REF="${{ github.event.client_payload.ref }}" ;;
+            workflow_dispatch)   REF="${{ inputs.ref }}" ;;
+            *)                   REF="main" ;;
+          esac
+          [ -z "$REF" ] && REF="main"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "Using helixscreen ref: $REF"
+
+      - name: Checkout helixscreen (docs source)
+        uses: actions/checkout@v4
+        with:
+          repository: prestonbrown/helixscreen
+          ref: ${{ steps.ref.outputs.ref }}
+          path: helixscreen-src
+
+      - name: Expose helixscreen at ../helixscreen
+        # sync-docs.sh reads from $PROJECT_ROOT/../helixscreen/docs/user.
+        # actions/checkout refuses paths outside the workspace, so we symlink.
+        run: ln -s "$GITHUB_WORKSPACE/helixscreen-src" "$GITHUB_WORKSPACE/../helixscreen"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site (prebuild runs sync-docs.sh)
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=helixscreen-website --branch=main
