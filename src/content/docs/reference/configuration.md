@@ -292,13 +292,12 @@ Located in the `display` section:
     "gcode_3d_enabled": true,
     "bed_mesh_render_mode": 0,
     "bed_mesh_show_zero_plane": true,
-    "printer_image": "",
-    "calibration": {
-      "valid": false
-    }
+    "printer_image": ""
   }
 }
 ```
+
+> **Touch calibration data lives under `input.calibration`, not `display.calibration`.** See the [Input Configuration](#input) section below and the [Touch Calibration Guide](/docs/guide/touch-calibration/). Older configs that placed it under `display` are automatically migrated on first load.
 
 ### `animations_enabled`
 **Type:** boolean
@@ -413,12 +412,23 @@ Located in the `input` section:
     "scroll_guard": false,
     "scroll_guard_cooldown_ms": 80,
     "touch_device": "",
-    "force_calibration": false
+    "force_calibration": false,
+    "calibration": {
+      "valid": false,
+      "a": 1.0,
+      "b": 0.0,
+      "c": 0.0,
+      "d": 0.0,
+      "e": 1.0,
+      "f": 0.0
+    }
   }
 }
 ```
 
 > **Tuning touch feel:** These four settings interact. See **[Touch Feel — Which Setting Do I Tune?](TROUBLESHOOTING.md#touch-feel--which-setting-do-i-tune)** in the troubleshooting guide for a symptom → setting map.
+>
+> **Touch calibration** (`input.calibration`) is set automatically by the wizard — don't edit the `a`–`f` coefficients by hand. See the [Touch Calibration Guide](/docs/guide/touch-calibration/) for the full reference.
 
 ### `scroll_throw`
 **Type:** integer
@@ -1475,11 +1485,7 @@ Environment="HELIX_TOUCH_DEVICE=/dev/input/event0"
     "gcode_3d_enabled": true,
     "bed_mesh_render_mode": 0,
     "bed_mesh_show_zero_plane": true,
-    "printer_image": "",
-    "calibration": {
-      "valid": false,
-      "swap_axes": false
-    }
+    "printer_image": ""
   },
 
   "input": {
@@ -1489,7 +1495,16 @@ Environment="HELIX_TOUCH_DEVICE=/dev/input/event0"
     "scroll_guard": false,
     "scroll_guard_cooldown_ms": 80,
     "touch_device": "",
-    "force_calibration": false
+    "force_calibration": false,
+    "calibration": {
+      "valid": false,
+      "a": 1.0,
+      "b": 0.0,
+      "c": 0.0,
+      "d": 0.0,
+      "e": 1.0,
+      "f": 0.0
+    }
   },
 
   "output": {

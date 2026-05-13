@@ -233,7 +233,6 @@ iw wlan0 set power_save off
 
 **Increase Moonraker timeouts:**
 ```json
-// /opt/helixscreen/config/settings.json
 {
   "printer": {
     "moonraker_connection_timeout_ms": 15000,
@@ -293,7 +292,7 @@ HelixScreen needs permission (via polkit rules) to manage WiFi through NetworkMa
 
 **Re-run the installer** (recommended — installs correct polkit rules):
 ```bash
-curl -fsSL https://install.helixscreen.org | bash
+curl -fsSL https://releases.helixscreen.org/install.sh | bash
 ```
 
 **Verify polkit rules are installed:**
@@ -390,7 +389,6 @@ sudo usermod -aG video $USER
 
 **For DRM displays, specify device:**
 ```json
-// /opt/helixscreen/config/settings.json
 {
   "display": {
     "drm_device": "/dev/dri/card1"
@@ -581,6 +579,50 @@ After restart, flags on the language selection screen should show correct colors
 
 ---
 
+### Random solid colors during screen sleep (AD5X)
+
+**Symptoms:**
+- After the screen goes to sleep (idle timeout), the display shows a solid red, green, or blue fill instead of a black/off screen
+- Color may differ each time the screen sleeps
+- Touching the screen wakes it normally and the UI returns fine
+- Only affects the FlashForge Adventurer 5X
+
+**Cause:**
+A driver-level quirk in the AD5X's Allwinner display pipeline. When HelixScreen tells the screen to sleep, the display controller on some AD5X units emits a solid primary-color fill instead of a blank frame. This is not a HelixScreen rendering bug — it does not affect printing, connectivity, or anything else. We have not yet been able to reproduce it reliably on our hardware, so there is no code fix available today.
+
+**Workaround 1 — Disable screen sleep (simplest):**
+
+1. Tap the gear icon to open **Settings**
+2. Open **Display**
+3. Set **Sleep** to **Never**
+
+The screen will stay on continuously. Power the touchscreen off at the wall if you want it dark when not in use.
+
+**Workaround 2 — Keep backlight on during sleep (preserves sleep logic):**
+
+This keeps the normal sleep timeout but prevents the backlight from being cut, which avoids the color fill. The screen stays lit showing the last-drawn frame.
+
+1. SSH into your printer (or open a shell on the AD5X directly)
+2. Edit `~/helixscreen/config/helixconfig.json`
+3. Find the `"display"` section and set:
+
+   ```json
+   "sleep_backlight_off": false
+   ```
+
+4. Save the file and restart HelixScreen:
+
+   ```bash
+   sudo systemctl restart helixscreen
+   ```
+
+Caveat: the panel stays fully lit 24/7 with this option. If long-term backlight wear is a concern, prefer Workaround 1 and manually power off the screen when not needed.
+
+**Helping us fix it:**
+If you are experiencing this and are willing to help, please send a debug bundle from **Settings → Help & About → Send Debug Bundle**. Include a note that mentions the sleep color issue so we can correlate configs and logs.
+
+---
+
 ### 5GHz WiFi networks not showing
 
 **Symptoms:**
@@ -659,8 +701,10 @@ sudo evtest /dev/input/event0
 ```
 
 **Specify touch device in config:**
+
+Edit `settings.json` in your install's `config/` directory (see [Config File Locations](guide/touch-calibration.md#config-file-locations) for the path on your platform). **Stop the service before editing** so the daemon doesn't overwrite your changes.
+
 ```json
-// /opt/helixscreen/config/settings.json
 {
   "input": {
     "touch_device": "/dev/input/event1"
@@ -690,7 +734,7 @@ Three separate settings control the feel of taps vs. scrolls. Match the symptom 
 | Lists feel sluggish — long coast after a flick | Scroll momentum decays too slowly | `scroll_throw` | **Raise** (e.g., 35) |
 | Short flicks never travel far enough — list barely moves | Momentum decays too fast | `scroll_throw` | **Lower** (e.g., 15) |
 
-All four live under `input` in `/opt/helixscreen/config/settings.json` — see [CONFIGURATION.md § Input Configuration](CONFIGURATION.md#input) for full reference.
+All four live under `input` in `settings.json` (path varies by platform — see [Config File Locations](guide/touch-calibration.md#config-file-locations)). See [CONFIGURATION.md § Input Configuration](CONFIGURATION.md#input) for the full reference.
 
 FlashForge AD5M and AD5X presets ship with `scroll_guard: true` out of the box. Other platforms default to `false`.
 
@@ -708,7 +752,6 @@ FlashForge AD5M and AD5X presets ship with `scroll_guard: true` out of the box. 
 **Solution:** HelixScreen includes a jitter filter (enabled by default, 5 px dead zone) that suppresses this noise. If taps still register as swipes on your panel, raise the threshold:
 
 ```json
-// /opt/helixscreen/config/settings.json
 {
   "input": {
     "jitter_threshold": 25
@@ -735,7 +778,6 @@ Set to `0` to disable the filter if it interferes with intentional short-travel 
 **Solution:** Lower `scroll_limit` so scrolling engages sooner.
 
 ```json
-// /opt/helixscreen/config/settings.json
 {
   "input": {
     "scroll_limit": 5
@@ -758,7 +800,6 @@ Note that this is a separate problem from the phantom click *after* a scroll (se
 **Solution:** Enable the scroll guard, which ignores taps for 80 ms after a scroll ends:
 
 ```json
-// /opt/helixscreen/config/settings.json
 {
   "input": {
     "scroll_guard": true
@@ -792,17 +833,19 @@ If taps are landing in the wrong place on screen:
    helix-screen --debug-touches
    ```
    This draws a ripple effect at each touch point, making it easy to see if touches are offset.
-2. **Recalibrate:** Go to **Settings > System > Touch Calibration**
-3. **If the option isn't visible:** Your screen may not normally need calibration. SSH in and run:
+2. **Recalibrate from the UI:** Go to **Settings > System > Touch Calibration**.
+3. **If the option isn't visible:** Your screen may not normally need calibration. SSH in, **stop the service**, then run:
    ```bash
+   sudo systemctl stop helixscreen
    helix-screen --calibrate-touch
+   # When done, start the service again:
+   sudo systemctl start helixscreen
    ```
-4. **If the screen is too broken to navigate:** SSH in and use any of these methods:
-   - Run `helix-screen --calibrate-touch`
-   - Set the environment variable: `HELIX_TOUCH_CALIBRATE=1` in your `helixscreen.env` and restart
-   - Edit your config file: set `"force_calibration": true` in the `input` section and restart HelixScreen
+4. **If the screen is too broken to navigate (recommended path):** SSH in and set `HELIX_TOUCH_CALIBRATE=1` in your `helixscreen.env`, then restart the service. Remove the line once calibration succeeds — the env var does not self-clear.
 
-See the full [Touch Calibration Guide](/docs/guide/touch-calibration/) for details.
+For the full menu of options (env var, config-file `force_calibration`, manual CLI, factory reset) plus exact config-file paths for every platform, see the [Touch Calibration Guide § Forcing Recalibration](guide/touch-calibration.md#forcing-recalibration).
+
+> **Don't hand-edit `settings.json` while the service is running** — the daemon rewrites the file periodically and your edits can be clobbered. Stop the service first, edit, then start it again.
 
 ---
 
@@ -1170,7 +1213,7 @@ ps aux | grep helix-screen
 | Too many G-code files | Large directories with thumbnails use more RAM |
 | Other processes hogging CPU | Check `top` for culprits |
 | Swapping to SD card | Reduce memory usage or add swap to USB |
-| Hardware issues | Settings → Hardware Health - check for problems |
+| Hardware issues | Settings → Hardware & Devices → Hardware Issues - check for problems |
 
 **To disable verbose logging:**
 
@@ -1280,9 +1323,13 @@ dmesg | grep -i "read.only\|error\|fault"
 
 **Try manual edit to verify:**
 ```bash
-sudo nano /opt/helixscreen/config/settings.json
-# Make change, save, restart
-sudo systemctl restart helixscreen
+# Stop the service first so it doesn't overwrite your edit:
+sudo systemctl stop helixscreen
+# Edit settings.json — path varies by platform; see:
+#   docs/user/guide/touch-calibration.md § Config File Locations
+sudo nano <path-to-your-settings.json>
+# Save, then start the service:
+sudo systemctl start helixscreen
 # Check if change persisted
 ```
 

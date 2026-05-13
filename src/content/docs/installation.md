@@ -80,8 +80,7 @@ After installation, the setup wizard will guide you through initial configuratio
 This covers any Klipper printer with a Raspberry Pi running MainsailOS (or similar), including SOVOL SV06, SOVOL SV08, Voron, RatRig, and other printers where Klipper runs on a separate Pi. Also works on x86 Linux PCs (e.g., mini ITX) running Debian/Ubuntu with Klipper and a touchscreen.
 
 - **Hardware:**
-  - Raspberry Pi 3, 4, or 5 (Pi 3 is minimum, Pi 4/5 recommended)
-  - Raspberry Pi Zero 2 W also supported
+  - Raspberry Pi 3, 4, or 5 — any of them work. Pi 3 / Zero 2 W is plenty for HelixScreen; Pi 4/5 only matters if your overall Klipper setup wants more headroom for cameras, slicing, etc.
   - Both **64-bit** and **32-bit** Raspberry Pi OS / MainsailOS supported
   - Touchscreen display (HDMI, DSI, or SPI)
   - Network connection (Ethernet or WiFi)
@@ -119,7 +118,7 @@ The installer automatically detects which firmware you're running and configures
 | **Forge-X** | GuppyScreen | `/opt/helixscreen/` | `S90helixscreen` |
 | **Klipper Mod** | KlipperScreen | `/root/printer_software/helixscreen/` | `S80helixscreen` |
 
-**Memory Savings:** On Klipper Mod, HelixScreen (~13MB) replaces KlipperScreen (~50MB), freeing ~37MB RAM on the memory-constrained AD5M.
+**Memory Savings:** On Klipper Mod, HelixScreen (~15MB) replaces KlipperScreen (~50MB), freeing ~35MB RAM on the memory-constrained AD5M.
 
 #### Forge-X Prerequisites
 
@@ -226,6 +225,25 @@ wget -O - http://dl.helixscreen.org/install.sh | sh
 - ZMOD manages installation and updates via Moonraker update manager
 - **Auto-detection:** HelixScreen automatically detects ZMOD firmware (by recognizing ZMOD-specific Klipper device names) and applies ZMOD-optimized presets for display, input, and fan configuration. No manual configuration needed.
 - IFS (4-channel filament system) supported — see [Filament Management](/docs/guide/filament/)
+
+#### Manual installs and updates (advanced)
+
+Most users never need this — ZMOD handles installs and updates through Moonraker's update manager and that path "just works." The notes below apply only if you're piping the installer yourself for a specific version, a `--local` zip, troubleshooting, or `--uninstall`.
+
+ZMOD installs HelixScreen into a chroot rooted at `/usr/data/.mod/.zmod/`. When you SSH into the printer you land in the host filesystem, *not* the chroot — so a plain `curl … | sh` writes into the squashfs base view that HelixScreen never sees. The installer detects this and refuses to run with a friendly message; the fix is to enter the chroot first:
+
+```bash
+ssh root@<printer-ip>
+chroot /usr/data/.mod/.zmod
+# now you're in the same view HelixScreen runs from — re-run your command:
+curl -fsSL https://get.helixscreen.org | sh
+# or:
+sh /tmp/install.sh --local /tmp/helixscreen-ad5x.zip
+sh /tmp/install.sh --update
+sh /tmp/install.sh --uninstall
+```
+
+The same applies to the uninstaller — run it from inside the chroot.
 
 ### Elegoo Centauri Carbon
 
