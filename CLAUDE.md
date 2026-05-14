@@ -8,7 +8,7 @@ Astro + Starlight documentation site for [helixscreen.org](https://helixscreen.o
 - **Styling:** Tailwind CSS v4, custom fonts (Space Grotesk headings, IBM Plex Sans body, IBM Plex Mono code)
 - **Theme:** Forced dark mode only (no light toggle) via `ForceDarkTheme.astro` component
 - **Search:** Pagefind (built-in with Starlight, indexes all pages at build time)
-- **Hosting:** Cloudflare Pages (manual deploy, NOT auto-deploy on push)
+- **Hosting:** Cloudflare Pages, deployed by `.github/workflows/deploy.yml` (auto-deploys on push to main, on `repository_dispatch` from helixscreen releases, or via `workflow_dispatch`)
 
 ## Source of Truth
 
@@ -85,25 +85,35 @@ npx astro build
 **Cloudflare Pages project:** `helixscreen-website`
 **Domains:** helixscreen.org, www.helixscreen.org, helixscreen-website.pages.dev
 
+Deploys are automated via `.github/workflows/deploy.yml`. Triggers:
+
+| Trigger | When |
+|---|---|
+| `push` to `main` | Every commit to this repo |
+| `repository_dispatch` (event `helixscreen-release`) | Stable release tag pushed to helixscreen (`notify-website` job in helixscreen's `release.yml`) |
+| `workflow_dispatch` | Manual run from the Actions tab — optionally pin a specific helixscreen ref |
+
+Required secrets on this repo: `CLOUDFLARE_API_TOKEN` (Pages:Edit) and `CLOUDFLARE_ACCOUNT_ID`.
+
+### Manual deploy (escape hatch)
+
+If CI is broken or you need to push a hotfix immediately:
+
 ```bash
 npx wrangler pages deploy dist --project-name helixscreen-website
 ```
 
-Requires Cloudflare authentication (wrangler login).
+Requires a local `wrangler login`.
 
-## Full Update Workflow
+## Full Update Workflow (typical)
 
 ```bash
 # 1. Edit docs in helixscreen repo (../helixscreen/docs/user/)
-# 2. Commit and push helixscreen repo
+# 2. Commit and push helixscreen repo — these changes appear on helixscreen.org
+#    on the next stable release tag (via repository_dispatch).
 
-# 3. Sync, build, and deploy
-cd /path/to/helixscreen-website
-bash scripts/sync-docs.sh        # or just 'npm run build' (runs sync as prebuild)
-npm run build                     # builds static site to dist/
-git add -A && git commit -m "docs: sync updated user documentation"
-git push
-npx wrangler pages deploy dist --project-name helixscreen-website
+# To preview without waiting for a release, push this repo or trigger manually:
+gh workflow run deploy.yml -R prestonbrown/helixscreen-website
 ```
 
 ## Other Cloudflare Projects
