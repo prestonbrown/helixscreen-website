@@ -76,11 +76,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          WRANGLER_LOG: debug
         run: |
-          # Sanity-check that env vars are non-empty (length only — no secret echo).
-          echo "API token length: ${#CLOUDFLARE_API_TOKEN}"
-          echo "Account id length: ${#CLOUDFLARE_ACCOUNT_ID}"
           npx wrangler@4 pages deploy dist \
             --project-name=helixscreen-website \
             --branch=main \
