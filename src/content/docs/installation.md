@@ -247,7 +247,7 @@ The same applies to the uninstaller — run it from inside the chroot.
 
 ### Elegoo Centauri Carbon
 
-> **Tested and working.** Prebuilt binaries ship in releases and the installer has auto-detection support. Requires the community [OpenCentauri COSMOS firmware](https://docs.opencentauri.cc/klipper-conversion/cosmos/) — stock Elegoo firmware is not supported (no SSH, no Klipper, no Moonraker).
+> **Tested and working.** Prebuilt binaries ship in releases and the installer has auto-detection support. Requires the community [OpenCentauri COSMOS firmware](https://docs.opencentauri.cc/klipper-conversion/cosmos/cosmos/) — stock Elegoo firmware is not supported (no SSH, no Klipper, no Moonraker).
 
 - **Hardware:**
   - Elegoo Centauri Carbon (4.3" 480×272 touchscreen, Allwinner R528, armv7l)
@@ -839,20 +839,25 @@ sudo journalctl -u helixscreen -f
 *Forge-X:*
 ```bash
 /etc/init.d/S90helixscreen start|stop|restart|status
-cat /tmp/helixscreen.log  # View logs
+tail -100 /opt/helixscreen/logs/launcher.log       # launcher / crash capture
+grep helix-screen /var/log/messages | tail -100    # structured app log
 ```
 
 *Klipper Mod:*
 ```bash
 /etc/init.d/S80helixscreen start|stop|restart|status
-cat /tmp/helixscreen.log  # View logs
+tail -100 /opt/helixscreen/logs/launcher.log
+grep helix-screen /var/log/messages | tail -100
 ```
 
-**K1/Simple AF (SysV init):**
+**K1/Simple AF (SysV init, BusyBox syslog in RAM):**
 ```bash
 /etc/init.d/S99helixscreen start|stop|restart|status
-cat /tmp/helixscreen.log  # View logs
+tail -100 /usr/data/helixscreen/logs/launcher.log    # launcher / crash capture
+logread | grep helix-screen | tail -100              # structured app log
 ```
+
+> If `launcher.log` doesn't exist, you're on a pre-v0.99.62 install; the log lived at `/tmp/helixscreen.log` then.
 
 ### Disabling Other UIs
 
@@ -1134,13 +1139,24 @@ sudo journalctl -u helixscreen -f
 sudo journalctl -u helixscreen -p err
 ```
 
-**AD5M / K1 (SysV init):**
-```bash
-# View log file
-cat /tmp/helixscreen.log
+**AD5M / K1 / K2 / AD5X / CC1 / Snapmaker U1 (SysV init):**
 
-# Follow live logs
-tail -f /tmp/helixscreen.log
+There are two log streams; collect both when reporting an issue.
+
+```bash
+# 1) Structured app log — where to look depends on your platform's syslog:
+#    - BusyBox in-memory syslog (K1, K2, CC1, AD5X):
+logread | grep helix-screen | tail -100
+#    - Persistent /var/log/messages (AD5M, Snapmaker U1):
+grep helix-screen /var/log/messages | tail -100
+
+# 2) Launcher / supervisor capture (startup, crash output) — path varies:
+#    - AD5M:           /opt/helixscreen/logs/launcher.log
+#    - K1 / K1C / K2 / AD5X: /usr/data/helixscreen/logs/launcher.log
+#    - Snapmaker U1:   /var/log/helixscreen/launcher.log
+#    - CC1 (COSMOS):   /user-resource/helixscreen/logs/launcher.log
+#    - Pre-v0.99.62 installs (legacy): /tmp/helixscreen.log
+tail -100 <path>
 ```
 
 ### Common Issues

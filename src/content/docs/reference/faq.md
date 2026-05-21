@@ -34,13 +34,13 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 | Voron 0.1, 2.4, Trident | **Tested** | Primary development platforms |
 | Doron Velta / RatRig V-Core | **Tested** | |
 | FlashForge AD5M / 5M Pro | **Tested** | Requires Forge-X or Klipper Mod firmware |
-| QIDI Q2, Plus 4, Max 4 | **Supported** | Stock firmware works (runs standard Moonraker); community firmware like FreeDi or OpenQIDI also supported |
+| QIDI Q2, Max 4 | **Supported** | Stock firmware works (runs standard Moonraker); community firmware like FreeDi or FreeQIDI also supported. Plus 4 uses a TJC serial display and is not supported for on-device install — only remote control via Moonraker. |
 | Creality K1 / K1C / K1 Max / K1 SE | **Supported** | Requires rooting or Guilouz firmware |
 | Creality K2 Max / K2 Plus | **Tested** | Runs natively with CFS support |
 | Creality Sonic Pad | **Supported** | 32-bit ARM, dedicated build |
 | FlashForge AD5X | **Tested** | IFS filament system integrated |
 | SOVOL SV06 / SV08 | **Tested** | Community reports welcome |
-| Elegoo Centauri Carbon 1 | **Tested** | Requires [OpenCentauri COSMOS](https://docs.opencentauri.cc/klipper-conversion/cosmos/) firmware; ships with factory white-balance calibration |
+| Elegoo Centauri Carbon 1 | **Tested** | Requires [OpenCentauri COSMOS](https://docs.opencentauri.cc/klipper-conversion/cosmos/cosmos/) firmware; ships with factory white-balance calibration |
 | Snapmaker U1 (SnapSwap toolchanger) | **Tested** | Native four-head support with RFID spool recognition; extended firmware required |
 | Artillery M1 Pro | **Tested** | |
 | Zero G Mercury / Nebula / Hydra | **Tested** | Multiple variants supported |
@@ -493,14 +493,14 @@ Open a GitHub issue with the "enhancement" label, or suggest it in the [Discord]
 
 **Easiest method:** Go to **Settings > System > Log Level** and select **Debug** from the dropdown. The change takes effect immediately — no restart needed. Set it back to **Warn** when you're done.
 
-**Alternative (via config file):** Add `HELIX_LOG_LEVEL=debug` to your `helixscreen.env` file and restart:
+**Alternative (via config file):** Add `HELIX_LOG_LEVEL=debug` to your `helixscreen.env` file and restart. On Klipper-based printers the canonical path is in your `printer_data` config dir (the same place where you edit `printer.cfg` from Mainsail/Fluidd):
 
 ```bash
-# MainsailOS / Pi
-echo 'HELIX_LOG_LEVEL=debug' >> ~/helixscreen/config/helixscreen.env
+# MainsailOS / Pi (Klipper convention)
+echo 'HELIX_LOG_LEVEL=debug' >> ~/printer_data/config/helixscreen/helixscreen.env
 sudo systemctl restart helixscreen
 
-# AD5M (Forge-X)
+# AD5M (Forge-X) — install dir is symlinked to printer_data convention
 echo 'HELIX_LOG_LEVEL=debug' >> /opt/helixscreen/config/helixscreen.env
 /etc/init.d/S90helixscreen restart
 ```
@@ -509,15 +509,23 @@ Available levels: `warn` (default), `info`, `debug`, `trace`. **Set back to Warn
 
 ### Where are the logs?
 
-```bash
-# systemd journal (MainsailOS)
-sudo journalctl -u helixscreen -f
+The app produces **two log streams**: a structured app log (recommended starting point), and a smaller launcher/crash capture file. Where they live depends on the platform.
 
-# If using file logging
-cat /var/log/helix-screen.log
-# or
-cat ~/.local/share/helix-screen/helix.log
+```bash
+# Structured app log
+sudo journalctl -u helixscreen -f          # MainsailOS / x86 / any systemd Pi-like setup
+grep helix-screen /var/log/messages         # AD5M, Snapmaker U1 (persistent syslog)
+logread | grep helix-screen                 # K1 / K1C / K2 / CC1 / AD5X (BusyBox in-RAM)
+
+# Launcher / crash capture (SysV platforms only — systemd platforms put this in the journal)
+tail -100 /opt/helixscreen/logs/launcher.log              # AD5M
+tail -100 /usr/data/helixscreen/logs/launcher.log         # K1 / K1C / K2 / AD5X
+tail -100 /var/log/helixscreen/launcher.log               # Snapmaker U1
+tail -100 /user-resource/helixscreen/logs/launcher.log    # CC1 (COSMOS)
+tail -100 /tmp/helixscreen.log                            # pre-v0.99.62 fallback
 ```
+
+For a complete map of log locations and how they're wired up, see the [Logging](../devel/LOGGING.md#log-destinations--retrieval) developer doc.
 
 ---
 

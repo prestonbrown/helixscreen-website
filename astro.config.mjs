@@ -79,6 +79,60 @@ export default defineConfig({
             { label: 'Telemetry', slug: 'legal/telemetry' },
           ],
         },
+        {
+          label: 'Developer Docs',
+          collapsed: true,
+          items: [
+            { label: 'Overview', slug: 'dev' },
+            {
+              label: 'Onboarding',
+              items: [
+                { label: 'Development Setup', slug: 'dev/onboarding/development' },
+                { label: 'Build System', slug: 'dev/onboarding/build-system' },
+                { label: 'Quick Reference', slug: 'dev/onboarding/quick-reference' },
+                { label: 'Your First Contribution', slug: 'dev/onboarding/first-contribution' },
+                { label: 'Contributor Gotchas', slug: 'dev/onboarding/gotchas' },
+              ],
+            },
+            {
+              label: 'Contributing',
+              items: [
+                { label: 'UI Contributor Guide', slug: 'dev/contributing/ui' },
+                { label: 'Theme Contributor Guide', slug: 'dev/contributing/themes' },
+                { label: 'Translation Contributor Guide', slug: 'dev/contributing/translations' },
+                { label: 'Plugin Development', slug: 'dev/contributing/plugins' },
+                { label: 'Copyright Headers', slug: 'dev/contributing/copyright' },
+              ],
+            },
+            {
+              label: 'Reference',
+              items: [
+                { label: 'LVGL9 XML Guide', slug: 'dev/reference/xml-guide' },
+                { label: 'Modal System', slug: 'dev/reference/modals' },
+                { label: 'Logging', slug: 'dev/reference/logging' },
+                { label: 'Testing', slug: 'dev/reference/testing' },
+              ],
+            },
+            {
+              label: 'Printer Platforms',
+              items: [
+                { label: 'Creality K1 Series', slug: 'dev/printers/creality-k1' },
+                { label: 'Creality K2 Series', slug: 'dev/printers/creality-k2' },
+                { label: 'FlashForge Adventurer 5X', slug: 'dev/printers/flashforge-ad5x' },
+                { label: 'QIDI Printers', slug: 'dev/printers/qidi' },
+                { label: 'Snapmaker U1', slug: 'dev/printers/snapmaker-u1' },
+                { label: 'AD5M Klipper Mod Variant', slug: 'dev/printers/ad5m-kmod' },
+              ],
+            },
+            {
+              label: 'Process',
+              items: [
+                { label: 'Release Process', slug: 'dev/process/release' },
+                { label: 'Installer', slug: 'dev/process/installer' },
+              ],
+            },
+          ],
+        },
       ],
     }),
   ],
