@@ -139,3 +139,24 @@
 .animate-on-scroll.delay-1 { animation-delay: 0.1s; }
 .animate-on-scroll.delay-2 { animation-delay: 0.2s; }
 .animate-on-scroll.delay-3 { animation-delay: 0.3s; }
+
+/* ── Docs search overlay (Pagefind widget) ── */
+/* Theme Pagefind's UI to the marketing dark look via its CSS variables,
+   reusing the existing design tokens. */
+#pagefind-search {
+  --pagefind-ui-primary: var(--color-accent);
+  --pagefind-ui-text: var(--color-text-primary);
+  --pagefind-ui-background: var(--color-surface);
+  --pagefind-ui-border: var(--color-border);
+  --pagefind-ui-tag: var(--color-canvas);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 0.5rem;
+  --pagefind-ui-font: var(--font-body);
+  padding: 1rem;
+}
+
+/* Constrain results so the panel never grows past the viewport. */
+#pagefind-search .pagefind-ui__results-area {
+  max-height: 60vh;
+  overflow-y: auto;
+}

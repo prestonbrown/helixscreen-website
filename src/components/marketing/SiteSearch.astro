@@ -1,0 +1,174 @@
+---
+// Docs-search overlay for the marketing pages. A trigger pill in the nav opens a
+// themed modal that mounts Pagefind's official UI widget. Pagefind assets and the
+// search index (/pagefind/) are emitted by the Starlight build; they are lazy-loaded
+// on first open. The corpus is the docs section — the marketing pages are not indexed.
+---
+
+<!-- Trigger pill (rendered inside the desktop nav cluster). -->
+<button
+  type="button"
+  data-site-search-open
+  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors text-sm font-body"
+  aria-label="Search docs"
+>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="11" cy="11" r="8"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+  <span>Search docs…</span>
+</button>
+
+<!-- Overlay: relocated to <body> on init so a hidden nav ancestor can't suppress it. -->
+<div
+  id="site-search-modal"
+  class="hidden fixed inset-0 z-[100]"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Search docs"
+>
+  <div id="site-search-backdrop" class="absolute inset-0 bg-canvas/80 backdrop-blur-sm"></div>
+  <div class="relative mx-auto mt-20 sm:mt-24 w-[92%] max-w-2xl">
+    <div class="rounded-xl border border-border bg-surface shadow-2xl overflow-hidden">
+      <div id="pagefind-search"></div>
+      <p id="site-search-fallback" class="hidden p-6 text-text-secondary text-sm font-body">
+        Search is available in the production build.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('site-search-modal');
+  const backdrop = document.getElementById('site-search-backdrop');
+  const panelBody = document.getElementById('pagefind-search');
+  const fallback = document.getElementById('site-search-fallback');
+  const triggers = document.querySelectorAll('[data-site-search-open]');
+
+  if (modal && backdrop && panelBody && fallback) {
+    // Escape the nav's responsive (potentially hidden) container so the fixed
+    // overlay renders correctly on every breakpoint.
+    document.body.appendChild(modal);
+
+    let pagefindAttempted = false;
+    let lastFocused: Element | null = null;
+
+    function isEditable(el: Element | null): boolean {
+      if (!el) return false;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || (el as HTMLElement).isContentEditable;
+    }
+
+    // Lazy-load and instantiate Pagefind's UI exactly once. Under `astro dev` the
+    // /pagefind/ directory does not exist, so the asset load rejects — we catch it
+    // and show an inline note rather than leaving a broken modal.
+    async function loadPagefind(): Promise<void> {
+      if (pagefindAttempted) return;
+      pagefindAttempted = true;
+      try {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = '/pagefind/pagefind-ui.css';
+        document.head.appendChild(css);
+
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = '/pagefind/pagefind-ui.js';
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error('pagefind-ui.js unavailable'));
+          document.head.appendChild(s);
+        });
+
+        const PagefindUI = (window as any).PagefindUI;
+        new PagefindUI({ element: '#pagefind-search', showSubResults: true, showImages: false });
+      } catch {
+        panelBody!.classList.add('hidden');
+        fallback!.classList.remove('hidden');
+      }
+    }
+
+    // PagefindUI renders asynchronously; poll a few frames for its search input.
+    function focusSearchInput(): void {
+      let tries = 0;
+      const attempt = () => {
+        const input = modal!.querySelector<HTMLInputElement>(
+          '.pagefind-ui__search-input, input'
+        );
+        if (input) {
+          input.focus();
+          return;
+        }
+        if (tries++ < 15) requestAnimationFrame(attempt);
+      };
+      requestAnimationFrame(attempt);
+    }
+
+    function trapFocus(e: KeyboardEvent): void {
+      const focusables = modal!.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
+      );
+      const visible = Array.from(focusables).filter((el) => el.offsetParent !== null);
+      if (visible.length === 0) return;
+      const first = visible[0];
+      const last = visible[visible.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function openModal(): void {
+      if (!modal!.classList.contains('hidden')) return;
+      lastFocused = document.activeElement;
+      modal!.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      loadPagefind().then(focusSearchInput);
+    }
+
+    function closeModal(): void {
+      if (modal!.classList.contains('hidden')) return;
+      modal!.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (lastFocused instanceof HTMLElement) lastFocused.focus();
+    }
+
+    triggers.forEach((t) =>
+      t.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
+      })
+    );
+
+    backdrop.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (e) => {
+      const isOpen = !modal!.classList.contains('hidden');
+
+      // ⌘K / Ctrl+K toggles from anywhere.
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        isOpen ? closeModal() : openModal();
+        return;
+      }
+
+      // "/" opens, unless the user is typing in a field.
+      if (e.key === '/' && !isOpen && !isEditable(document.activeElement)) {
+        e.preventDefault();
+        openModal();
+        return;
+      }
+
+      if (!isOpen) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+      } else if (e.key === 'Tab') {
+        trapFocus(e);
+      }
+    });
+  }
+</script>
