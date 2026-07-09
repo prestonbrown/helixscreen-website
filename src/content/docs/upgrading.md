@@ -31,6 +31,28 @@ scp -O helixscreen-ad5m.zip root@<printer-ip>:/data/
 /root/printer_software/helixscreen/install.sh --local /data/helixscreen-ad5m.zip --update
 ```
 
+**Adventurer 5X (ZMOD):**
+
+Most AD5X upgrades happen automatically through Mainsail's Update Manager — open Mainsail, go to **Machine → Update Manager**, and click **Update** next to HelixScreen.
+
+If that fails (you see an error toast like `Error updating helixscreen: [Errno 93] Directory not empty`, or HelixScreen won't start after an update), run the CLI upgrade from a Mainsail Shell or SSH session:
+
+```bash
+ssh root@<printer-ip>
+chroot /usr/data/.mod/.zmod
+curl -fsSL https://get.helixscreen.org | sh -s -- --update
+```
+
+The `chroot` step is required. ZMOD installs HelixScreen inside `/usr/data/.mod/.zmod/`, and a plain `curl … | sh` from outside the chroot writes to the wrong filesystem view — the installer detects this and refuses to run.
+
+Offline variant (release zip already on the printer):
+
+```bash
+ssh root@<printer-ip>
+chroot /usr/data/.mod/.zmod
+sh /tmp/install.sh --local /tmp/helixscreen-ad5x.zip --update
+```
+
 Your settings (`settings.json`), environment overrides (`helixscreen.env`), and custom files (custom printer images, etc.) are automatically preserved across updates.
 
 ---
@@ -116,6 +138,16 @@ curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/script
 
 **Adventurer 5M:** Download the specific version archive from [GitHub Releases](https://github.com/prestonbrown/helixscreen/releases), then use `--local` as shown above.
 
+### Reinstall a Version with Fresh Settings
+
+The commands above keep your existing `settings.json`. To reinstall a specific version **and** reset HelixScreen's settings to defaults at the same time, use `--clean` instead of `--update`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --clean --version v1.2.0
+```
+
+`--clean` removes HelixScreen's settings and caches (it asks for confirmation first), then installs the version you specified. Your Klipper config, Moonraker settings, print history, and G-code files are **not** affected.
+
 ---
 
 ## Checking Your Version
@@ -135,6 +167,9 @@ curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/script
 
 # AD5M (Klipper Mod):
 /root/printer_software/helixscreen/bin/helix-screen --version
+
+# AD5X (ZMOD — run from inside the chroot):
+/srv/helixscreen/bin/helix-screen --version
 ```
 
 ---

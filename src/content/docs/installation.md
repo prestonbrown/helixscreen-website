@@ -14,11 +14,12 @@ This guide walks you through installing HelixScreen on your 3D printer's touchsc
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Remote Screen Setup (Run on a Separate Device)](#remote-screen-setup-run-on-a-separate-device)
 - [Prerequisites](#prerequisites)
 - [MainsailOS Installation](#mainsailos-installation)
 - [Flashforge Adventurer 5M Installation](#flashforge-adventurer-5m-installation)
 - [Creality K1 Installation](#creality-k1-series)
-- [Creality K2 Series](#creality-k2-series-untested)
+- [Creality K2 Series](#creality-k2-series)
 - [FlashForge Adventurer 5X](#flashforge-adventurer-5x)
 - [Elegoo Centauri Carbon 1](#elegoo-centauri-carbon)
 - [Creality Sonic Pad](#creality-sonic-pad)
@@ -55,7 +56,7 @@ No SSL required — uses plain HTTP. See [Creality K1 Series](#creality-k1-serie
 
 **Flashforge Adventurer 5X:** Install [ZMOD](https://github.com/ghzserg/zmod), which manages HelixScreen installation and updates. See [FlashForge Adventurer 5X](#flashforge-adventurer-5x).
 
-**Snapmaker U1:** Run directly on the printer via SSH (requires [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware)):
+**Snapmaker U1:** Run directly on the printer via SSH (stock firmware with **Root access** enabled, or [PAXX Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware) which enables SSH by default):
 ```bash
 curl -sSL https://releases.helixscreen.org/install.sh | sh
 ```
@@ -70,6 +71,32 @@ See [Snapmaker U1](#snapmaker-u1) for details.
 After installation, the setup wizard will guide you through initial configuration.
 
 > **Upgrading from an older version?** If HelixScreen keeps showing the setup wizard after an update, see [UPGRADING.md](/docs/upgrading/) for how to fix configuration issues.
+
+---
+
+## Remote Screen Setup (Run on a Separate Device)
+
+HelixScreen does **not** have to run on your printer. You can install it on any supported Linux device and have it drive a display while it talks to your printer's Moonraker over the network. This is ideal when the printer sits on the floor and you want the screen at your desk, or when your printer's stock panel can't be replaced (some QIDI models).
+
+Common setups:
+- A spare Raspberry Pi (3/4/5, Zero 2 W, CM4) with a touchscreen, sitting at your desk
+- A mini PC or x86 box with an HDMI touchscreen
+- Your desktop, running the app in a window (macOS or Linux) for monitoring
+
+**How it works:** HelixScreen is a Moonraker client. It only needs network access to your printer's Moonraker instance (port `7125` by default) — it does **not** need to run on the same machine as Klipper.
+
+**Steps:**
+
+1. Install HelixScreen on the device that will drive the display, using the [Quick Start](#quick-start) one-liner or the platform section that matches that device (e.g. a Raspberry Pi uses the [MainsailOS](#raspberry-pi--mainsailos-installation) steps). Install it on the *screen* device, not the printer.
+2. Make sure the device is on the same network as your printer and can reach it — from the device, `ping <printer-ip>` should succeed.
+3. On first boot, the setup wizard reaches [Step 4: Moonraker Connection](#step-4-moonraker-connection). Enter your **printer's IP address** (not `localhost`), for example `192.168.1.50`. Leave the port at the default `7125` unless you've changed it.
+4. The wizard tests the connection, then discovers your printer's capabilities as usual.
+
+> **Point it at Moonraker, not Mainsail/Fluidd.** HelixScreen connects to Moonraker's API (port `7125`), not the Mainsail/Fluidd web interface. You do not need Mainsail or Fluidd installed on the screen device at all.
+
+To change the host later, go to **Settings > System > Host**, or edit `moonraker_host` in `settings.json`.
+
+> **Note:** A remote screen controls the printer the same as an on-printer screen would. Features that require running *on the printer* (for example, HelixScreen taking over the printer's own physical panel, or on-device WiFi configuration in the wizard) don't apply to a remote install — but all printing, monitoring, and control features work normally.
 
 ---
 
@@ -197,8 +224,14 @@ Installs to `/usr/data/helixscreen/`, boot service at `/etc/init.d/S99helixscree
 
 **Install:**
 ```bash
-wget -O - http://dl.helixscreen.org/install.sh | sh
+python3 -c "import urllib.request as u;u.urlretrieve('https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh','/tmp/install.sh')" && sh /tmp/install.sh
 ```
+
+> **Why not `wget`?** Recent K2 firmware (Tina/OpenWrt) ships neither `wget` nor `curl` on the
+> `PATH` — even the BusyBox `wget` applet has been compiled out. Every K2 does include `python3`
+> (Klipper and Moonraker need it) with working SSL, so the command above uses Python to fetch the
+> installer over HTTPS; the installer then uses Python for the rest of the download and extraction.
+> If your firmware still has `wget` (older builds did), `wget -O - http://dl.helixscreen.org/install.sh | sh` also works.
 
 **What's different from K1:**
 - ARM processor (Allwinner, not MIPS) — standard cross-compilation
@@ -226,24 +259,22 @@ wget -O - http://dl.helixscreen.org/install.sh | sh
 - **Auto-detection:** HelixScreen automatically detects ZMOD firmware (by recognizing ZMOD-specific Klipper device names) and applies ZMOD-optimized presets for display, input, and fan configuration. No manual configuration needed.
 - IFS (4-channel filament system) supported — see [Filament Management](/docs/guide/filament/)
 
-#### Manual installs and updates (advanced)
+#### Manual install from the command line (advanced)
 
-Most users never need this — ZMOD handles installs and updates through Moonraker's update manager and that path "just works." The notes below apply only if you're piping the installer yourself for a specific version, a `--local` zip, troubleshooting, or `--uninstall`.
+Most users never need this — ZMOD handles initial install and ongoing updates through Moonraker's update manager and that path "just works." Use the manual route only if you're pinning a specific version, working from a `--local` zip, or recovering from a failed update.
 
 ZMOD installs HelixScreen into a chroot rooted at `/usr/data/.mod/.zmod/`. When you SSH into the printer you land in the host filesystem, *not* the chroot — so a plain `curl … | sh` writes into the squashfs base view that HelixScreen never sees. The installer detects this and refuses to run with a friendly message; the fix is to enter the chroot first:
 
 ```bash
 ssh root@<printer-ip>
 chroot /usr/data/.mod/.zmod
-# now you're in the same view HelixScreen runs from — re-run your command:
+# now you're in the same view HelixScreen runs from:
 curl -fsSL https://get.helixscreen.org | sh
-# or:
-sh /tmp/install.sh --local /tmp/helixscreen-ad5x.zip
-sh /tmp/install.sh --update
-sh /tmp/install.sh --uninstall
 ```
 
-The same applies to the uninstaller — run it from inside the chroot.
+The same applies to the uninstaller — run `sh /tmp/install.sh --uninstall` from inside the chroot.
+
+For **upgrades** (including recovery from a failed Mainsail update) see [UPGRADING.md → Adventurer 5X (ZMOD)](UPGRADING.md#quick-upgrade).
 
 ### Elegoo Centauri Carbon
 
@@ -345,8 +376,15 @@ The Snapmaker U1 is an all-in-one printer with a built-in touchscreen. HelixScre
   - Network connection
 
 - **Software:**
-  - [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware) installed (required for SSH access)
-  - SSH access (`root@<printer-ip>` or `lava@<printer-ip>`, password: `snapmaker`)
+  - **SSH access** — via either firmware path:
+    - **Stock Snapmaker firmware (1.2+):** enable the **Root access** option in printer settings (added in V1.2.0). This turns on SSH. *(Stock-firmware support is newly added and not yet verified end-to-end on a stock device — see note below.)*
+    - **[PAXX Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware):** SSH on by default. Tested on **1.2.x, 1.3.x, and 1.4.x**.
+  - SSH login (`root@<printer-ip>` or `lava@<printer-ip>`, password: `snapmaker`)
+
+**Notes:**
+- **Reinstall after a firmware update** — any firmware update (stock or PAXX) resets system files and can overwrite HelixScreen; re-run the installer afterward.
+- **Remote screen ("gui" camera) is not yet supported** — the built-in firmware exposes a "gui" webcam in Mainsail/Fluidd that mirrors the printer's local touchscreen. Once HelixScreen takes over the display it owns the screen directly, so that feed shows "No Signal" and is expected. The physical "case" camera is unaffected. Streaming the HelixScreen UI to the web frontend is planned but not implemented; use Mainsail/Fluidd for remote monitoring in the meantime.
+- **Two harmless Moonraker warnings are expected** — after install, the Mainsail/Fluidd "Moonraker warnings found" banner may show *"Unable to find DBus PolKit Interface"* and *"Unable to initialize System Update Provider for distribution: buildroot"*. Both are inherent to Moonraker on the U1's buildroot firmware (no PolKit, no OS package manager) and do **not** affect HelixScreen or printing. They are not specific to HelixScreen — installing simply restarts Moonraker, which re-surfaces them. See [Troubleshooting](/docs/reference/troubleshooting/).
 
 ---
 
@@ -570,7 +608,9 @@ Use the touchscreen to complete the setup wizard. The printer should auto-detect
 
 ## Snapmaker U1 Installation
 
-> **Requires [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware).** Stock firmware does not provide SSH access. Install Extended Firmware first before proceeding.
+> **Requires SSH access.** Enable it on **stock firmware (1.2+)** via the **Root access** option in printer settings, or install [PAXX Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware) (SSH on by default). PAXX is **not** required — it's just the turnkey option.
+>
+> **Firmware versions:** Tested on PAXX Extended Firmware **1.2.x, 1.3.x, and 1.4.x**. Stock-firmware support is newly added and not yet verified end-to-end on a stock device. After any firmware update, **reinstall HelixScreen** — the update resets the printer's system files and the stock screen will return until you reinstall (see [Upgrading the firmware](#upgrading-the-extended-firmware-with-helixscreen-installed)).
 
 SSH into the printer:
 
@@ -610,27 +650,60 @@ mkdir -p /userdata/helixscreen && unzip -q helixscreen-snapmaker-u1.zip -d /user
 bash /userdata/helixscreen/scripts/snapmaker-u1-setup-autostart.sh /userdata/helixscreen
 ```
 
-This replaces the stock UI (`unisrv`) on boot with HelixScreen.
+This sets HelixScreen to launch on boot and disables the stock UI program (`/usr/bin/gui`) so HelixScreen owns the screen. (The stock UI program lives in a read-only part of the firmware and is only disabled, never deleted — the uninstaller re-enables it.)
 
 **Step 4: Start HelixScreen**
 
 ```bash
-killall unisrv 2>/dev/null; /userdata/helixscreen/bin/helix-launcher.sh &
+killall gui 2>/dev/null; /userdata/helixscreen/bin/helix-launcher.sh &
 ```
 
 ### Reverting to Stock UI
 
+Run the uninstaller — it re-enables the stock UI and removes HelixScreen:
+
 ```bash
-rm -rf /userdata/helixscreen
+curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --uninstall
 reboot
 ```
 
-The stock UI resumes automatically when HelixScreen is not found.
+If you can't run the uninstaller, revert manually. HelixScreen *disables* the stock UI program rather than deleting it, so re-enable it and remove HelixScreen's files:
+
+```bash
+chmod +x /usr/bin/gui          # re-enable the stock UI program
+rm -rf /userdata/helixscreen   # remove HelixScreen
+reboot
+```
 
 **Notes:**
-- Extended firmware is required — stock firmware does not provide SSH access
+- SSH is required — enable stock firmware's **Root access** option, or use PAXX Extended Firmware (SSH on by default). PAXX is not required.
 - Display resolution may need manual configuration if the screen appears stretched or misaligned (see [Display Configuration](#display-configuration))
-- The stock UI can be restored at any time by removing `/userdata/helixscreen` and rebooting
+- A firmware update resets the printer's system files and brings the stock screen back — reinstall HelixScreen afterward
+
+### Upgrading the Extended Firmware with HelixScreen installed
+
+A firmware upgrade is safe to run with HelixScreen installed — it does **not** brick the printer. HelixScreen's files live in a layer that the upgrade clears, so after upgrading you simply **reinstall HelixScreen**.
+
+Because HelixScreen replaces the stock touchscreen, the stock screen's on-device **"Local Update"** button is gone. Upgrade over the network instead:
+
+1. In a web browser on the same network, open **`http://<printer-ip>/firmware-config`**.
+2. Choose **Firmware Upgrade**, upload the new `U1_extended_<version>_upgrade.bin`, and let it complete. The printer reboots into the new firmware.
+3. The stock screen comes back (HelixScreen was cleared by the upgrade). **Reinstall HelixScreen** with the [Quick Install](#quick-install-recommended) one-liner. Your settings, WiFi, and printer config are preserved (they live on a separate partition the upgrade keeps).
+
+### Recovery: screen is blank or the printer is off the network
+
+If something goes wrong and the printer comes up with a blank screen and is unreachable over WiFi, recover over a wired connection:
+
+1. Plug a **USB-Ethernet adapter** into the printer and connect it to your router. The printer auto-configures the wired link and gets an IP from your router (check the router's client list).
+2. SSH in over that wired IP: `ssh root@<wired-ip>` (password `snapmaker`).
+3. Run the uninstaller to return to the stock UI, then reboot:
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --uninstall
+   reboot
+   ```
+4. Once the stock screen is back and the printer is on WiFi again, you can reinstall HelixScreen.
+
+> If the uninstaller can't run, reset HelixScreen's persistence flag and files manually, then reboot: `rm -f /oem/.debug && rm -rf /oem/overlay/* && rm -rf /userdata/helixscreen && sync && reboot`. This returns the printer to a clean stock state.
 
 ---
 
@@ -968,9 +1041,29 @@ curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/script
 
 **Creality K1 / Flashforge Adventurer 5M:** Download the specific version archive from [GitHub Releases](https://github.com/prestonbrown/helixscreen/releases), then use `--local` as shown above.
 
+To reinstall a specific version with a **fresh settings.json** (instead of keeping your existing settings), swap `--update` for `--clean`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --clean --version v1.2.0
+```
+
 ### Preserving Configuration
 
-The update process preserves your `settings.json` settings. If you want to reset to defaults:
+The update process preserves your `settings.json` settings. If you want to reset to defaults, use the `--clean` flag — it removes your HelixScreen settings and caches everywhere they live, then does a fresh install:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --clean
+```
+
+`--clean` asks for confirmation before wiping anything. Your Klipper config, Moonraker settings, print history, and G-code files are **not** touched — only HelixScreen's own settings.
+
+To reset settings **and** pin a specific version in one step, combine `--clean` with `--version`:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --clean --version v1.2.0
+```
+
+If you'd rather delete the settings file by hand instead of reinstalling:
 
 ```bash
 # Use your actual install path (~/helixscreen or /opt/helixscreen)

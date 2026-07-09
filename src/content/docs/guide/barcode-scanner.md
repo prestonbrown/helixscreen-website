@@ -9,6 +9,8 @@ HelixScreen can read Spoolman QR codes from a USB or Bluetooth barcode scanner, 
 
 This guide covers both USB and Bluetooth scanners, and how to fix the most common Bluetooth pairing problem on Raspberry Pi.
 
+Scanning is a shortcut for assigning spools — see [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) for what happens once a spool is linked.
+
 ---
 
 ## USB Scanners

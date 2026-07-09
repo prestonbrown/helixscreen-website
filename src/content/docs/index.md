@@ -61,6 +61,9 @@ Extrusion controls, load/unload procedures, AMS multi-material systems with mult
 
 ![AMS Panel](../../assets/images/docs/ams.png)
 
+### [Filament Tracking & Spoolman](/docs/guide/filament-tracking/)
+How HelixScreen tracks material, color, and remaining weight — with the built-in tracker or a connected Spoolman server. Covers the difference between the two modes, how usage is estimated during a print, connecting a Spoolman server, and browsing your spool inventory on the touchscreen.
+
 ### [Bluetooth Setup](/docs/guide/bluetooth-setup/)
 Enable Bluetooth on Raspberry Pi or BTT Pi when it's disabled for UART, or add a USB Bluetooth dongle when your MCU uses the serial port.
 
@@ -79,6 +82,21 @@ Bed mesh visualization, screws tilt adjust, input shaper resonance testing, Z-of
 Display, theme, sound, LED, network, sensors, touch calibration, hardware issues, safety, machine limits, factory reset, help & support (debug bundles, Discord, docs), and About sub-overlay (version info, updates, branding, contributors).
 
 ![Settings](../../assets/images/docs/screenshot-settings-panel.png)
+
+### [Fans](/docs/guide/fans/)
+Discovered fans grouped by controllable vs. automatic, fan types, live speed control via animated dials, RPM readouts, and per-fan renaming.
+
+### [Sensors](/docs/guide/sensors/)
+Filament switch and motion sensors with per-sensor role assignment (None, Runout, Toolhead, Entry), read-only probe/width/humidity/accelerometer/color/temperature sensors, and chamber heater/sensor assignment.
+
+### [Security & Screen Lock](/docs/guide/security/)
+Set, change, or remove a PIN screen lock, auto-lock tied to the display sleep timeout, the lock-screen keypad with emergency-stop access, and what a factory reset clears.
+
+### [Camera](/docs/guide/camera/)
+Webcam viewing via the home widget and standalone fullscreen viewer, rotation and flip configuration, stream status states, and performance throttling.
+
+### [Print History](/docs/guide/print-history/)
+History dashboard with time-range statistics and trend charts, searchable/filterable/sortable job list, per-job details, and reprinting a previous job.
 
 ### [Advanced Features](/docs/guide/advanced/)
 Console, macro execution, power device control (with home panel quick-toggle and device selection), print history, notification history, and timelapse settings.

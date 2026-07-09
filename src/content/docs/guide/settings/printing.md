@@ -30,7 +30,16 @@ Most users can leave this on **Auto**. Change it if HelixScreen picks the wrong 
 
 ## G-code Preview
 
-Enable interactive 3D G-code visualization during prints. When off, only the 2D layer view is available. Disable if your hardware struggles with 3D rendering.
+Choose how the G-code of the active print is visualized:
+
+| Option | Description |
+|--------|-------------|
+| **Auto** (default) | HelixScreen picks the best mode for your hardware — interactive 3D on capable devices, falling back to lighter modes on slower ones |
+| **3D View** | Interactive 3D rendering of the toolpath |
+| **2D Layers** | Flat per-layer view — lighter on the GPU than 3D |
+| **Thumbnail Only** | Shows just the slicer-embedded thumbnail, no live toolpath rendering — the lightest option |
+
+Use a lighter mode if your hardware struggles with 3D rendering.
 
 ---
 
@@ -50,12 +59,23 @@ This only changes the direction labels in the UI — the actual G-code sent is t
 
 ## Machine Limits
 
-Tap to open the Machine Limits overlay. Adjust motion limits for the current session:
+Tap to open the Machine Limits overlay. A banner at the top reminds you: **"Changes are temporary and reset on printer reboot."** These sliders override your Klipper config for the current session — useful for testing or troubleshooting motion issues. To make permanent changes, edit `printer.cfg` directly.
 
-- Maximum velocity per axis
-- Maximum acceleration per axis
+Each setting has a slider with the live value shown on the right:
 
-These override your Klipper config temporarily — useful for testing or troubleshooting motion issues. **Changes are lost on restart.** To make permanent changes, edit `printer.cfg` directly.
+| Setting | Range | Description |
+|---------|-------|-------------|
+| **Max Velocity** | 50–1000 mm/s | Maximum toolhead speed |
+| **Max Acceleration** | 500–50000 mm/s² | Maximum acceleration |
+| **Accel to Decel** | 500–50000 mm/s² | Acceleration-to-deceleration limit (caps how aggressively moves slow down) |
+| **Square Corner Velocity** | 1–20 mm/s | Maximum speed carried through square corners |
+| **Extrude Speed** | 1–50 mm/s | Feedrate used for manual extrude/retract actions |
+
+> **Extrude Speed is saved.** Unlike the motion limits above, the Extrude Speed value is a persisted HelixScreen setting — it is remembered across restarts and applies to the manual extrude/retract controls.
+
+Below the adjustable sliders is a read-only **Config-defined** section showing your **Max Z Velocity** and **Max Z Accel**, which come from your Klipper config and cannot be changed here.
+
+**Reset:** the **Reset** button at the bottom restores the motion limits to your printer's original configured values.
 
 ---
 

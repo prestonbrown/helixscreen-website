@@ -21,6 +21,8 @@ The spool preset button only appears when the loaded material differs from the s
 
 > **Tip:** The spool preset updates automatically when you change the external spool configuration — no need to close and reopen panels.
 
+> **Tip:** You can change which filament type a preset button controls — long-press it to pick a different material. See [Reassigning a Preset's Filament Type](temperature.md#reassigning-a-presets-filament-type).
+
 ---
 
 ## Extrusion Panel
@@ -83,6 +85,18 @@ Below the slot grid, a **filament path diagram** shows the routing from slots th
 
 Above the slot view, a **mini temperature graph** shows live nozzle, bed, and chamber temperatures (when a chamber sensor or heater is present) so you can monitor heating during filament operations without switching panels.
 
+#### Reading Error States
+
+When a slot runs into trouble, HelixScreen shows it visually so you don't have to dig through logs:
+
+- **Error dot** — A small colored dot appears at the corner of a slot's spool when that slot reports a problem. **Red** means an error (jam, runout, hardware fault); **amber** means a warning. With animations enabled, the dot gently pulses to draw your eye.
+- **Buffer-health tint** — On systems with a buffer between the slots and the toolhead (AFC TurtleNeck, or Happy Hare with sync feedback), the hub on the filament path diagram changes color as the buffer drifts toward a fault: green when healthy, yellow when approaching the fault threshold, and red when at or past it.
+
+**To recover:**
+
+- Tap the affected slot and choose **Reset Lane** to clear a jam or error on that one slot (shown only on backends that support per-slot reset).
+- For a system-wide problem, use **Reset** in the sidebar, or **Recover** in the AMS Management overlay (Settings), to bring the whole system back to a known-good state.
+
 ### Sidebar (Right)
 
 The right sidebar shows the status of the currently loaded filament and provides quick-access controls.
@@ -120,15 +134,17 @@ Each step updates in real time so you can see exactly where the operation is.
 |--------|-------------|
 | **Load** | Feed filament from this slot to the toolhead. Disabled if the slot is empty. |
 | **Unload** | Retract filament from this slot. Only available if this slot is currently loaded. |
+| **Eject** | Push filament fully out of the lane to release the spool, when the slot has filament in its lane but **not** loaded into the toolhead. Replaces the Unload button in that state. Only on backends that support per-lane eject (AFC and Happy Hare). |
 | **Reset Lane** | Clear an error or jam state on this slot. Only shown if your backend supports per-slot reset. |
 | **Spool Info** | Open the filament editor to view or change material, color, vendor, and remaining weight. |
 | **Select Spool** | Assign a saved Spoolman spool to this slot. Only shown when Spoolman is configured. |
 | **Scan QR Code** | Scan a filament QR code to auto-fill spool data. Only shown when Spoolman is configured. |
 
-For advanced multi-tool setups, the context menu also includes:
+On systems that support **Endless Spool**, the context menu also includes:
 
-- **Tool Mapping** — Assign which extruder tool (T0, T1, etc.) this slot feeds
-- **Backup Slot** (Endless Spool) — Choose a backup slot to automatically switch to if this spool runs out mid-print
+- **Backup Slot** — Choose a backup slot to automatically switch to if this spool runs out mid-print. The backup must hold a compatible material; the menu warns you if you pick an incompatible one. Shown only on backends that support endless spool (AFC, Happy Hare, and CFS auto-refill).
+
+> **Assigning tools:** Tool-to-slot mapping isn't set from the slot context menu — it's done from the **filament mapping card** that appears when you select a file to print. See [Tool Mapping](#tool-mapping) below.
 
 ### Editing Filament Properties
 
@@ -157,13 +173,29 @@ Tap **Spool Info** in the slot context menu to open the filament editor. This le
 
 Tap **Save** to apply your changes, or **Cancel** to discard them.
 
-### Syncing with OrcaSlicer 2.3.2+
+### Tool Mapping
 
-When you edit spool info in HelixScreen — on any supported filament system (AD5X IFS, Snapmaker U1, ACE, CFS) — that information is saved to your printer in the standard location OrcaSlicer 2.3.2 and later reads automatically. Open OrcaSlicer after editing and your slot's vendor, material, color, and Spoolman link show up in the filament panel with no extra setup.
+For multi-tool prints, you can control which AMS slot feeds each tool the slicer expects (T0, T1, T2, …). The mapping controls appear as a **filament mapping card** on the file detail screen — open a file from the print browser and, if your file uses multiple tools and your AMS supports editable tool mapping, the card shows a compact row of color pairs. Tap the card to open the **Filament Mapping** dialog.
 
-**AFC (Box Turtle) and Happy Hare** work the same way automatically — their Klipper plugins write the same records on their own, so your lane assignments also flow through to OrcaSlicer with nothing to configure.
+In the dialog you get one row per tool in the file:
 
-Either way — whether HelixScreen is writing the metadata (IFS / Snapmaker / ACE / CFS) or your filament system's own plugin is (AFC / Happy Hare) — your printer's filament info and OrcaSlicer stay in sync.
+- **Map to closest colors with matching material** (toggle at the top) — When on, HelixScreen auto-assigns each tool to the loaded slot with the nearest color and a compatible material; the rows become read-only. When off, you assign tools yourself.
+- **Manual assignment** — With the toggle off, tap a tool's row to pick which slot feeds it.
+- **Mismatch warnings** — A warning icon appears on any row mapped to an empty slot or a slot whose material doesn't match what the tool needs.
+
+Tap **Done** to keep your mapping, or **Cancel** to discard it.
+
+> **Note:** The mapping card only appears on backends with editable tool mapping. On fixed 1:1 systems (Snapmaker U1, ACE) tools always map directly to their matching slot, so there's nothing to assign.
+
+### Syncing with OrcaSlicer (2.3.2 and later, including 2.4.0)
+
+When you edit spool info in HelixScreen — on any supported filament system (AD5X IFS, Snapmaker U1, ACE, CFS) — that information is saved to your printer in the standard location OrcaSlicer 2.3.2 and later reads automatically. Open OrcaSlicer after editing and your slot's vendor, material, color, and temperatures show up in the filament panel with no extra setup.
+
+**AFC (Box Turtle) and Happy Hare** work the same way automatically — your lane assignments flow through to OrcaSlicer with nothing to configure.
+
+Either way, your printer's filament info and OrcaSlicer stay in sync. The sync is one-way (your printer → OrcaSlicer): editing in OrcaSlicer doesn't change what's loaded in your AMS.
+
+> **Tip:** For the cleanest match, use material names OrcaSlicer recognizes (PLA, PETG, ABS, TPU, etc.). OrcaSlicer matches your slot to a filament preset by material name, so a slot set to "PLA" auto-selects a PLA preset.
 
 > **Requirements:** OrcaSlicer 2.3.2 or newer, connected to the same printer's Moonraker. Nothing to enable on the HelixScreen side — it's automatic.
 
@@ -177,7 +209,21 @@ Tap **Settings** in the sidebar to open the AMS Management overlay with advanced
 - **Bypass Mode** — Toggle direct-feed mode (if supported by hardware)
 - **System status** — Current system state and firmware version
 
-Additional device-specific settings may appear as expandable sections depending on your hardware.
+Below the top-level controls, **device-specific settings appear as expandable sections** that vary by hardware. Tap a section to open it; inside you'll find buttons, on/off toggles, and sliders for that group, and changes apply immediately.
+
+**AFC (Box Turtle and friends)** exposes the richest set, organized into sections:
+
+| Section | What's inside |
+|---------|---------------|
+| **Setup** | Run Calibration Wizard, Bowden Length, LED toggles (system + per-toolhead), Quiet Mode |
+| **Speed Settings** | Forward and reverse move-speed multipliers |
+| **Toolhead** | Sensor-to-nozzle, unload, and post-sensor clear distances (per tool) |
+| **Maintenance** | Test All Lanes, Change Blade, Park, Clean Brush, Reset Motor Timer |
+| **Hub & Cutter** | Cutter enable, cut distance, hub bowden length, assisted retract |
+| **Tip Forming** | Ramming volume, unloading start speed, cooling-tube length and retraction |
+| **Purge & Wipe** | Purge enable/length, brush-wipe enable |
+
+Other backends show their own (usually smaller) set of sections, or none at all.
 
 ### Tips
 
@@ -202,12 +248,13 @@ When multiple backends are detected:
 
 | System | Description |
 |--------|-------------|
-| **CFS** | Creality Filament System (K2 series printers) |
+| **CFS** | Creality Filament System (K2 series, plus K1/K1C/K1 Max with the official CFS upgrade) |
 | **Happy Hare** | MMU2, ERCF, 3MS, Tradrack, EMU |
 | **AFC** | Box Turtle, OpenAMS, ViViD |
 | **ACE** | Anycubic ACE Pro (via ValgACE/BunnyACE/DuckACE Klipper drivers) |
 | **Tool Changer** | Toolchanger-based filament routing |
 | **AD5X IFS** | FlashForge Adventurer 5X Intelligent Filament Switching (requires ZMOD firmware v1.7.0 or newer) |
+| **SnapSwap** | Snapmaker U1 4-toolhead changer (parallel, one independent toolhead per slot) |
 
 Each system displays its own logo in the AMS panel header. Happy Hare and AFC show their firmware logos; specific hardware variants (ERCF, Box Turtle, ViViD, etc.) show hardware-specific logos when detected.
 
@@ -217,7 +264,9 @@ Single-backend setups are unaffected — the panel works exactly as before with 
 
 ## Creality Filament System (CFS)
 
-The CFS is an enclosed filament storage and delivery system for **Creality K2 series** printers. Each CFS unit holds 4 spools of filament, and up to 4 units can be connected (16 total slots). HelixScreen auto-detects CFS when connected to a K2 printer.
+The CFS is an enclosed filament storage and delivery system for **Creality** printers. It ships on the **K2 series**, and is also supported on the **K1, K1C, and K1 Max** once you install Creality's official CFS upgrade kit and firmware. Each CFS unit holds 4 spools of filament, and up to 4 units can be connected (16 total slots). HelixScreen auto-detects CFS — and the correct macro dialect for your printer (K2 uses `CR_BOX_*` macros, K1 series uses `BOX_*`) — when connected.
+
+> **K1 series note:** CFS on the K1, K1C, and K1 Max requires Creality's official CFS upgrade firmware (v2.3.5.33 or newer). HelixScreen detects the K1 macro dialect automatically; no manual configuration is needed.
 
 ### Slot Layout
 
@@ -255,47 +304,93 @@ Tap the menu icon on the CFS panel to access device actions:
 
 ---
 
-## Spoolman Integration
+## Snapmaker U1 (SnapSwap)
 
-![Spoolman](../../../assets/images/docs/advanced-spoolman.png)
+The Snapmaker U1 is a **4-toolhead changer**, not a shared-path AMS. Each of its four slots has its own independent toolhead, so the topology is **parallel** — slot 1 always feeds tool 0, slot 2 feeds tool 1, and so on (a direct 1-to-1 mapping). There is no hub or selector to share between slots.
 
-When Spoolman is configured:
+### RFID Detection
 
-- Spool name and material type displayed per slot
-- Remaining filament weight shown
-- Tap a slot to open **Spool Picker** and assign a different spool
+Each channel has an RFID reader that reads Snapmaker filament tags automatically:
 
-### Spoolman Panel
+- Material type and sub-type (e.g. "PLA SnapSpeed"), manufacturer, and brand appear per slot
+- Color, recommended nozzle/bed temperatures, and spool weight come from the tag
+- When you physically swap a spool, the new tag is detected and any stale metadata you'd previously entered for that slot is cleared automatically
 
-Access via the **Filament** nav tab. Browse, search, and manage your entire spool inventory:
+You can still edit spool info manually from the slot context menu for spools without a tag.
 
-- **Search** — Filter spools by vendor, material, or color name
-- **Context menu** — Tap a spool to set active, edit, or delete
-- **3D spool visualization** — Color-coded fill level at a glance
+### Runout and Resume
 
-### New Spool Wizard
+The U1 tracks filament with a motion sensor per tool. When a runout fires mid-print, HelixScreen prepares the printer before resuming — disabling the runout sensor, heating the tool, priming a short length of filament past the encoder, and re-enabling the sensor — so a plain Resume actually continues the print. If the motion sensor reports a runout but filament is still physically present (a stale sensor reading), HelixScreen recovers silently without prompting you.
 
-Tap **+ Add** in the Spoolman panel to create a new spool in 3 steps:
-
-1. **Select Vendor** — Search existing vendors or tap **+ New** to add one
-2. **Select Filament** — Pick an existing filament or tap **+ New** to create one with material, color, temperature ranges, and weight
-3. **Spool Details** — Set remaining weight, price, lot number, and notes
-
-The wizard creates all records (vendor, filament, spool) atomically in Spoolman.
-
-> **Tip:** You can print physical spool labels with a QR code linking to Spoolman. See [Label Printing](/docs/guide/label-printing/) for setup instructions.
+> **Note:** Because each toolhead is independent, the Snapmaker backend has no Home, Recover, Reset, Bypass, or Endless Spool controls — those apply to shared-path AMS hardware only.
 
 ---
 
-## Dryer Control
+## Spoolman Integration
 
-If your filament system has an integrated dryer (AMS, CFS, etc.):
+Spoolman is an optional filament-inventory server. Once it's connected, the AMS panel shows saved spool data on each slot and lets you assign spools straight from your inventory:
 
-- Temperature display and current humidity reading
-- Timer settings for drying duration
-- Enable/disable drying cycle
+- Spool name and material type shown per slot
+- Remaining filament weight shown
+- Tap a slot's **Spool Info** or **Select Spool** to assign a saved spool — see [Editing Filament Properties](#editing-filament-properties) and the [Slot Context Menu](#slot-context-menu)
 
-**Multi-unit setups:** Each unit has its own dryer with independent controls. The dryer panel shows which unit you're controlling — tap to switch between units. You can run dryers on multiple units simultaneously.
+Connecting a server, the full spool-inventory panel, the new-spool wizard, and how remaining weight is tracked all live on their own page: **[Filament Tracking & Spoolman](/docs/guide/filament-tracking/)**.
+
+---
+
+## Filament Drying
+
+Many filament materials absorb moisture from the air over time. Wet filament prints poorly — you may see popping, stringing, reduced layer adhesion, or a rough surface finish. Drying the filament before or during a print removes that moisture and restores print quality. Hygroscopic materials that benefit most include Nylon, PA-CF, TPU, and PETG; PLA is less sensitive but still benefits after long storage.
+
+### Supported Systems
+
+Dryer control is available on hardware that includes an integrated heated chamber:
+
+| System | Notes |
+|--------|-------|
+| **Anycubic ACE Pro** | Built-in drying chamber with fan |
+| **Happy Hare** | On MMU setups where a heater is configured |
+| **QIDI Box** | PTC heater in the filament storage unit (QIDI PLUS4, Q2, MAX4) |
+
+Systems without a dedicated drying chamber (AFC Box Turtle, Creality CFS, AD5X IFS, Snapmaker U1, tool changers) do not have dryer controls — the option won't appear for those.
+
+### Using the Dryer
+
+Open the dryer controls from the **multi-filament panel**:
+
+1. Open the **Filament** panel from the sidebar.
+2. Tap **Settings** to open the AMS Management overlay.
+3. The dryer controls appear if your hardware supports drying.
+
+From the dryer panel you can:
+
+- **Set target temperature** — Use the slider or tap the value to type a temperature. The target is automatically clamped to the safe maximum for your unit (typically 65–90 °C depending on firmware).
+- **Set duration** — Choose how long to dry, in hours. Some systems accept a custom duration; others offer material-based presets.
+- **Pick a material preset** — If presets are available, tap a material name (PLA, PETG, Nylon, etc.) to fill in the recommended temperature and time automatically.
+- **Start drying** — Tap **Start** to begin. The heater activates and the chamber temperature climbs to your target.
+- **Watch the countdown** — While drying, the panel shows the current chamber temperature, humidity (when a sensor is present), and the time remaining.
+- **Stop early** — Tap **Stop** at any time to turn off the heater. Remaining time is discarded; it is safe to stop mid-session.
+
+> **QIDI Box note:** QIDI Box drying control requires recent QIDI firmware that exposes the `box_extras` Klipper plugin. On older firmware, the heater still works but the session timer won't be tracked — the heater runs until you tap Stop.
+
+### Typical Drying Parameters
+
+These are general-purpose starting points. Your filament manufacturer's guidance takes priority.
+
+| Material | Temperature | Time |
+|----------|-------------|------|
+| PLA | 45 °C | 4–6 h |
+| PETG | 55 °C | 4–6 h |
+| ABS / ASA | 60 °C | 4 h |
+| TPU / TPE | 50 °C | 4–8 h |
+| Nylon (PA) | 60 °C | 8–12 h |
+| PA-CF / PA-GF | 60 °C | 8–12 h |
+
+Filament that has been stored open for a long time may need the longer end of the range.
+
+### Multi-Unit Setups
+
+If you have multiple Box units connected, each unit has its own dryer with independent controls. The panel shows which unit you are controlling. You can run dryers on multiple units at the same time — each unit heats independently.
 
 ---
 
@@ -303,6 +398,7 @@ If your filament system has an integrated dryer (AMS, CFS, etc.):
 
 ## See Also
 
+- [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) — How remaining weight is tracked, with and without Spoolman, and how to connect a Spoolman server
 - [Temperature Control](/docs/guide/temperature/) — Preheat presets work with spool material info
 - [Bluetooth Setup](/docs/guide/bluetooth-setup/) — Required for Bluetooth-connected AMS and label printers
 - [Label Printing](/docs/guide/label-printing/) — Print physical spool labels with Spoolman data
@@ -310,4 +406,4 @@ If your filament system has an integrated dryer (AMS, CFS, etc.):
 
 ---
 
-**Next:** [Label Printing](/docs/guide/label-printing/) | **Prev:** [Motion & Positioning](/docs/guide/motion/) | [Back to User Guide](/docs/)
+**Next:** [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) | **Prev:** [Motion & Positioning](/docs/guide/motion/) | [Back to User Guide](/docs/)

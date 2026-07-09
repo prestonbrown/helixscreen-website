@@ -36,17 +36,25 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 | FlashForge AD5M / 5M Pro | **Tested** | Requires Forge-X or Klipper Mod firmware |
 | QIDI Q2, Max 4 | **Supported** | Stock firmware works (runs standard Moonraker); community firmware like FreeDi or FreeQIDI also supported. Plus 4 uses a TJC serial display and is not supported for on-device install — only remote control via Moonraker. |
 | Creality K1 / K1C / K1 Max / K1 SE | **Supported** | Requires rooting or Guilouz firmware |
-| Creality K2 Max / K2 Plus | **Tested** | Runs natively with CFS support |
+| Creality K2 Pro / K2 Max / K2 Plus | **Tested** | Runs natively with CFS support |
 | Creality Sonic Pad | **Supported** | 32-bit ARM, dedicated build |
+| Creality Hi | **Preliminary** | Auto-detected; Cartesian bedslinger with optional CFS. Untested on our hardware. |
+| Anycubic Kobra 2 Pro / Kobra 3 / 3 V2 / 3 Max / S1 / S1 Max | **Community** | Auto-detected on [Rinkhals](https://github.com/jbatonnet/Rinkhals) firmware; native ACE (`filament_hub`) supported. Untested on our hardware. |
 | FlashForge AD5X | **Tested** | IFS filament system integrated |
 | SOVOL SV06 / SV08 | **Tested** | Community reports welcome |
 | Elegoo Centauri Carbon 1 | **Tested** | Requires [OpenCentauri COSMOS](https://docs.opencentauri.cc/klipper-conversion/cosmos/cosmos/) firmware; ships with factory white-balance calibration |
-| Snapmaker U1 (SnapSwap toolchanger) | **Tested** | Native four-head support with RFID spool recognition; extended firmware required |
+| Snapmaker U1 (SnapSwap toolchanger) | **Tested** | Native four-head support with RFID spool recognition. Needs SSH — stock firmware (1.2+) via its **Root access** option, or PAXX Extended Firmware (SSH on by default). Tested on PAXX 1.2.x–1.4.x; stock-firmware support is newly added. Reinstall after a firmware update. Remote screen streaming (the "gui" webcam) is not yet supported; physical cameras work normally. |
 | Artillery M1 Pro | **Tested** | |
 | Zero G Mercury / Nebula / Hydra | **Tested** | Multiple variants supported |
 | Other Klipper printers | **Should work** | Any printer with Moonraker API access |
 
-> **Note:** "Tested" means the HelixScreen team has verified the platform. "Untested" means binaries exist but haven't been verified on real hardware. See the [Installation Guide](/docs/installation/) for platform-specific instructions.
+> **Note:** "Tested" means the HelixScreen team has verified the platform on real hardware. "Community" means a community user has confirmed it working but we haven't tested it ourselves. "Preliminary" means support exists from the printer's published config but has not been verified on hardware. See the [Installation Guide](/docs/installation/) for platform-specific instructions.
+
+### Can I run HelixScreen on a separate device instead of on my printer?
+
+Yes. HelixScreen is a Moonraker client — it only needs network access to your printer's Moonraker instance, so it doesn't have to run on the printer itself. Install it on any supported Linux device (a spare Raspberry Pi with a touchscreen, a mini PC with an HDMI touchscreen, even your desktop) and enter your **printer's IP address** in the wizard's Moonraker step instead of `localhost`. This is ideal when the printer is on the floor and you want the screen at your desk.
+
+Point it at Moonraker (port `7125`), not the Mainsail/Fluidd web interface — you don't need Mainsail or Fluidd on the screen device at all. See [Remote Screen Setup](INSTALL.md#remote-screen-setup-run-on-a-separate-device) for step-by-step instructions.
 
 ### Which displays are supported?
 
@@ -69,6 +77,19 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 **Display rotation:** All three binaries (main, splash, watchdog) support 0°, 90°, 180°, and 270° rotation via config or command line.
 
 If you test on hardware not listed above, please let us know your results!
+
+### Which slicer should I use?
+
+HelixScreen reads standard G-code, so most slicers work. But support is tiered:
+
+| Slicer | Status | Notes |
+|--------|--------|-------|
+| **OrcaSlicer 2.3.2+** | **Primary** | The slicer we develop and test against. Best experience — including two-way filament preset sync with HelixScreen's filament slots. Recommended for everyone. |
+| Manufacturer slicers (Creality Print, FlashForge Orca, Bambu Studio, etc.) | **Supported** | Most are OrcaSlicer/PrusaSlicer forks and work well. We aim to support them. |
+| PrusaSlicer / SuperSlicer | **Supported** | Fully usable, including exclude-objects and pre-print options. |
+| Cura | **Not targeted** | We don't test against Cura and don't build features for it, but we don't go out of our way to break it. Output generally works; some features (exclude objects, filament sync) need extra setup or aren't available. |
+
+For the best results — accurate metadata, thumbnails, exclude-object support, and filament syncing — use **OrcaSlicer 2.3.2 or later**.
 
 ### How is this different from KlipperScreen and GuppyScreen?
 
@@ -239,7 +260,7 @@ Labels include spool name, material, color swatch, temperatures, and a QR code. 
 **Yes.** Full multi-material support is available for:
 - **Happy Hare** — MMU2, ERCF, 3MS, Tradrack
 - **AFC-Klipper** — Box Turtle with full data parsing, 11 device actions, per-lane reset, and mock mode
-- **ACE** (Anycubic ACE Pro, via ValgACE/BunnyACE/DuckACE Klipper drivers) — supported
+- **ACE** (Anycubic ACE Pro) — supported on native Anycubic firmware (the `filament_hub` Klipper object, e.g. Kobra on Rinkhals) and on the community ValgACE/BunnyACE/DuckACE Klipper drivers
 - **Tool changers** — supported
 
 Features include visual slot configuration with tool badges, endless spool arrows, tap-to-edit popup, Spoolman integration, and material compatibility validation.

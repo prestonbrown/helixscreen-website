@@ -209,8 +209,10 @@ The default layout places:
 
 | Widget | Description | Default | Min | Max | Resizable | Hardware Required |
 |--------|-------------|---------|-----|-----|-----------|-------------------|
-| **Nozzle Temperature** | Live nozzle temperature with an animated heating icon that pulses when the heater is active. Tap to open the temperature graph overlay. | 1x1 | 1x1 | 2x2 | Yes | — |
+| **Nozzle Temperature** | Live nozzle temperature for the active extruder, with an animated heating icon that pulses when the heater is active. Tap to open the temperature graph overlay. (Singular — shows one nozzle. For all extruders at once, use **Nozzle Temperatures** below.) | 1x1 | 1x1 | 2x2 | Yes | — |
+| **Nozzle Temperatures** | Shows **all** extruder temperatures at once, each as a labeled row with current and target readings color-coded by state (green at-temp, red heating, blue cooling, gray off), plus a bed row at the bottom. On multi-tool printers each extruder gets its own row, labeled "T0", "T1", … (or "Nozzle 1", "Nozzle 2", … at wider sizes). Tap a nozzle row to open the nozzle temperature graph, or the bed row for the bed graph. (Plural — for single-extruder printers the singular **Nozzle Temperature** widget is simpler.) | 1x2 | 1x1 | 2x3 | Yes | — |
 | **Bed Temperature** | Live bed temperature with current and target readings. Tap to open the temperature graph overlay. | 1x1 | 1x1 | 2x2 | Yes | — |
+| **Chamber Temperature** | Live chamber temperature with current and target readings, shown with a chamber icon and an animated heating indicator. Tap to open the temperature graph overlay focused on the chamber. Only available on printers with a chamber temperature sensor or heater. | 1x1 | 1x1 | 2x2 | Yes | Chamber sensor or heater |
 | **Temperatures** | Stacked view showing nozzle, bed, and chamber temperatures in one widget. Each row shows current temp and target. Also available in Carousel mode (see [Display Modes](#display-modes-stack-vs-carousel) below). Tap any reading to open the temperature graph. | 1x1 | 1x1 | 3x2 | Yes | — |
 | **Temperature Sensors** | Monitor additional temperature sensors (chamber, enclosure heater, etc.) in a single-sensor or carousel view. You can add multiple instances, each configured to a different sensor. Also available in Carousel mode. | 1x1 | 1x1 | 2x1 | Horizontal only | Extra temp sensors |
 | **Temperature Graph** | Live temperature chart with configurable sensor series. Shows colored lines for each sensor with optional target setpoint lines. Content adapts to size — larger sizes show legends, axis labels, gradients, and temperature readouts. Tap to open the full-screen graph overlay. Configure which sensors to display via the gear icon in Edit Mode. You can add multiple instances. | 2x2 | 1x1 | 6x4 | Yes | — |
@@ -229,7 +231,7 @@ The default layout places:
 | Widget | Description | Default | Min | Max | Resizable | Hardware Required |
 |--------|-------------|---------|-----|-----|-----------|-------------------|
 | **Active Spool** | Shows the currently loaded Spoolman spool — displays the spool color, material type, brand, and remaining weight. Tap to edit the active spool. At compact sizes (1x1) shows just the colored spool icon; at wider sizes shows material details alongside. | 1x1 | 1x1 | 4x2 | Yes | Spoolman configured |
-| **AMS Status** | Mini view of your multi-material spool slots showing filament colors and status. Tap for the full AMS panel. | 1x1 | 1x1 | 2x2 | Yes | AMS/MMU detected |
+| **AMS Status** | A live view of your multi-material spool lanes. At 1x it's a compact row of colored bars — one per lane, each filled to show roughly how much filament is left. At 2x and wider it switches to a detailed view: a small spool for each lane with its lane number, material type (PLA, PETG…), and percent remaining, and the currently loaded lane's number badge is highlighted green. The spools size to fit the widget — 2 across at 2x, 4 across at 4x — and any lanes that don't fit scroll sideways. Tap for the full AMS panel. | 1x1 | 1x1 | 4x2 | Yes | AMS/MMU detected |
 | **Filament Sensor** | Filament runout detection status. Shows whether filament is loaded. | 1x1 | 1x1 | 2x1 | Horizontal only | Filament sensor |
 | **Width Sensor** | Live filament width reading from a diameter sensor. | 1x1 | 1x1 | 2x2 | Yes | Width sensor |
 | **Clog Detection** | Filament clog and flow health monitor. Shows a clog/flow arc meter, and a buffer sync meter on Happy Hare printers. Tap to open the Buffer Status detail modal. Configurable via the gear icon in Edit Mode. See [Clog Detection Widget](#clog-detection-widget) below. | 1x1 | 1x1 | 2x2 | Yes | AMS/MMU detected |
@@ -248,6 +250,7 @@ The default layout places:
 | **Macro Button 1–5** | One-tap buttons to run configured macros. Up to 5 independently configurable slots. Assign a macro to each via the gear icon in Edit Mode. | 1x1 | 1x1 | 2x1 | Horizontal only | — |
 | **Macros** | One-tap shortcut to open the [Macros](advanced.md#macro-execution) panel for browsing and executing Klipper macros. | 1x1 | 1x1 | 1x1 | No | — |
 | **G-code Console** | One-tap shortcut to open the [G-code Console](advanced.md#g-code-console) overlay for sending commands and viewing Klipper responses. See [G-code Console Widget](#g-code-console-widget) below. | 1x1 | 1x1 | 1x1 | No | — |
+| **Tool Switcher** | Quick tool switching for multi-tool printers (IDEX, toolchangers, multi-head). Shows the available tools and lets you switch the active tool with one tap. See [Tool Switcher Widget](#tool-switcher-widget) below. | 1x1 | 1x1 | 2x2 | Yes | Multi-tool printer |
 | **Power** | Toggle all selected Moonraker power devices (PSU, lights, etc.) with one tap. | 1x1 | 1x1 | 1x1 | No | Power devices |
 | **Power Device** | Toggle an individual Moonraker power device. You can add multiple instances, each bound to a different device. Shows the device name, state, and a customizable icon. | 1x1 | 1x1 | 1x1 | No | Power devices |
 
@@ -271,6 +274,7 @@ Some widgets depend on specific hardware being detected by Klipper. If the hardw
 | Widget | Required Hardware |
 |--------|-------------------|
 | Camera | Webcam configured in Moonraker (crowsnest, camera-streamer, etc.) |
+| Chamber Temperature | A chamber temperature sensor (`[temperature_sensor chamber]`) or chamber heater (`[heater_generic chamber]`) in Klipper |
 | AMS Status | AMS, AFC (Box Turtle), Happy Hare, ACE (Anycubic ACE Pro), or compatible MMU system |
 | Clog Detection | AMS, AFC, Happy Hare, or compatible MMU with clog/flow detection |
 | LED Light / LED Controls | Any LED strip configured in Klipper (neopixel, dotstar, output_pin) |
@@ -323,7 +327,9 @@ While **not** in Edit Mode, widgets respond to taps and other gestures:
 | Network | — (display only) |
 | Camera | Opens fullscreen camera view |
 | Nozzle Temperature | Opens temperature graph overlay |
+| Nozzle Temperatures | Tap a nozzle row opens the nozzle graph; tap the bed row opens the bed graph |
 | Bed Temperature | Opens temperature graph overlay |
+| Chamber Temperature | Opens temperature graph overlay focused on the chamber |
 | Temperatures | Opens temperature graph for the tapped sensor |
 | Temperature Sensors | — (display only) |
 | Temperature Graph | Opens full-screen temperature graph overlay |
@@ -341,6 +347,7 @@ While **not** in Edit Mode, widgets respond to taps and other gestures:
 | Macro Button | Runs the configured macro immediately |
 | Macros | Opens the Macros panel overlay |
 | G-code Console | Opens the G-code Console overlay |
+| Tool Switcher | Switches the active tool (compact size opens a tool picker; larger sizes show tappable tool pills) |
 | Power | Toggles all selected power devices |
 | Power Device | Toggles the individual power device |
 | Shutdown/Reboot | Shows confirmation, then shuts down/reboots |
@@ -480,6 +487,32 @@ Tap the G-code Console widget on the Home Panel. A full-screen console overlay o
 
 ---
 
+## Tool Switcher Widget
+
+The Tool Switcher widget lets you change the active tool on multi-tool printers — IDEX machines, toolchangers, and other multi-head setups. It only appears in the Widget Catalog when more than one tool is detected.
+
+### How It Looks
+
+The widget adapts to its size:
+
+- **Compact (1x1)** — shows a swap icon above the current tool's label (e.g., "T0"). Tap it to open a **tool picker** popup listing every tool. The active tool is highlighted; tap any other tool to switch to it.
+- **Larger sizes** — shows a row (or two rows) of tappable **tool pills**, one per tool. The active tool's pill is highlighted. If there are more tools than fit, the row scrolls horizontally and keeps the active tool in view.
+
+The widget updates automatically when the active tool changes — whether you switch it here, run a tool-change macro, or it changes during a print.
+
+### Switching Tools
+
+Tap a tool (or pick one from the popup) to make it active.
+
+- **When idle**, the tool change happens immediately.
+- **When printing or paused**, a confirmation dialog appears first — changing tools mid-print can cause issues, so you have to confirm before it proceeds.
+
+Tapping the tool that's already active does nothing.
+
+> **Tool Switcher vs. Active Tool Badge:** The Tool Switcher is an optional, interactive widget you add to your dashboard. The [Active Tool Badge](#active-tool-badge) is a small read-only indicator that always appears in the top bar on multi-tool printers. The badge shows the current tool; the widget lets you change it.
+
+---
+
 ## Grid Layout Details
 
 ### Grid Dimensions
@@ -598,6 +631,38 @@ The Camera widget shows a live view from your webcam. It works with any MJPEG st
 5. Resize to your preferred size (up to 4x3)
 
 Tap the camera feed to open a **fullscreen view**. Tap again or press back to return.
+
+### Rotation & Flip
+
+If your camera is mounted at an angle or its image comes in mirrored, you can correct it without changing anything in Moonraker:
+
+1. Enter **Edit Mode** (long-press the grid)
+2. **Tap** the Camera widget to select it
+3. **Tap the gear icon** in the upper-left corner to open the Camera configuration modal
+4. Adjust the settings and tap **Save** (or **Cancel** to discard)
+
+The modal offers:
+
+- **Rotation** — rotate the feed by **0°, 90°, 180°, or 270°**. The current rotation is highlighted.
+- **Flip** — toggle **Horizontal** and/or **Vertical** mirroring. Each can be on or off independently.
+
+Your rotation and flip choices are applied on top of (combined with) any flip Moonraker is already doing, so if Moonraker already mirrors the image, toggling the matching flip here cancels it back out.
+
+### Stream Status
+
+While the feed is loading or unavailable, the widget shows a status message instead of video:
+
+- **No Camera** — no webcam is configured or detected yet
+- **Connecting Camera...** — the stream is being established
+- **Error messages** — if the stream can't be reached, the underlying error is shown so you know what went wrong
+
+Once the first frame arrives, the status text disappears and the live image takes over.
+
+At the smallest size (1x1) the widget shows only a camera icon and does not stream — tap it to open the fullscreen view, which starts the stream on demand. To save power, the stream also pauses automatically when the screen sleeps or when another overlay covers the widget, and throttles down while you're in Edit Mode.
+
+### Frame Rate
+
+The camera's target frame rate is read from your Moonraker webcam configuration (defaulting to 15 fps if not set). There's no separate frame-rate control in HelixScreen — adjust it in Moonraker (the same place Mainsail and Fluidd read it from).
 
 ### Performance Tip
 

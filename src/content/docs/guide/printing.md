@@ -16,6 +16,10 @@ Everything about selecting, starting, monitoring, and tuning your prints.
 1. From the **Home panel**, tap the print file area (shows "Select a file" when idle)
 2. Browse your G-code files from Moonraker's virtual SD card
 
+**File source tabs:**
+
+If your printer exposes a USB drive, the top-left of the panel shows **Printer** and **USB** tabs. Tap a tab to switch which storage the file browser lists — **Printer** shows files on the printer's storage (Moonraker's virtual SD card), **USB** shows files on the attached USB drive. The tabs only appear when more than one source is available.
+
 **View options:**
 
 - **Card View** (default): Thumbnails with file info — estimated time, filament usage, slicer
@@ -31,6 +35,26 @@ List view shows filename, print status, file size, modification date, and estima
 - Modified date (newest or oldest first)
 - Size (largest or smallest)
 - Print time (longest or shortest)
+
+---
+
+## Sending Prints from OrcaSlicer
+
+Files you slice in OrcaSlicer can be sent straight to your printer over the network, where they show up in the file browser above — no USB stick or web upload needed. **OrcaSlicer 2.4.0 or newer** added a native Klipper/Moonraker connection that makes this work out of the box; HelixScreen needs nothing configured on its side.
+
+In OrcaSlicer:
+
+1. Open **Printer Settings** (the gear next to your printer profile) → **Connection** (or the printer/network icon in the device area).
+2. Set the host type to **Moonraker (Klipper)**.
+3. Enter your printer's address — the same IP or hostname your printer's web interface (Mainsail/Fluidd) uses, e.g. `http://192.168.1.50` or `http://myprinter.local`.
+4. **API key** (only if your Moonraker requires one): paste the key from your Moonraker config. Most home setups can leave this blank.
+5. Click **Test** — OrcaSlicer confirms it can reach the printer.
+
+Once connected, OrcaSlicer's **Print** button uploads the sliced file and (optionally) starts it. The file appears in HelixScreen's file browser like any other, and you can also start it from the touchscreen.
+
+> **Older OrcaSlicer (2.3.x):** the native Moonraker option isn't available. Either upgrade to 2.4.0+, use the older **Octo (Klipper)** host type, or just export the G-code and copy it through Mainsail/Fluidd.
+
+> **Filament presets come along for the ride:** if your AMS slots are configured in HelixScreen, OrcaSlicer pre-selects matching filament presets automatically — see the [Filament guide](filament.md#syncing-with-orcaslicer-232-and-later-including-240).
 
 ---
 
@@ -90,9 +114,10 @@ The Print Status panel shows:
 
 | Button | Action |
 |--------|--------|
+| **Light** | Toggles the printer's LED/case light. Only appears when HelixScreen has a controllable light configured. |
 | **Pause** | Parks nozzle safely, pauses print |
 | **Resume** | Continues from paused state |
-| **Cancel** | Stops print (confirmation required). By default, waits for the printer's cancel routine to finish. If **Cancel Escalation** is enabled in **Settings > Motion**, an emergency stop triggers automatically after the configured timeout. |
+| **Cancel** | Stops print (confirmation required). By default, waits for the printer's cancel routine to finish. If **Cancel Escalation** is enabled in **Settings > Safety & Notifications**, an emergency stop triggers automatically after the configured timeout. |
 | **Tune** | Opens Print Tune overlay for real-time adjustments |
 
 ### View Toggle (Progress / Complete)
@@ -122,17 +147,19 @@ Access by tapping **Tune** during an active print.
 
 | Parameter | Range | What It Does |
 |-----------|-------|--------------|
-| Speed % | 10-300% | Overall print speed multiplier |
+| Speed % | 50-200% | Overall print speed multiplier |
 | Flow % | 75-125% | Extrusion rate multiplier |
-| Fan % | 0-100% | Part cooling fan speed |
+
+The overlay also includes Z-Offset / baby-step controls (see below).
 
 **When to adjust:**
 
-- **Speed %**: Slow down (50-70%) for intricate details or if you see layer separation. Speed up for large infill areas.
+- **Speed %**: Slow down (60-80%) for intricate details or if you see layer separation. Speed up for large infill areas.
 - **Flow %**: Increase (105-110%) if you see gaps between extrusion lines. Decrease (95-98%) for blobs or over-packed lines.
-- **Fan %**: Increase for better bridging and overhangs. Decrease or disable for ABS/ASA to prevent warping.
 
 > **Note:** Tune adjustments are temporary and only affect the current print. The next print uses your slicer's original values.
+
+> **Fan speed:** Part cooling fan speed is not adjusted from the Tune overlay. Current fan speeds are shown on the Print Status panel; tap that fan row to open the separate fan control overlay.
 
 ---
 
@@ -164,30 +191,6 @@ Fine-tune your first layer height while printing:
 
 ---
 
-## Pressure Advance Tuning
-
-If your printer has Pressure Advance configured:
-
-1. Tap **Tune** during a print
-2. Find **Pressure Advance** section (only visible if PA is enabled in Klipper)
-3. Adjust the value
-
-**Typical values by material:**
-
-| Material | PA Range |
-|----------|----------|
-| PLA | 0.02 - 0.06 |
-| PETG | 0.04 - 0.10 |
-| ABS/ASA | 0.03 - 0.08 |
-| TPU | 0.10 - 0.20 |
-
-**When to adjust:**
-
-- **Bulging corners**: Increase PA by 0.01-0.02
-- **Gaps at line starts**: Decrease PA by 0.01-0.02
-
----
-
 ## Exclude Object
 
 If your slicer supports object labels (OrcaSlicer, SuperSlicer):
@@ -210,6 +213,8 @@ When a print completes, a **completion modal** appears showing:
 - **Filament consumed** (formatted as mm, meters, or km)
 - Notification sound plays (if enabled in Sound Settings)
 - Print is logged to history
+
+Once a print has finished — whether it completed, was cancelled, or failed — a **Reprint** button replaces the Cancel button in the print controls. Tap it to start the same file again without browsing back to it.
 
 ---
 

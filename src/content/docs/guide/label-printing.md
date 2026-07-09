@@ -155,4 +155,4 @@ A toast notification confirms success or shows an error message.
 
 ---
 
-**Next:** [Calibration & Tuning](/docs/guide/calibration/) | **Prev:** [Filament Management](/docs/guide/filament/) | [Back to User Guide](/docs/)
+**Next:** [Calibration & Tuning](/docs/guide/calibration/) | **Prev:** [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) | [Back to User Guide](/docs/)

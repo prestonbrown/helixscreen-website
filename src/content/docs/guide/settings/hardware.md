@@ -9,11 +9,9 @@ The Hardware & Devices category contains settings for printers, peripherals, and
 
 ---
 
-## Hardware Issues
+## Hardware Health
 
-> Only shown when hardware issues are detected.
-
-Tap to open the Hardware Issues overlay, which lists detected issues:
+Tap to open the Hardware Health overlay, which lists detected hardware validation issues:
 
 | Category | Meaning |
 |----------|---------|
@@ -45,6 +43,14 @@ After switching, a toast notification confirms the new connection and you're tak
 
 ---
 
+## Camera
+
+> Only shown when a webcam is detected (an enabled webcam is configured in Moonraker).
+
+Tap to open a standalone fullscreen camera viewer showing the live feed from your printer's webcam.
+
+---
+
 ## Multi-Filament System Management
 
 > Only shown when a multi-filament system is detected.
@@ -65,15 +71,18 @@ Tap to open the Fan Settings overlay. This shows all detected fans and their cur
 
 > Only shown when sensors are detected.
 
-Tap to open the Sensor Settings overlay. Manage all detected filament sensors by choosing a role for each:
+Tap to open the Sensor Settings overlay. Each detected filament sensor can be assigned a role:
 
 | Role | Behavior |
 |------|----------|
-| **Runout** | Pauses print when filament runs out |
-| **Motion** | Detects filament movement (clog detection) |
-| **Ignore** | Sensor present but not monitored |
+| **None** | Sensor present but not monitored |
+| **Runout** | Pauses the print when filament runs out |
+| **Toolhead** | Monitors filament at the toolhead |
+| **Entry** | Monitors filament at the entry to the extruder path |
 
-Other detected sensors (accelerometers, probes, humidity, width, color) are listed as read-only information.
+Whether a sensor is a switch or a motion sensor is detected automatically — it is not something you choose. Other detected sensors (accelerometers, probes, humidity, width, color) are listed as read-only information.
+
+See [Sensors](/docs/guide/sensors/) for the full guide.
 
 ---
 
@@ -100,6 +109,8 @@ See [Power Device Control](../advanced.md#power-device-control) for full details
 > Only shown when Spoolman is configured in Moonraker.
 
 Tap to open Spoolman integration settings. HelixScreen connects to your Spoolman server for spool tracking, weight sync, and barcode scanning.
+
+> For the bigger picture — how filament tracking works with and without Spoolman, and how remaining weight is kept current — see [Filament Tracking & Spoolman](/docs/guide/filament-tracking/).
 
 ### Server Setup
 

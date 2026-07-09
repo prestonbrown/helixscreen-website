@@ -20,7 +20,7 @@ All K2 models use Allwinner ARM Cortex-A7 dual-core processors running Tina Linu
 | K2 Pro | 300 mm cubed | 4.3" 480x800 | Yes (60C) | Optional | Untested |
 | K2 Plus | 350 mm cubed | 4.3" 480x800 | Yes (60C) | Optional | Untested |
 | K2 Max | 350 mm cubed | 4.3" 480x1600 | Yes | Yes (combo) | **Hardware confirmed** |
-| K2 SE | 220x215x245 mm | Unknown | No | Unknown | Untested |
+| K2 SE | 220x215x245 mm | Unknown | No | Unknown | User-confirmed install (wget) |
 
 ## Hardware (Confirmed on K2 Max — 2026-03-23)
 
@@ -341,6 +341,7 @@ External filament rack (non-CFS) state:
 | `filament_switch_sensor filament_sensor` | Filament runout sensor state |
 | `load_ai` | AI print quality monitoring (waste detection) |
 | `heater_generic chamber_heater` | Chamber heater control |
+| `temperature_fan chamber_fan` | Chamber cooling fan (carries the M141 maintain ceiling) |
 | `temperature_sensor chamber_temp` | Chamber temperature sensor |
 | `motor_control` | Motor ready state, cutter position |
 | `belt_mdl mdlx` / `belt_mdl mdly` | Belt tension measurement |
@@ -348,6 +349,16 @@ External filament rack (non-CFS) state:
 | `z_align` / `z_tilt` | Z axis alignment |
 | `custom_macro` | Custom macro management |
 | `fan_feedback` | RPM feedback for all fans |
+
+#### Chamber Heating (M141)
+
+The K2 chamber is controlled by the `M141` macro, which coordinates two objects: `heater_generic chamber_heater` and `temperature_fan chamber_fan`. HelixScreen routes chamber sets through `M141 S{temp}` (rather than a raw `SET_HEATER_TEMPERATURE`), and the macro's behavior depends on the setpoint:
+
+- `M141 S0` → **Off** (heater target 0; cooling fan reset to its configured resting target, e.g. 35°C)
+- `M141 S{≤40}` → **Maintaining** — holds a cooling ceiling via `temperature_fan chamber_fan`; the heater target stays 0
+- `M141 S{>40}` → **Heating** — sets the `heater_generic chamber_heater` target
+
+Because the heater target reads 0 while maintaining, HelixScreen synthesizes a canonical display target and mode rather than displaying the raw heater target. See [MULTI_EXTRUDER_TEMPERATURE.md § Chamber Heating (M141)](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/MULTI_EXTRUDER_TEMPERATURE.md#chamber-heating-m141) for the subject/binding details.
 
 ### GCode Commands (from `box_wrapper.so` decompilation)
 
@@ -521,6 +532,7 @@ HelixScreen auto-detects K2 printers using heuristics from `config/printer_datab
 - **Low CPU** — Dual Cortex-A7 at ~57 BogoMIPS. Performance-sensitive features (bed mesh 3D, animations) may need throttling.
 - **No curl** — BusyBox wget only, no HTTPS support.
 - **WiFi managed by platform hooks** — The stock `wifi-server` is killed when HelixScreen takes over the display. Platform hooks (`hooks-k2.sh`) start `wpa_supplicant` directly using credentials at `/etc/wifi/wpa_supplicant/wpa_supplicant.conf`. WiFi configuration changes made via the stock UI are preserved.
+- **Non-standard control socket** — `hooks-k2.sh` launches `wpa_supplicant` without `-O`, so the control socket lands at the `ctrl_interface=` from the stock conf — `/etc/wifi/wpa_supplicant/sockets/wlan0` on K2 — not the usual `/run/wpa_supplicant`. The WiFi backend searches that location (and auto-detects any `-O` path from the live process), so network discovery works without manual symlinks. Firmware that uses yet another path can be pointed at it via `HELIX_WPA_SOCKET_DIR`. Surfaced by a community **K2 Plus** report.
 
 ## Related Resources
 

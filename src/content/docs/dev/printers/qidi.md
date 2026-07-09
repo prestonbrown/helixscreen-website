@@ -16,7 +16,7 @@ HelixScreen supports the entire QIDI 3-series and 4-series in two distinct modes
 
 If your QIDI is running Klipper + Moonraker -- whether that's stock firmware, [FreeDi](https://github.com/Phil1988/FreeDi), [FreeQIDI](https://github.com/Phil1988/FreeQIDI), or another community stack -- HelixScreen can control it remotely from a separate touchscreen device. The printer's local display (TJC HMI or otherwise) is irrelevant in this mode; HelixScreen talks to Moonraker over WebSocket on port 7125 the same way Mainsail or Fluidd does.
 
-All six QIDI models in the printer database (X-Smart 3, X-Plus 3, X-Max 3, Q1 Pro, Plus 4, Q2) are auto-detected as remote targets. Just point HelixScreen at the printer's hostname or IP and the correct profile loads automatically.
+All seven QIDI models in the printer database (X-Smart 3, X-Plus 3, X-Max 3, Q1 Pro, Plus 4, Q2, Max 4) are auto-detected as remote targets. Just point HelixScreen at the printer's hostname or IP and the correct profile loads automatically.
 
 **On-device install (replace the built-in UI)**
 
@@ -37,7 +37,7 @@ The TJC panel on Plus 4 and the 3-series is part of QIDI's **MKS PI smart-panel*
 
 HelixScreen renders LVGL directly to a Linux framebuffer / DRM / SDL surface; it has no architecture for pushing UI to a remote serial HMI. Even if we added a TJC backend, the panel firmware would still be the actual UI — HelixScreen would be reduced to a thumbnail-encoder shim, not a touchscreen UI replacement. The two architectures don't meet halfway.
 
-A community pure-Python reimplementation of `libColPic.so` exists (byte-for-byte verified, 30/30 cases against the original, May 2026) and is useful to anyone driving the stock panel from host-side tooling (FreeDi, community firmware). It is **not** a path to running HelixScreen on the stock display.
+A community pure-Python reimplementation of `libColPic.so` exists (byte-for-byte verified, 30/30 cases against the original, by `Sib6019`, May 22 2026; full panel + encoder writeup in [`../printer-research/QIDI_PLUS_4_RESEARCH.md`](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/printer-research/QIDI_PLUS_4_RESEARCH.md) § 0). It is useful to anyone driving the stock panel from host-side tooling (FreeDi, community firmware). It is **not** a path to running HelixScreen on the stock display.
 
 The only way to run HelixScreen on-device on a Plus 4 or 3-series printer is to replace the MKS panel with a Linux-driven display (HDMI/DSI/SDL framebuffer). Remote-control mode is unaffected.
 
@@ -48,13 +48,13 @@ QIDI uses two generations of mainboard:
 - **Older models (X-Smart 3, X-Plus 3, X-Max 3, Q1 Pro, Plus 4):** MKSPI boards with Rockchip RK3328, ARM Cortex-A53 (aarch64), 1 GB RAM. These all use TJC HMI serial displays.
 - **Newer models (Q2, Max 4):** New-generation boards with quad-core ARM Cortex-A35 (aarch64), ~498 MB RAM. Both drive Linux framebuffer displays from the SoC.
 
-"On-device" below means whether HelixScreen can replace the printer's built-in display. **All six models work as remote targets regardless of this column.**
+"On-device" below means whether HelixScreen can replace the printer's built-in display. **All seven models work as remote targets regardless of this column.**
 
 | Model | Display Type | Resolution | On-Device Install? | Notes |
 |-------|-------------|------------|--------------------|-------|
 | Max 4 | Linux framebuffer (5" capacitive) | 800x480 | **Likely yes** (untested) | Same new-gen mainboard as Q2, with a larger framebuffer display. |
 | Q2 | Linux framebuffer (4.3" IPS capacitive) | 480x272 | **Yes** (confirmed) | Goodix touch controller. User-confirmed working install. WiFi requires wpa_supplicant backend (see below). |
-| Plus 4 | TJC HMI (serial) | 800x480 | **No** | Requires screen replacement. Same display firmware as X-Max 3. Auto-detected as remote target. |
+| Plus 4 | TJC HMI (serial) | 800x480 | **No** | Panel identified: `TJC8048X250_011C_I_Z03`, firmware V1.65, CST3240 touch, driven by `xindi` daemon over `/dev/ttyS1 @ 115200`. Requires screen replacement. Auto-detected as remote target. |
 | Q1 Pro | TJC HMI (serial) | 480x272 | **No** | Requires screen replacement. TJC model TJC4827X243_011. Auto-detected as remote target. |
 | X-Max 3 | TJC HMI (serial) | 800x480 | **No** | Requires screen replacement (HDMI/DSI touchscreen). Auto-detected as remote target. |
 | X-Plus 3 | TJC HMI (serial) | 800x480 | **No** | Requires screen replacement. Same display firmware as X-Max 3. Auto-detected as remote target. |
@@ -148,9 +148,9 @@ Ensure the user running HelixScreen has read permissions on the event device. Ru
 
 ## Auto-Detection
 
-HelixScreen auto-detects all six supported QIDI models (X-Smart 3, X-Plus 3, X-Max 3, Q1 Pro, Plus 4, Q2) using several heuristics:
+HelixScreen auto-detects all seven supported QIDI models (X-Smart 3, X-Plus 3, X-Max 3, Q1 Pro, Plus 4, Q2, Max 4) using several heuristics:
 
-- Hostname patterns (`qidi`, `x-max`, `x-plus`, `x-smart`, `xsmart`, `q1`, `plus4`, `plus-4`)
+- Hostname patterns (`qidi`, `x-max`, `x-plus`, `x-smart`, `xsmart`, `q1`, `plus4`, `plus-4`, `max4`, `max-4`)
 - Active chamber heater presence (X-Plus 3, X-Max 3, Q1 Pro, Plus 4 -- X-Smart 3 has a passive enclosure with no heater)
 - MCU identification patterns (RP2040 toolhead -- QIDI dual-MCU signature)
 - Build volume dimensions
@@ -209,7 +209,7 @@ HelixScreen has a **read-only state mirror** and a **gated write-path** for the 
 - **Temperature profiles** — fetches `/server/files/config/officiall_filas_list.cfg` via Moonraker's file API at `on_started()`. Parses the ConfigParser INI sections (`[fila<N>]` with `min_temp` / `max_temp` / `box_min_temp` / `box_max_temp`), caches them, and applies the nozzle min/max to `SlotInfo` whenever a `filament_slot<N>` index arrives. HTTP failure is non-fatal.
 - **Bootstrap** — `on_started()` issues a `printer.objects.query` for `save_variables` + `box_extras` so the initial snapshot lands; subsequent `notify_status_update` frames carry deltas only.
 - **Heater drying state** — `heater_generic heater_box<N>` notifications (temperature/target) flow into `AmsUnit::environment` as the max across all boxes, so the UI can show drying-active state regardless of which physical box is active.
-- **Write-path (gated)** — set `HELIX_QIDI_BOX_WRITE=1` to enable `load_filament` (`T<tool>`), `unload_filament` (`UNLOAD_T<tool>`, supports `-1` for active slot), `change_tool` (`T<tool>`), and `set_tool_mapping` (`SAVE_VARIABLE VARIABLE=value_t<t> VALUE="slot<s>"`). Default off — production builds return `not_supported` so unvalidated gcode never reaches live hardware.
+- **Write-path** — always enabled: `load_filament` (`T<tool>`), `unload_filament` (`UNLOAD_T<tool>`, supports `-1` for active slot), `change_tool` (`T<tool>`), and `set_tool_mapping` (`SAVE_VARIABLE VARIABLE=value_t<t> VALUE="slot<s>"`). Commands verified against QIDI's open-source firmware (`box_stepper.py`/`box_extras.py`, #1030). Each op logs at `info` (entry log + raw G-code) for field visibility.
 
 **Known gaps:**
 
@@ -222,13 +222,15 @@ Full context and references to the `qidi-community/Plus4-Wiki` open-source reimp
 
 **Alternative path: [Bunny Box](https://github.com/Wazzup77/Bunny-Box)** — a community open-source replacement that reimplements the QIDI Box as a [Happy Hare](https://github.com/moggieuk/Happy-Hare) MMU. HelixScreen already has Happy Hare support, so a printer flashed with Bunny Box is controllable through HelixScreen via its existing Happy Hare integration. Plus 4 is the most mature target (tested on stock QIDI 1.7.3, FreeDi, and Kalico); Q2 is in active testing; Max 4 is not yet supported. Bunny Box currently depends on the maintainer's [Happy Hare fork](https://github.com/Wazzup77/Happy-Hare) for QIDI-specific hall-sensor and cutter handling, pending upstream merge.
 
+HelixScreen ships a **Q2 Happy Hare preset** (`presets/qidi_q2.json`) for exactly this path — a Q2 running Happy Hare (e.g. Bunny Box) auto-detects and loads with the Happy Hare MMU pre-gate sensors and heaters wired up. The Q2 install and WiFi were confirmed working by a community user; HelixScreen owns no QIDI hardware, so the Q2 path is community-validated rather than team-tested (prestonbrown/helixscreen#997).
+
 ## Known Limitations
 
 - **Most QIDI models have TJC HMI serial displays** -- The X-Max 3, X-Plus 3, Q1 Pro, X-Smart 3, and **Plus 4** all use TJC (Nextion-compatible) displays connected via serial UART. HelixScreen cannot drive these. For on-device install, a physical screen replacement (HDMI or DSI touchscreen) is required. Remote-control mode is unaffected.
 - **Q2 resolution is very small** -- The Q2's 480x272 display uses the MICRO layout. Some UI elements may be cramped but the layout is functional.
 - **Q2 has limited RAM** -- ~498 MB total. HelixScreen must be memory-conscious on this device.
-- **Max 4 untested** -- Detection heuristics and display rendering for this model are based on specs. Community testers welcome.
-- **No chamber heater control UI** -- QIDI printers have heated chambers, but HelixScreen doesn't yet have a dedicated chamber temperature control panel.
+- **Max 4 QIDI Box control diverges from the Q2** -- Detection + preset are in and a community tester confirmed the on-device build runs, but the Max 4's QIDI Box does **not** share the Q2's control surface. The shared QIDI backend ejects/unloads via a `box_stepper` `FORCE_MOVE` primitive (measured on a real Q2, prestonbrown/helixscreen#1041); on the Max 4 that is rejected with `Invalid pin value` — the Max 4 uses the `multi_color_controller` dialect (`MULTI_COLOR_BOX_UNLOAD SLOT=slotN`) instead. Per-model box dispatch is tracked in prestonbrown/helixscreen#1083 (#1070 is separate — multi-box scaling). Klipper/Moonraker version reporting is also currently blank on QIDI new-gen firmware (Q2 + Max 4).
+- **No standalone box-heater panel** -- The QIDI Box's PTC dryer heater (`heater_generic heater_box<N>`) *is* controllable today through the shared AMS drying screen (Start/Stop drying, target temp/duration), which drives the native `heater_box<N>` for the stock QIDI backend and `MMU_HEATER` for a Happy-Hare-flashed box (Bunny Box). What's missing is a *dedicated* box-heater temperature panel like the chamber temperature panel — the heater is reachable only via the drying flow, not as a standalone control.
 
 ## Q2 Hardware Details
 

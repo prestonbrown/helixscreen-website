@@ -164,7 +164,7 @@ spdlog::trace("[Moonraker Client] Registered request {} for method {}", id, meth
 ## Implementation Notes
 
 - Use `spdlog` exclusively (not `printf`, `std::cout`, or `LV_LOG_*`)
-- Include timestamps automatically via spdlog configuration
+- Every log line carries the emitting **thread id** and (on console/file) an ms timestamp — see "Per-Sink Log Patterns" below
 - For errors that should notify the user, use `NOTIFY_ERROR()` macro
 
 ---
@@ -197,6 +197,27 @@ The runtime target is set by precedence (highest → lowest):
 
 Valid `LogTarget` values: `auto`, `journal`, `syslog`, `file`, `console`, `android`.
 
+### Per-Sink Log Patterns
+
+Each sink gets its **own** spdlog pattern (applied via `sink->set_pattern()` right after construction — not a global `spdlog::set_pattern()`, since the formats differ). The pattern strings come from the pure helper `helix::logging::pattern_for_sink(SinkKind)` in `logging_init.h`, so the format decision is unit-testable without constructing real sinks (`tests/unit/test_log_pattern.cpp`, tag `[logging][pattern]`).
+
+| Sink (`SinkKind`) | Pattern | Notes |
+|---|---|---|
+| Console (`stdout_color_sink`) | `[%H:%M:%S.%e] [%^%l%$] [%t] %v` | ms timestamp, colored level, thread id |
+| File (`rotating_file_sink`) | `[%H:%M:%S.%e] [%^%l%$] [%t] %v` | same string — `%^…%$` are no-ops on the non-color file sink |
+| journald (`systemd_sink`) | `[%l] [%t] %v` | **no time token** — journald stamps its own time |
+| syslog (`syslog_sink`) | `[%l] [%t] %v` | **no time token** — syslog stamps its own; `%l` kept for grep-ability of `/var/log/messages` |
+| Android (`android_sink`) | `[%t] %v` | logcat adds its own timestamp/level/tag metadata |
+| Crash breadcrumb (`CrashErrorLogSink`) | `[%H:%M:%S.%e] [%l] [%t] %v` | feeds crash context; the ring actually stores `msg.payload`, so this pattern is for any other consumer of the stream |
+
+**Why the thread id (`%t`) is on every sink:** the worst crash family in this codebase (L081 / async-delete) is about main-thread-vs-background-thread (WebSocket / HTTP worker) confusion. Knowing which thread emitted a line is the single highest-value field for diagnosing it. The `[logging][pattern]` test fails if `%t` is dropped from any sink or if a time token is added to the system sinks (which would double-stamp the journal/syslog clock).
+
+A console/file line now looks like:
+
+```
+[14:32:07.918] [debug] [140351827234560] [PrinterState] Initialized 6 fans (version 1)
+```
+
 ### Console Sink (Stdout) — When It's Attached
 
 The console sink is **opt-in by detection**. Logic in `logging_init.cpp::init()`:
@@ -215,6 +236,25 @@ The TTY check means:
 
 This prevents the "double-log" mode that caused the Snapmaker U1 print failure where spdlog at trace wrote ~35 lines/sec to stdout, the init script captured stdout to a tmpfs file, and 498 MB filled `/tmp`.
 
+### Reading `--test` Logs When stdout Isn't a TTY
+
+The same `isatty(STDOUT_FILENO)` gate bites dev runs too: launch `./build/bin/helix-screen --test` with stdout **redirected or piped** (background run, `> log.txt`, `| grep`, a non-interactive agent shell) and there's no TTY, so the **console sink is not attached** — nothing prints to the pipe. The logs still land in the resolved system sink (syslog/journal on Linux dev boxes), not on stdout.
+
+Read them from syslog instead:
+
+```bash
+HELIX_MOCK_PRINTER=ad5m ./build/bin/helix-screen --test -v &   # boots, runs headless
+sleep 6 && kill %1
+journalctl --since "1 min ago" | grep helix          # all lines
+journalctl --since "1 min ago" | grep '\[PrinterDetector\]'   # one subsystem
+```
+
+Run it from an interactive shell (or `ssh -t`) and the console sink **is** attached — output goes straight to the terminal as usual.
+
+Don't reach for `--log-dest file` to work around this: it writes `/var/log/helix-screen.log`, which is **not writable by a non-root user**, so the run fails. For redirected/background dev runs, syslog (`journalctl`) is the way.
+
+Verbosity still applies (`-v`=info, `-vv`=debug, `-vvv`=trace). Detection lines such as `[PrinterState] Printer type set to: '…'` are **info-level**, so `-v` is enough to see them.
+
 ### Per-Platform Routing Summary
 
 | Platform | spdlog target (default) | Where structured logs land | How to read |
@@ -230,6 +270,23 @@ This prevents the "double-log" mode that caused the Snapmaker U1 print failure w
 | SonicPad (Debian) | Syslog | `/var/log/syslog` | `grep helix-screen /var/log/syslog` |
 | Android | Android | logcat | `adb logcat -s HelixScreen` |
 | Dev workstation (macOS / interactive Linux) | Console | stdout in terminal | visible directly |
+
+### Debugging the C / libhv Layer On-Device
+
+spdlog is C++-only. When you need temporary instrumentation **inside a C
+dependency** (libhv, the DNS resolver in `lib/libhv/base/`), do **not** rely on
+`fprintf(stderr)` — the app manages its own stdout/stderr and a raw stderr write
+may not be captured. Use **`syslog(3)`** (`#include <syslog.h>`,
+`syslog(LOG_WARNING, "[TAG] ...")`); it lands in the platform's syslog
+(`/var/log/messages`, `logread`, etc.) right alongside spdlog's syslog sink, with
+no plumbing. spdlog's own warn/error (fd1/syslog) is reliably captured;
+`--log-dest=console -vv` forces the console sink for redirected/non-tty runs.
+
+**Trap:** before trusting *absence* of instrumentation output, confirm the code
+is actually in the deployed binary: `strings <binary> | grep <MARKER>`. A patched
+file compiled into a static `.a` (e.g. `hsocket.o` in `libhv.a`) can be a stale
+cached object that never picked up your edit — "no log output" then means "not
+compiled in," not "not reached." See BUILD_SYSTEM.md § Patch Gotchas.
 
 ## Launcher Subshell Capture (`launcher.log`)
 

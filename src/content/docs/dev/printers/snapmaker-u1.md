@@ -35,6 +35,41 @@ The U1 is a 4-toolhead color printer. Each head has its own nozzle, extruder, he
 
 The U1 does **not** use the standard [viesturz/klipper-toolchanger](https://github.com/viesturz/klipper-toolchanger) module. Instead, it uses native multi-extruder with custom Klipper extensions. Extruders are named `extruder`, `extruder1`, `extruder2`, `extruder3` with custom state fields (`park_pin`, `active_pin`, `activating_move`, `state`). HelixScreen has a dedicated `AmsBackendSnapmaker` that tracks tool state, RFID filament data, and supports tool switching via `T0`–`T3` gcodes.
 
+## Firmware Requirements
+
+HelixScreen needs exactly one thing from the firmware: **SSH access** (to deploy and to install its boot hook). Both stock and community firmware can provide it — HelixScreen does **not** require PAXX.
+
+- **Stock Snapmaker firmware (1.2+)** ships the `dropbear` SSH server. It is disabled by default and gated behind the printer's root/developer-access mode: `/etc/init.d/S50dropbear` exits early unless `custom_misc vertype` reports `dbg`. Snapmaker added a user-facing **Root access** option in firmware **V1.2.0**; enabling it (or flashing debug mode via `custom_misc gen-debug`, which persists across upgrades) starts dropbear with the standard `root` / `lava` accounts, password `snapmaker`. That is the exact SSH path HelixScreen uses — **stock firmware is supported.**
+- **PAXX Extended Firmware** is *repackaged stock firmware* plus an overlay of patches. It removes the dropbear debug-mode gate (SSH on by default) and bundles extras HelixScreen does not use — Tailscale, OctoEverywhere, WebRTC camera, a `/firmware-config/` web UI, RFID filament write-back, etc. It is the turnkey option if you'd rather not enable stock root access yourself, but it is **not** a HelixScreen requirement.
+
+| Firmware | SSH | Status | Boot launcher HelixScreen hooks |
+|----------|-----|--------|----------------------------------|
+| Stock 1.2+ | dropbear, enabled via Root access / debug mode | **Supported** (autostart newly added, see caveat) | No display init script exists; HelixScreen hooks `S99input-event-daemon` (the only boot-glob launcher present on stock). |
+| PAXX 1.2 / 1.3 | on by default | **Tested** | `/etc/init.d/S99screen` (launches stock UI `/usr/bin/gui`). |
+| PAXX 1.4 | on by default | **Tested + hardware-validated** | `S99screen` removed; HelixScreen hooks `S99fb-http`. |
+
+> **Stock-firmware caveat:** deploy, SSH, WiFi-credential reuse, and display takeover (`chmod -x /usr/bin/gui`) all rely on the *base rootfs*, which is byte-identical between stock and PAXX — so they work on stock. The stock **boot-time autostart** (the `S99input-event-daemon` hook) is newly added and **not yet verified on a stock device** (development hardware runs PAXX). The hook is additive and idempotent, so it is a no-op on PAXX; see [How HelixScreen takes over the display](#how-helixscreen-takes-over-the-display).
+
+The only PAXX-specific endpoint HelixScreen ever calls is `/printer/filament_detect/set` (RFID write-back); on stock it returns 404 and HelixScreen degrades gracefully (filament edits persist in HelixScreen's own store instead of mirroring back to firmware).
+
+PAXX source: [paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware).
+
+### How HelixScreen takes over the display
+
+The U1 root filesystem is a read-only SquashFS with a writable OverlayFS upper on `/oem`. `/etc/init.d/S01aoverlayfs` wipes that upper on every boot **unless `/oem/.debug` exists**, so the installer touches `/oem/.debug` to make its changes persist. (This overlay/`.debug` mechanism is byte-identical across firmware 1.2/1.3/1.4.)
+
+To own the display and auto-start at boot, the installer:
+
+1. **Hooks a boot-time launcher** — installs a HelixScreen delegate into whichever boot-glob init scripts ship in the firmware's read-only SquashFS, each preserved as `*.stock` for the helix-not-installed fallback and for uninstall:
+   - **PAXX 1.2 / 1.3** → `/etc/init.d/S99screen` (the stock display launcher); delegate is *helix-instead-of-stock-UI*.
+   - **PAXX 1.4** → `/etc/init.d/S99fb-http` (`S99screen` was removed); delegate is *helix-instead-of-stock-UI*.
+   - **Stock firmware** → `/etc/init.d/S99input-event-daemon`. Stock ships **no display launcher** in `/etc/init.d` (the stock UI is started by a supervisor binary), so there is nothing UI-shaped to hook. `S99input-event-daemon` is the one squashfs-resident, late-running script present on stock; the delegate *preserves* its function (runs the saved `.stock` to keep `input-event-daemon` going) and **then** starts HelixScreen. Because `helixscreen.init start` is idempotent, this same hook is harmless on PAXX (where an earlier launcher already started HelixScreen).
+2. **Disables the stock UI binary itself** with `chmod -x /usr/bin/gui` (launcher-independent belt-and-suspenders so nothing can re-grab the framebuffer/DRM, regardless of which launcher or supervisor starts it). The uninstaller restores the exec bit.
+
+Both changes live in the persistent overlay upper and survive reboot via `/oem/.debug`. A **firmware upgrade** re-flashes the rootfs and removes `/oem/.debug`, so HelixScreen must be reinstalled after any firmware update (stock or PAXX).
+
+> **CRITICAL — the boot-glob trap that dictates which script we hook.** busybox `init` runs `/etc/init.d/rcS` **from the read-only SquashFS** and expands its `for i in /etc/init.d/S??*` boot loop **once**, *before* `S01aoverlayfs` does its `pivot_root` onto the `.debug` overlay. So the *list of script names* is frozen from the SquashFS; a script created **only** in the overlay upper (not present in the SquashFS) is **not** in that frozen glob → it **never runs at boot** (only at *shutdown*, via `rcK`, once the overlay is active — a boot/shutdown asymmetry). This is why an installer-created `/etc/init.d/S99screen` does not autostart on PAXX 1.4 *or* stock (neither ships `S99screen` in its SquashFS). The fix is to delegate from a script that **does** ship in the SquashFS and runs **after** `S01aoverlayfs` (so rcS executes its *overlay copy*, post-pivot): `S99fb-http` on PAXX 1.4, `S99input-event-daemon` on stock. Each hook is conditional (`[ -f ]`) and idempotent, so installing all of them is safe across every firmware variant.
+
 ## Cross-Compilation
 
 The U1 target uses the same aarch64 cross-compiler as the Raspberry Pi, with fully static linking to avoid glibc version dependencies.
@@ -82,13 +117,10 @@ make package-snapmaker-u1
 ### Prerequisites
 
 1. **Snapmaker U1** on the network (Ethernet or WiFi)
-2. **Extended Firmware** installed — provides SSH access. Download from [paxx12/SnapmakerU1-Extended-Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware), flash via USB drive (FAT32, `.bin` file in root)
-3. **SSH enabled** — after Extended Firmware is installed, enable SSH via the firmware config web UI:
-   ```bash
-   # Open http://<printer-ip>/firmware-config/ in a browser, or:
-   curl -X POST http://<printer-ip>/firmware-config/api/settings/ssh/true
-   ```
-4. **SSH access verified** — connect as root:
+2. **SSH access** — via either firmware path:
+   - **Stock firmware (1.2+):** enable the printer's **Root access** option (added in V1.2.0), or flash persistent debug mode (`custom_misc gen-debug`). This starts `dropbear`.
+   - **PAXX Extended Firmware:** SSH is on by default. Download from [paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware), flash via USB (FAT32, `.bin` in root). To toggle SSH explicitly: `curl -X POST http://<printer-ip>/firmware-config/api/settings/ssh/true`.
+3. **SSH access verified** — connect as root (works on both):
    ```bash
    ssh root@<printer-ip>   # password: snapmaker
    ```
@@ -139,43 +171,41 @@ The deploy target automatically:
 ### What Happens on Deploy
 
 1. DRM keepalive: a background process opens `/dev/dri/card0` to prevent CRTC teardown
-2. Stock UI processes (`gui`, `lmd`) are killed via their SysV init scripts
+2. The stock UI process (`gui`) is killed, and the installer disables its binary (`chmod -x /usr/bin/gui`) so no launcher can relaunch it. `lmd` (the camera/timelapse supervisor) is left running — killing it would break timelapse.
 3. HelixScreen starts as DRM master with double-buffered page flipping
 4. The DRM keepalive process exits once HelixScreen has the DRM device open
 5. The first-run wizard appears (language selection, printer connection setup)
 
 ### Rollback (Restore Stock UI)
 
-To restore the stock Snapmaker touchscreen UI at any time:
+To restore the stock Snapmaker touchscreen UI, run the uninstaller — it re-enables the stock UI binary (`/usr/bin/gui`) and restores the stock `S99screen` launcher (firmware 1.3) or removes the HelixScreen-created one (firmware 1.4):
 
 ```bash
-# Quick rollback — kill HelixScreen, restart stock UI
-ssh root@<printer-ip> "killall helix-screen helix-watchdog; /etc/init.d/S99screen start; /etc/init.d/S90lmd start"
-
-# Or simply reboot — stock UI starts automatically on boot
-ssh root@<printer-ip> reboot
+ssh root@<printer-ip> "curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --uninstall; reboot"
 ```
 
-The stock UI lives on the read-only SquashFS rootfs and cannot be damaged by HelixScreen deployment. HelixScreen files are entirely on `/userdata/` and can be removed cleanly:
+> **A bare `rm -rf /userdata/helixscreen` is no longer sufficient.** The installer disables the stock UI binary (`chmod -x /usr/bin/gui`) so neither firmware's launcher can start it; removing HelixScreen without re-enabling the binary leaves a black screen. If you can't run the uninstaller, revert manually:
+>
+> ```bash
+> ssh root@<printer-ip> "killall helix-screen helix-watchdog 2>/dev/null; chmod +x /usr/bin/gui; rm -rf /userdata/helixscreen; reboot"
+> ```
 
-```bash
-ssh root@<printer-ip> "killall helix-screen helix-watchdog 2>/dev/null; rm -rf /userdata/helixscreen; reboot"
-```
+The stock UI binary lives on the read-only SquashFS rootfs and is only disabled, never deleted — it cannot be damaged by HelixScreen deployment.
 
 ## Reversible Deployment Strategy
 
-HelixScreen can be deployed to the U1 without modifying the stock firmware. The approach is fully reversible at multiple levels.
+HelixScreen can be deployed to the U1 without modifying the read-only base firmware — all changes live in the writable overlay and are fully reversible.
 
 ### Level 1: Manual SSH Deployment (Current, Fully Reversible)
 
 This is the current deployment method used by `make deploy-snapmaker-u1`:
 
-1. Install [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware) for SSH access
+1. Install [PAXX Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware) for SSH access
 2. Enable SSH via firmware config web UI
 3. Deploy via `make deploy-snapmaker-u1 SNAPMAKER_U1_HOST=<ip>`
-4. Platform hooks stop stock UI (`S99screen`, `S90lmd`) and HelixScreen starts on `/dev/fb0`
+4. The installer disables the stock UI binary (`chmod -x /usr/bin/gui`) and installs a HelixScreen launcher at `/etc/init.d/S99screen` (in the writable overlay); HelixScreen starts on `/dev/fb0`. `lmd` (camera/timelapse supervisor) keeps running.
 
-**To revert**: `killall helix-screen; /etc/init.d/S99screen start` — or simply reboot. The stock UI is on the read-only SquashFS rootfs and cannot be damaged. Init scripts are not modified.
+**To revert**: run the uninstaller (re-enables `/usr/bin/gui` and restores the launcher), or manually `chmod +x /usr/bin/gui && rm -rf /userdata/helixscreen`, then reboot. The stock UI binary is on the read-only SquashFS rootfs and is only disabled, never deleted — but note that the init-script changes and the binary's exec bit **are** modified (in the reversible overlay), so a plain reboot alone will not bring the stock UI back.
 
 ### Level 2: SysV Init Override (Persistent, Reversible)
 
@@ -289,29 +319,24 @@ These are resolution-specific issues, not Snapmaker-specific. Any 480x320 device
 ## Known Limitations
 
 - **480x320 UI needs work** -- Multiple panels have layout issues at this resolution (see above).
-- **Extended firmware required** -- SSH access (needed for deployment) requires the community [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware). Stock firmware does not provide SSH.
-- **Auto-start requires `/oem/.debug`** -- The overlay filesystem is wiped on boot unless `/oem/.debug` exists. This flag must be created once during installation to persist the S99screen patch.
+- **SSH access required** -- deployment needs SSH. Stock firmware (1.2+) provides it via the **Root access** option / debug mode; the community [Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware) enables it by default. Either works — PAXX is **not** required. (Stock boot-time autostart is newly added and pending verification on stock hardware; see [Firmware Requirements](#firmware-requirements).)
+- **Auto-start requires `/oem/.debug`** -- The overlay filesystem is wiped on boot unless `/oem/.debug` exists. This flag must be created once during installation to persist the boot-launcher hook (see [How HelixScreen takes over the display](#how-helixscreen-takes-over-the-display)).
 - **WiFi management** -- Stopping `unisrv` (stock UI) does not affect WiFi — the U1 uses standard `wpa_supplicant` managed by the OS. HelixScreen has its own WiFi manager with `wpa_supplicant` support.
+- **Remote screen ("gui" webcam) not yet wired up** -- The firmware ships a screen-capture daemon (`/usr/local/bin/fb-http.py`, PNG snapshot on `127.0.0.1:8092`, reads `/dev/fb0` via mmap), an nginx `/screen/` route (`/etc/nginx/fluidd.d/remote-screen.conf`), and a `[webcam gui]` Moonraker slot. Two gaps make it show "No Signal — maybe not enabled?": (1) the daemon has **no service unit** and isn't running, and (2) HelixScreen renders into its own DRM dumb buffer and **never writes `/dev/fb0`**, so even when the daemon runs it serves a stale boot-leftover frame. Note `/dev/fb0` is *not* unreadable under DRM — it's a separate, idle buffer decoupled from scanout (bench-confirmed: a magenta write to fb0 was served by the daemon while the panel kept showing HelixScreen untouched). See Future Work for the fix.
+- **Two benign Moonraker warnings on buildroot** -- After install, Mainsail/Fluidd surface *"Unable to find DBus PolKit Interface"* (Moonraker's always-loaded `machine` component on a no-PolKit OS) and *"Unable to initialize System Update Provider for distribution: buildroot"* (Moonraker's `update_manager` initializes a system/OS package provider by default, which can't detect apt/PackageKit on buildroot). The PolKit one is not ours — it's inherent to Moonraker on buildroot and re-surfaces because our installer restarts Moonraker. The system-update one is triggered by us adding `[update_manager helixscreen]` (loading the component pulls in the default system provider); it can be silenced with a top-level `[update_manager]` / `enable_system_updates: False`, which doesn't affect HelixScreen's own one-click updater. Both are harmless. Same condition applies to K1/K2 (also buildroot).
 
 ## Future Work
 
-### Auto-Start on Boot
+### Remote screen / "gui" webcam streaming
 
-The overlay filesystem is wiped on every reboot by `S01aoverlayfs` (`rm -rf /oem/overlay/*`) **unless** the debug flag `/oem/.debug` exists. With this flag, overlay modifications persist across reboots.
+Serve the HelixScreen UI as the `[webcam gui]` feed so it shows in Mainsail/Fluidd. **Validated approach (bench-tested 2026-06-14): the "fb0 mailbox."** Don't build an in-process server — reuse the firmware's existing capture daemon (`fb-http.py` on `:8092`, nginx `/screen/`, `[webcam gui]` slot). The daemon mmaps and reads `/dev/fb0`, PNG-encodes on demand (md5/ETag-cached, so a static screen is nearly free), and does its own work on the device's CPU — **we add no server and no encoder.**
 
-To enable auto-start:
+Our only job is to keep `/dev/fb0` current. fb0 is a separate buffer decoupled from our DRM scanout (proven: writing magenta to fb0 was served by the daemon while the panel stayed on HelixScreen). Implementation:
 
-```bash
-# 1. Create debug flag to prevent overlay wipe
-ssh root@<ip> "touch /oem/.debug"
+1. **Mirror frames into fb0.** Open `/dev/fb0` once, mmap `MAP_SHARED|PROT_WRITE`. In the existing flush hook (`DisplayManager::install_color_transform_hook()`, `src/application/display_manager.cpp`), copy rendered (dirty) regions into fb0 — **BGRA**, stride 1920 (480×320×4), throttled to a few fps to match the daemon's poll rate. One main-thread memcpy, no encode. We write post-rotation pixels, so the remote view matches the panel automatically.
+2. **Enable the daemon.** It currently has no service unit and isn't running. Ship a systemd unit (or installer step) that starts `python3 /usr/local/bin/fb-http.py`, and ensure the `[webcam gui]` Moonraker entry points at `/screen/snapshot`.
 
-# 2. Patch S99screen to delegate to HelixScreen when installed
-# (The deploy target handles this automatically)
-```
-
-The patched `S99screen` checks for `/userdata/helixscreen/helixscreen.init` on boot. If present, it starts HelixScreen instead of the stock GUI. If HelixScreen is removed, S99screen falls back to the stock GUI automatically.
-
-**Important**: The platform hooks must NOT call `/etc/init.d/S99screen stop` — since S99screen delegates to HelixScreen, this causes infinite recursion. The hooks kill `gui` directly instead.
+Caveats: occasional tearing if we write mid-poll (acceptable for a remote view, or double-buffer); throttle the mirror cadence to bound CPU. **Bonus — remote control:** `fb-http.py` also injects touch to `/dev/input/event0` via its `/touch` endpoint, so this gets remote *control* nearly for free — pending a check that HelixScreen reads `event0` (separate follow-up). PNG snapshot is poll-based, not a continuous MJPEG stream.
 
 ### Extended Firmware Overlay
 
@@ -452,18 +477,18 @@ HelixScreen has been tested on a Snapmaker U1 with Extended Firmware. Confirmed 
 
 ## Community Testing
 
-We welcome additional testers with Snapmaker U1 hardware:
+We welcome additional testers with Snapmaker U1 hardware — **especially anyone running STOCK firmware** (with Root access enabled), since stock boot-time autostart is implemented but not yet verified on a stock device:
 
-1. Install the [Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware) for SSH access
-2. Enable SSH: `curl -X POST http://<ip>/firmware-config/api/settings/ssh/true`
-3. Install via one-liner (easiest): `curl -sSL https://releases.helixscreen.org/install.sh | sh`
+1. Enable SSH — stock firmware: turn on the **Root access** option in printer settings; or install the [Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware) (SSH on by default, then `curl -X POST http://<ip>/firmware-config/api/settings/ssh/true` if needed)
+2. Install via one-liner (easiest): `curl -sSL https://releases.helixscreen.org/install.sh | sh`
+3. **Stock testers:** after install, **reboot** and confirm HelixScreen comes back up on its own (this exercises the `S99input-event-daemon` boot hook) — please report success/failure.
    - Or build from source: `make snapmaker-u1-docker` then `make deploy-snapmaker-u1-fg SNAPMAKER_U1_HOST=<ip>`
 4. Report: Does the wizard appear? Does touch work? Can you connect to Moonraker? Do tool changes work?
 5. File issues at the HelixScreen GitHub repository
 
 ## Related Resources
 
-- **[Extended Firmware](https://github.com/paxx12/SnapmakerU1-Extended-Firmware)** -- Adds SSH access and community features to the U1
+- **[Extended Firmware](https://github.com/paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware)** -- Adds SSH access and community features to the U1
 - **[U1 Config Example](https://github.com/JNP-1/Snapmaker-U1-Config)** -- Community reverse-engineered Klipper configuration
 - **[Snapmaker Forum](https://forum.snapmaker.com/c/snapmaker-products/87)** -- Official U1 discussion
 - **[Toolchanger Research](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/printer-research/SNAPMAKER_U1_RESEARCH.md)** -- Detailed analysis of U1's toolchanger implementation vs. standard Klipper toolchanger module

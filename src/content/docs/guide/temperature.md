@@ -41,6 +41,21 @@ Built-in presets:
 
 Tap a preset to set the target temperature immediately. If your printer has a chamber heater, presets that include a chamber temperature will set it automatically — materials that don't need an enclosed chamber (PLA, PETG) leave the chamber heater off.
 
+### Reassigning a Preset's Filament Type
+
+The four preset buttons (PLA, PETG, ABS, TPU) aren't fixed — you can point any of
+them at a different filament type from the built-in materials database.
+
+![Choosing a filament type for a preset button](../../../assets/images/docs/filament-preset-picker.png)
+
+1. **Long-press** a preset button until the material picker appears.
+2. Scroll the list and tap the filament type you want. The button's label and its
+   temperatures update immediately, and the choice is remembered across restarts.
+3. To undo all changes, long-press any preset button and tap **Reset all to
+   defaults** at the top of the list — this restores PLA / PETG / ABS / TPU.
+
+> **Tip:** A short tap still just applies the button's temperatures. Only a long-press opens the picker.
+
 ### Spool Preset
 
 When you have a filament loaded — either via an [external spool configuration](filament.md#external-spool-configuration) or an active AMS slot — and the material doesn't match one of the standard presets (PLA, PETG, ABS, TPU), an additional **spool preset** button appears below the standard presets.
@@ -64,12 +79,20 @@ Single-extruder printers are unaffected — the panel works exactly as before.
 
 ## Chamber Temperature Panel
 
-If your printer has a chamber heater or chamber temperature sensor configured in Klipper, you can access the Chamber Temperature panel by tapping the chamber row in the **Temperatures** widget on the Home Panel.
+If your printer has a chamber heater or chamber temperature sensor configured in Klipper, you can access the Chamber Temperature panel a few ways: tap the chamber row in the **Temperatures** widget, or add the dedicated **Chamber Temperature** widget to your Home Panel and tap it. Both open the temperature graph overlay focused on the chamber.
 
 - **Heated chambers** (`heater_generic chamber`): Full control panel with current/target temperature, presets, and a live temperature graph with a green trace
 - **Sensor-only chambers** (`temperature_sensor chamber`): Monitoring mode — shows the current chamber temperature and graph, with a "Monitoring" status instead of heating controls. Presets and target input are hidden since there's no heater to control.
 
 The chamber panel works identically to the nozzle and bed panels, just with chamber-specific presets and colors.
+
+**Heating vs. Maintaining vs. Off:** On printers that coordinate the chamber heater and a cooling fan (such as the Creality K2), the chamber status shows one of three states:
+
+- **Off** — no chamber temperature is being held
+- **Maintaining** — holding a *cooling ceiling* of 40°C or below. The printer isn't actively heating; it's keeping the chamber from rising above your setpoint (useful for materials like PLA in an enclosure). The displayed target is the ceiling it's holding.
+- **Heating** — actively heating the chamber to a setpoint above 40°C (for materials like ABS or ASA)
+
+You set any of these the same way — just pick a preset or enter a temperature. The printer decides whether to maintain or heat based on the value, and the panel shows which it's doing.
 
 **Cooldown:** When you tap **Off** or cool down the printer, HelixScreen also turns off the chamber heater (if present) along with the nozzle and bed.
 
