@@ -22,20 +22,30 @@ export default defineConfig({
         {
           label: 'Installation',
           items: [
+            { label: 'Supported Printers', slug: 'guide/supported-printers' },
             { label: 'Install', slug: 'installation' },
             { label: 'Upgrading', slug: 'upgrading' },
           ],
         },
         {
+          // Page order mirrors the sequence in docs/user/USER_GUIDE.md.
           label: 'User Guide',
           items: [
+            { label: 'Overview', slug: 'guide' },
             { label: 'Getting Started', slug: 'guide/getting-started' },
             { label: 'Home Panel', slug: 'guide/home-panel' },
             { label: 'Printing', slug: 'guide/printing' },
+            { label: 'Print Monitoring', slug: 'guide/print-monitoring' },
             { label: 'Temperature', slug: 'guide/temperature' },
             { label: 'Motion', slug: 'guide/motion' },
             { label: 'Filament', slug: 'guide/filament' },
+            { label: 'Filament Tracking', slug: 'guide/filament-tracking' },
             { label: 'Calibration', slug: 'guide/calibration' },
+            { label: 'Fans', slug: 'guide/fans' },
+            { label: 'Sensors', slug: 'guide/sensors' },
+            { label: 'Security & Screen Lock', slug: 'guide/security' },
+            { label: 'Camera', slug: 'guide/camera' },
+            { label: 'Print History', slug: 'guide/print-history' },
             { label: 'Advanced Features', slug: 'guide/advanced' },
             { label: 'Beta Features', slug: 'guide/beta-features' },
             { label: 'Tips & Tricks', slug: 'guide/tips' },
@@ -50,6 +60,7 @@ export default defineConfig({
             { label: 'Hardware & Devices', slug: 'guide/settings/hardware' },
             { label: 'Safety & Notifications', slug: 'guide/settings/safety' },
             { label: 'System', slug: 'guide/settings/system' },
+            { label: 'Touch & Input', slug: 'guide/settings/touch-input' },
             { label: 'Help & About', slug: 'guide/settings/help-about' },
             { label: 'LED Settings', slug: 'guide/settings/led-settings' },
           ],
