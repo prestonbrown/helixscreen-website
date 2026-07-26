@@ -127,39 +127,39 @@ process_file() {
 
   # --- Internal link rewriting ---
   # Top-level docs with uppercase names (with any number of ../ prefixes)
-  body=$(echo "$body" | sed -E 's|\((\.\./)*INSTALL\.md\)|(/docs/installation/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*UPGRADING\.md\)|(/docs/upgrading/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*CONFIGURATION\.md\)|(/docs/reference/configuration/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*TROUBLESHOOTING\.md\)|(/docs/reference/troubleshooting/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md\)|(/docs/reference/faq/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md\)|(/docs/legal/privacy/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md\)|(/docs/legal/telemetry/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/docs/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*INSTALL\.md\)|(/installation/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*UPGRADING\.md\)|(/upgrading/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*CONFIGURATION\.md\)|(/reference/configuration/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*TROUBLESHOOTING\.md\)|(/reference/troubleshooting/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md\)|(/reference/faq/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md\)|(/legal/privacy/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md\)|(/legal/telemetry/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/)|g')
 
   # guide/settings/*.md links (must come before guide/*.md)
   # From guide/ files linking to settings/foo.md
-  body=$(echo "$body" | sed -E 's|\((\.\./)*settings/([a-z-]+)\.md\)|(/docs/guide/settings/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*settings/([a-z-]+)\.md\)|(/guide/settings/\2/)|g')
   # From settings/ files linking to ../settings.md (the index)
-  body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md\)|(/docs/guide/settings/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md\)|(/guide/settings/)|g')
 
   # guide/*.md links — with optional ../ prefixes for cross-directory references
-  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z-]+)\.md\)|(/docs/guide/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z-]+)\.md\)|(/guide/\2/)|g')
 
   # Sibling links to guide-level pages from settings/ files (e.g. ../advanced.md)
   # These are guide/*.md pages referenced with ../ from settings/
-  body=$(echo "$body" | sed -E 's|\(\.\./([a-z-]+)\.md\)|(/docs/guide/\1/)|g')
+  body=$(echo "$body" | sed -E 's|\(\.\./([a-z-]+)\.md\)|(/guide/\1/)|g')
 
-  # Sibling .md links within guide/ or guide/settings/ (e.g. (printing.md) -> /docs/guide/printing/)
+  # Sibling .md links within guide/ or guide/settings/ (e.g. (printing.md) -> /guide/printing/)
   # Sibling .md links — use the SOURCE directory to determine context,
   # since some files move directories (e.g. guide/settings.md -> guide/settings/index.md)
   local src_dir
   src_dir=$(dirname "$src")
   if [[ "$src_dir" == "guide/settings" ]]; then
-    # Sibling links in settings/ (e.g. printer.md -> /docs/guide/settings/printer/)
-    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/docs/guide/settings/\1/)|g')
+    # Sibling links in settings/ (e.g. printer.md -> /guide/settings/printer/)
+    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/guide/settings/\1/)|g')
   elif [[ "$src_dir" == "guide" || "$src_dir" == "." ]]; then
-    # Sibling links in guide/ (e.g. printing.md -> /docs/guide/printing/)
-    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/docs/guide/\1/)|g')
+    # Sibling links in guide/ (e.g. printing.md -> /guide/printing/)
+    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/guide/\1/)|g')
   fi
 
   # Drop links to files outside our scope (e.g. ../DEVELOPMENT.md)
