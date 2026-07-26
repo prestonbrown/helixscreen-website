@@ -55,7 +55,10 @@ mkdir -p "$DEST_IMAGES"
 #   2 = guide/settings/
 
 FILES=(
-  "USER_GUIDE.md|index.md|User Guide|0|0"
+  # The User Guide overview lives at /guide/ rather than the docs root: the
+  # marketing landing page (src/pages/index.astro) owns "/", so an entry at the
+  # root is shadowed and never reachable.
+  "USER_GUIDE.md|guide/index.md|User Guide|0|1"
   "INSTALL.md|installation.md|Installation|1|0"
   "UPGRADING.md|upgrading.md|Upgrading|2|0"
   "guide/getting-started.md|guide/getting-started.md|Getting Started|1|1"
@@ -73,6 +76,14 @@ FILES=(
   "guide/label-printing.md|guide/label-printing.md|Label Printing|14|1"
   "guide/touch-calibration.md|guide/touch-calibration.md|Touch Calibration|15|1"
   "guide/creality-k1c-setup.md|guide/creality-k1c-setup.md|Creality K1C Setup|16|1"
+  "guide/supported-printers.md|guide/supported-printers.md|Supported Printers|17|1"
+  "guide/print-monitoring.md|guide/print-monitoring.md|Print Monitoring & Failure Detection|18|1"
+  "guide/filament-tracking.md|guide/filament-tracking.md|Filament Tracking & Spoolman|19|1"
+  "guide/fans.md|guide/fans.md|Fans|20|1"
+  "guide/sensors.md|guide/sensors.md|Sensors|21|1"
+  "guide/security.md|guide/security.md|Security & Screen Lock|22|1"
+  "guide/camera.md|guide/camera.md|Camera|23|1"
+  "guide/print-history.md|guide/print-history.md|Print History|24|1"
   "guide/settings.md|guide/settings/index.md|Settings|1|2"
   "guide/settings/display-sound.md|guide/settings/display-sound.md|Display & Sound|2|2"
   "guide/settings/printing.md|guide/settings/printing.md|Printing|3|2"
@@ -81,6 +92,7 @@ FILES=(
   "guide/settings/system.md|guide/settings/system.md|System|6|2"
   "guide/settings/help-about.md|guide/settings/help-about.md|Help & About|7|2"
   "guide/settings/led-settings.md|guide/settings/led-settings.md|LED Settings|8|2"
+  "guide/settings/touch-input.md|guide/settings/touch-input.md|Touch & Input|9|2"
   "CONFIGURATION.md|reference/configuration.md|Configuration|1|1"
   "TROUBLESHOOTING.md|reference/troubleshooting.md|Troubleshooting|2|1"
   "FAQ.md|reference/faq.md|FAQ|3|1"
@@ -134,7 +146,7 @@ process_file() {
   body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md\)|(/reference/faq/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md\)|(/legal/privacy/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md\)|(/legal/telemetry/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/guide/)|g')
 
   # guide/settings/*.md links (must come before guide/*.md)
   # From guide/ files linking to settings/foo.md
@@ -288,7 +300,7 @@ process_devel_file() {
   # Pattern (\.\./)+ matches any number of ../ prefixes (printers/* is depth-2
   # from docs/devel/ so it uses ../../user/X.md; top-level devel files use
   # ../user/X.md).
-  body=$(echo "$body" | sed -E 's|\((\.\./)+user/USER_GUIDE\.md\)|(/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)+user/USER_GUIDE\.md\)|(/guide/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)+user/INSTALL\.md\)|(/installation/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)+user/UPGRADING\.md\)|(/upgrading/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)+user/CONFIGURATION\.md\)|(/reference/configuration/)|g')
