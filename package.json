@@ -6,7 +6,9 @@
     "dev": "astro dev",
     "start": "astro dev",
     "sync-docs": "./scripts/sync-docs.sh",
-    "prebuild": "./scripts/sync-docs.sh",
+    "gen-themes": "node scripts/gen-themes.mjs",
+    "test": "node --test tests/",
+    "prebuild": "./scripts/sync-docs.sh && node scripts/gen-themes.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
