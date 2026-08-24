@@ -1,0 +1,31 @@
+---
+import { Image } from 'astro:assets';
+import zoffset from '../../assets/images/screenshots/advanced-zoffset.png';
+import shaper from '../../assets/images/screenshots/advanced-shaper.png';
+import printSelect from '../../assets/images/screenshots/print-select.png';
+import history from '../../assets/images/screenshots/advanced-history.png';
+import spoolman from '../../assets/images/screenshots/advanced-spoolman.png';
+import controls from '../../assets/images/screenshots/controls.png';
+
+const cells = [
+  { img: zoffset,     t: 'Z-offset you can actually see', b: 'A live visual meter while you set first-layer height, rather than nudging a number and hoping.' },
+  { img: shaper,      t: 'Input shaper without a laptop', b: 'Frequency response charts render on the printer. Run the test, read the graph, apply the result, all on the screen.' },
+  { img: printSelect, t: 'Files with real thumbnails',    b: 'Live 3D previews and metadata, fast enough to scroll through hundreds of files.' },
+  { img: history,     t: 'Every print, recorded',         b: 'Success rate, print time and filament used, plus Moonraker-Timelapse capture and playback.' },
+  { img: spoolman,    t: 'Spoolman, properly integrated', b: '48 material profiles with drying parameters, weight polling, and spools assigned to AMS slots.' },
+  { img: controls,    t: 'Lighting that follows the job', b: 'Klipper LEDs, output pins, WLED, led_effects and macros, switching per printer state.' },
+];
+---
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-hairline">
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+    {cells.map((c) => (
+      <article>
+        <div class="plinth mb-4">
+          <Image src={c.img} alt="" widths={[320, 480]} sizes="(max-width: 640px) 92vw, 30vw" />
+        </div>
+        <h3 class="text-lg mb-1.5">{c.t}</h3>
+        <p class="text-sm leading-relaxed text-ink-muted">{c.b}</p>
+      </article>
+    ))}
+  </div>
+</section>
