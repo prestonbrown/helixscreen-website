@@ -1,161 +1,20 @@
-@import 'tailwindcss';
+/* Marketing-page styles. Design tokens live in tokens.css, which is generated
+   from the helixscreen theme files. */
+@import './tokens.css';
 
-/* ── Design tokens ── */
-@theme {
-  --color-canvas: #0C0C0E;
-  --color-surface: #161619;
-  --color-border: #2A2A2F;
-  --color-accent: #3A7CC8;
-  --color-accent-light: #6A9CC8;
-  --color-accent-glow: rgba(58, 124, 200, 0.15);
-
-  --color-text-primary: #E8E8EC;
-  --color-text-secondary: #8E8E96;
-  --color-text-muted: #5A5A64;
-
-  --font-heading: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-}
-
-/* ── Base styles ── */
-@layer base {
-  body {
-    font-family: var(--font-body);
-    background-color: var(--color-canvas);
-    color: var(--color-text-primary);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
-  }
-
-  code, pre {
-    font-family: var(--font-mono);
-  }
-}
-
-/* ── Components ── */
-@layer components {
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-family: var(--font-heading);
-    font-weight: 500;
-    font-size: 0.875rem;
-    letter-spacing: 0.025em;
-    transition: all 0.2s;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light));
-    color: #FFFFFF;
-    text-decoration: none;
-  }
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #4A8CD8, #7AACD8);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(58, 124, 200, 0.3);
-  }
-
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-family: var(--font-heading);
-    font-weight: 500;
-    font-size: 0.875rem;
-    letter-spacing: 0.025em;
-    transition: all 0.2s;
-    border: 1px solid var(--color-border);
-    color: var(--color-text-primary);
-    text-decoration: none;
-  }
-  .btn-ghost:hover {
-    border-color: var(--color-text-muted);
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .screenshot-glow {
-    position: relative;
-  }
-  .screenshot-glow::after {
-    content: '';
-    position: absolute;
-    bottom: -20%;
-    left: 10%;
-    right: 10%;
-    height: 60%;
-    background: radial-gradient(ellipse at center, var(--color-accent-glow) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  .mesh-bg {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L30 0 L60 30 L30 60Z' fill='none' stroke='%233A7CC8' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
-    background-size: 60px 60px;
-  }
-
-  .screenshot-hover {
-    transition: transform 0.3s ease, filter 0.3s ease;
-  }
-  .screenshot-hover:hover {
-    transform: scale(1.02);
-  }
-
-  .gradient-text {
-    background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-light) 50%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-}
-
-/* ── Scroll animations ── */
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(24px);
-}
-
-.animate-on-scroll.is-visible {
-  animation: fade-in-up 0.6s ease-out forwards;
-}
-
-.animate-on-scroll.delay-1 { animation-delay: 0.1s; }
-.animate-on-scroll.delay-2 { animation-delay: 0.2s; }
-.animate-on-scroll.delay-3 { animation-delay: 0.3s; }
-
-/* ── Docs search overlay (Pagefind widget) ── */
-/* Theme Pagefind's UI to the marketing dark look via its CSS variables,
-   reusing the existing design tokens. */
+/* Pagefind search overlay, themed through the token layer. */
 #pagefind-search {
-  --pagefind-ui-primary: var(--color-accent);
-  --pagefind-ui-text: var(--color-text-primary);
-  --pagefind-ui-background: var(--color-surface);
-  --pagefind-ui-border: var(--color-border);
-  --pagefind-ui-tag: var(--color-canvas);
+  --pagefind-ui-primary: var(--hx-primary);
+  --pagefind-ui-text: var(--hx-text);
+  --pagefind-ui-background: var(--hx-card-bg);
+  --pagefind-ui-border: var(--hx-border);
+  --pagefind-ui-tag: var(--hx-screen-bg);
   --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: 0.5rem;
-  --pagefind-ui-font: var(--font-body);
+  --pagefind-ui-border-radius: var(--hx-radius);
+  --pagefind-ui-font: var(--font-ui);
   padding: 1rem;
 }
 
-/* Constrain results so the panel never grows past the viewport. */
 #pagefind-search .pagefind-ui__results-area {
   max-height: 60vh;
   overflow-y: auto;
