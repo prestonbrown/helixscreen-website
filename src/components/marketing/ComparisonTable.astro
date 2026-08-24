@@ -22,16 +22,16 @@ const tone = (t: string | undefined, fallback: string) =>
     <table class="w-full border-collapse font-mono text-xs min-w-[560px]">
       <thead>
         <tr>
-          <th class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline w-[38%]"></th>
-          <th class="text-left ui text-[10px] uppercase tracking-[0.13em] text-alert font-normal pb-2 border-b border-hairline">HelixScreen</th>
-          <th class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline">KlipperScreen</th>
-          <th class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline">GuppyScreen</th>
+          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline w-[38%]"><span class="sr-only">Feature</span></th>
+          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-alert font-normal pb-2 border-b border-hairline">HelixScreen</th>
+          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline">KlipperScreen</th>
+          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline">GuppyScreen</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => (
           <tr>
-            <td class="ui text-[13px] text-ink py-2.5 pr-4 border-b border-hairline/40">{r.k}</td>
+            <th scope="row" class="text-left ui text-[13px] font-normal text-ink py-2.5 pr-4 border-b border-hairline/40">{r.k}</th>
             <td class:list={['py-2.5 pr-4 border-b border-hairline/40 tabular', tone(r.meTone, 'text-ink')]}>{r.me}</td>
             <td class:list={['py-2.5 pr-4 border-b border-hairline/40 tabular', tone(r.ksTone, 'text-ink-muted')]}>{r.ks}</td>
             <td class:list={['py-2.5 pr-4 border-b border-hairline/40 tabular', tone(r.gsTone, 'text-ink-muted')]}>{r.gs}</td>
