@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, lstatSync, existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
 // Scope: the CSS *we* author, and the landing page we build from it.
@@ -15,10 +15,27 @@ import { join, extname } from 'node:path';
 const SRC = 'src';
 const LANDING = join('dist', 'index.html');
 
+// lstat, not stat: a symlink under src/ must not be followed (cycle risk,
+// and it would mean scanning something outside this repo's authored tree).
+// Unreadable entries (a broken symlink, a permissions edge case) are skipped
+// rather than crashing the whole gate.
 function collect(dir, exts, acc = []) {
-  for (const entry of readdirSync(dir)) {
+  let entries;
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return acc;
+  }
+  for (const entry of entries) {
     const p = join(dir, entry);
-    if (statSync(p).isDirectory()) collect(p, exts, acc);
+    let stat;
+    try {
+      stat = lstatSync(p);
+    } catch {
+      continue;
+    }
+    if (stat.isSymbolicLink()) continue;
+    if (stat.isDirectory()) collect(p, exts, acc);
     else if (exts.includes(extname(p))) acc.push(p);
   }
   return acc;
@@ -37,27 +54,119 @@ const landing = () => {
   return readFileSync(LANDING, 'utf8');
 };
 
-// tokens.css intentionally carries `box-shadow: none !important` as the
-// enforcement mechanism for "no shadows, ever" — a global reset, not a
-// violation. A single regex with a negative lookahead here (`(?!none)`)
-// re-matched that reset: `\s*` backtracks to satisfy the lookahead one
-// position early, then the trailing character class re-consumes the very
-// "none" the lookahead was meant to exclude. Match-then-filter avoids the
-// backtracking trap entirely.
+// tokens.css intentionally carries `box-shadow: none !important` (and the
+// same for text-shadow below) as the enforcement mechanism for "no shadows,
+// ever" — a global reset, not a violation. A single regex with a negative
+// lookahead here (`(?!none)`) re-matched that reset: `\s*` backtracks to
+// satisfy the lookahead one position early, then the trailing character
+// class re-consumes the very "none" the lookahead was meant to exclude.
+// Match-then-filter avoids the backtracking trap entirely.
 test('no shadows in authored CSS', () => {
-  const hits = (authoredCss().match(/box-shadow\s*:[^;}]*/g) ?? [])
+  const hits = (authoredCss().match(/box-shadow\s*:[^;}]*/gi) ?? [])
     .filter((d) => !/^\s*box-shadow\s*:\s*none\b/i.test(d));
   assert.deepEqual(hits, [], `found shadows: ${hits.slice(0, 3).join(' | ')}`);
 });
 
-test('no gradient-filled text', () => {
-  assert.doesNotMatch(authoredCss(), /-webkit-text-fill-color\s*:\s*transparent/);
+// Same enforcement pattern as box-shadow, and the same reset line in
+// tokens.css resets this property too — a naive "any text-shadow" regex
+// would hit the same false positive, so this uses the same match-then-filter
+// shape rather than a lookahead.
+test('no text-shadow in authored CSS', () => {
+  const hits = (authoredCss().match(/text-shadow\s*:[^;}]*/gi) ?? [])
+    .filter((d) => !/^\s*text-shadow\s*:\s*none\b/i.test(d));
+  assert.deepEqual(hits, [], `found text-shadow: ${hits.slice(0, 3).join(' | ')}`);
 });
 
+// `filter: drop-shadow(...)` is a visually-identical route to the same old
+// screenshot glow this rework removed — and it would apply to exactly the
+// `.plinth` framing that replaced it. box-shadow/text-shadow resets don't
+// touch `filter` at all, so this needs its own check.
+test('no drop-shadow filters in authored CSS', () => {
+  assert.doesNotMatch(authoredCss(), /\bfilter\s*:[^;}]*drop-shadow/i);
+});
+
+test('no gradient-filled text', () => {
+  const css = authoredCss();
+  assert.doesNotMatch(css, /-webkit-text-fill-color\s*:\s*transparent/i);
+  // `background-clip: text` (prefixed or not) is the standard, unprefixed
+  // way to do gradient-filled text — arguably more common than the
+  // -webkit-text-fill-color pairing above. This design system has no
+  // legitimate use for it at all, so the property is flagged outright
+  // rather than trying to detect it paired with a transparent color.
+  assert.doesNotMatch(css, /\b(-webkit-)?background-clip\s*:\s*text\b/i);
+});
+
+// Radius is authored on two surfaces here: literal CSS `border-radius`
+// values, and Tailwind's `rounded-*` utility classes in .astro markup. Both
+// must be checked — this codebase writes radius almost exclusively as the
+// class `rounded-[var(--hx-radius)]`, which never produces literal
+// `border-radius: Npx` text, so a CSS-only check has nothing to match and a
+// contributor writing `rounded-lg` sails through untouched.
+//
+// Utility-class px values come from Tailwind's default scale
+// (node_modules/tailwindcss/theme.css: xs=2px, sm=4px, md=6px, lg=8px,
+// xl=12px, 2xl=16px, 3xl=24px, 4xl=32px; bare `rounded` = --radius = 4px).
+// `var(--hx-radius)` — as a literal CSS value or inside the arbitrary class
+// form `rounded-[var(--hx-radius)]` — is the one asserted-safe indirection
+// (the schema caps it at 3px) and always passes. An unrecognized length unit
+// or utility suffix is flagged conservatively rather than silently passed.
+const RADIUS_SCALE_PX = { none: 0, xs: 2, sm: 4, md: 6, lg: 8, xl: 12, '2xl': 16, '3xl': 24, '4xl': 32, full: Infinity };
+
+function lengthToPx(token) {
+  if (/^var\(/i.test(token)) return 0;
+  const m = token.match(/^(-?\d*\.?\d+)(px|rem|em|%)?$/i);
+  if (!m) return Infinity; // e.g. calc(...) — can't evaluate statically, flag it
+  const num = parseFloat(m[1]);
+  const unit = (m[2] ?? 'px').toLowerCase();
+  if (unit === 'rem' || unit === 'em') return num * 16;
+  if (unit === '%') return num > 0 ? Infinity : 0; // not measurable in px; any nonzero % is suspect
+  return num;
+}
+
+function cssRadiusHits(css) {
+  const hits = [];
+  const re = /border-radius\s*:\s*([^;}]+)/gi;
+  let m;
+  while ((m = re.exec(css))) {
+    const value = m[1].trim();
+    // Shorthand can carry up to 4 values (and an optional `/` for
+    // horizontal/vertical radii) — the offending value is not always first,
+    // e.g. `border-radius: 0 0 8px 8px`.
+    const max = value
+      .split('/')
+      .flatMap((half) => half.trim().split(/\s+/))
+      .filter(Boolean)
+      .reduce((acc, tok) => Math.max(acc, lengthToPx(tok)), 0);
+    if (max > 3) hits.push(`border-radius: ${value}`);
+  }
+  return hits;
+}
+
+function classRadiusHits(css) {
+  const hits = [];
+  // Stops the suffix at whitespace/quotes (class-attribute boundaries), and
+  // the trailing lookahead keeps a bare `rounded` from matching inside an
+  // unrelated identifier like `roundedCorners`.
+  const re = /\brounded(?:-([^\s"'`]+))?(?![a-zA-Z0-9])/g;
+  let m;
+  while ((m = re.exec(css))) {
+    const suffix = m[1];
+    let px;
+    if (suffix === undefined) px = 4; // bare `rounded` = --radius = 0.25rem
+    else if (suffix in RADIUS_SCALE_PX) px = RADIUS_SCALE_PX[suffix];
+    else {
+      const arb = suffix.match(/^\[(.+)\]$/);
+      px = arb ? lengthToPx(arb[1].trim()) : Infinity; // unrecognized suffix — flag it
+    }
+    if (px > 3) hits.push(m[0]);
+  }
+  return hits;
+}
+
 test('no radius above the 3px the theme schema allows', () => {
-  const hits = authoredCss().match(/border-radius\s*:\s*(\d+)px/g) ?? [];
-  const bad = hits.filter((h) => Number(h.match(/(\d+)px/)[1]) > 3);
-  assert.deepEqual(bad, [], `radius too large: ${bad.slice(0, 5).join(' | ')}`);
+  const css = authoredCss();
+  const hits = [...cssRadiusHits(css), ...classRadiusHits(css)];
+  assert.deepEqual(hits, [], `radius too large: ${hits.slice(0, 5).join(' | ')}`);
 });
 
 test('deleted decorative classes do not reappear', () => {
@@ -67,8 +176,19 @@ test('deleted decorative classes do not reappear', () => {
   }
 });
 
+// Marketing prose gets wrapped in inline tags (`<em>`, `<strong>`) and the
+// build can introduce line breaks mid-phrase, so a banned phrase can survive
+// on the rendered page while failing a raw substring match against the HTML.
+// Stripping tags and collapsing whitespace before matching closes both gaps.
+function normalizedLandingText() {
+  return landing()
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
 test('banned copy does not appear on the landing page', () => {
-  const html = landing().toLowerCase();
+  const html = normalizedLandingText();
   for (const phrase of [
     'beautiful, customizable, community-driven',
     'built by makers, for makers',
@@ -88,8 +208,12 @@ test('Space Grotesk is gone from authored styles and the landing page', () => {
 // panel at large sizes. Every use of it on this site was 10-12px, where it measures
 // 4.02:1 on canvas and 2.88:1 on overlay — both under AA's 4.5:1. Three tiers
 // (ink, ink-muted, accent) carry enough hierarchy, so it is simply not used for text.
-test('ink-subtle is not used for text in landing components', () => {
-  const files = collect(join(SRC, 'components', 'marketing'), ['.astro']);
+// Scoped to all of src/, not just components/marketing/: the layout and the
+// page itself (src/layouts/MarketingLayout.astro, src/pages/index.astro) can
+// use it just as easily. (The generated theme CSS carries `--hx-text-subtle`,
+// a different string, so widening the scope does not false-positive there.)
+test('ink-subtle is not used for text anywhere in src', () => {
+  const files = collect(SRC, ['.astro']);
   const offenders = files.filter((f) => readFileSync(f, 'utf8').includes('ink-subtle'));
   assert.deepEqual(offenders, [], `ink-subtle used in: ${offenders.join(', ')}`);
 });
