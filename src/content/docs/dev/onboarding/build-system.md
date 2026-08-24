@@ -1246,7 +1246,7 @@ make icon
 The `make icon` target performs the following steps:
 
 **All platforms:**
-1. **Crops source logo** (`assets/images/helixscreen-logo.png`) to just the circular helix
+1. **Crops source logo** (`assets/../../../../assets/images/docs/helixscreen-logo.png`) to just the circular helix
 2. **Creates square icon** at 650x650px with transparent background → `helix-icon.png`
 
 **macOS only (additional steps):**
@@ -1259,7 +1259,7 @@ The `make icon` target performs the following steps:
 ### Generated Files
 
 **All platforms:**
-- **`assets/images/helix-icon.png`** - Cropped square logo (650x650px, ~245KB)
+- **`assets/../../../../assets/images/docs/helix-icon.png`** - Cropped square logo (650x650px, ~245KB)
 
 **macOS only:**
 - **`assets/images/helix-icon.icns`** - macOS icon bundle (~1.3MB with all resolutions)
@@ -1299,7 +1299,7 @@ sudo dnf install ImageMagick
 
 **Regenerating after logo changes:**
 ```bash
-# Update assets/images/helixscreen-logo.png
+# Update assets/../../../../assets/images/docs/helixscreen-logo.png
 make icon  # Regenerates all icon files (platform-specific)
 ```
 
