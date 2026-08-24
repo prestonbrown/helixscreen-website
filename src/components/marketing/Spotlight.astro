@@ -1,0 +1,51 @@
+---
+import { Image } from 'astro:assets';
+import ams from '../../assets/images/screenshots/ams.png';
+import ercf from '../../assets/images/ams/ercf.svg';
+import boxTurtle from '../../assets/images/ams/box_turtle.svg';
+import tradrack from '../../assets/images/ams/tradrack.svg';
+import threeMs from '../../assets/images/ams/3ms.svg';
+import nightOwl from '../../assets/images/ams/night_owl.svg';
+import kms from '../../assets/images/ams/kms.svg';
+import quattro from '../../assets/images/ams/quattro_box.svg';
+import vivid from '../../assets/images/ams/btt_vivid.svg';
+import mmx from '../../assets/images/ams/mmx.svg';
+
+const icons = [
+  { src: ercf, alt: 'ERCF' }, { src: boxTurtle, alt: 'Box Turtle' },
+  { src: tradrack, alt: 'TradRack' }, { src: threeMs, alt: '3MS' },
+  { src: nightOwl, alt: 'Night Owl' }, { src: kms, alt: 'KMS' },
+  { src: quattro, alt: 'Quattro Box' }, { src: vivid, alt: 'BTT Vivid' },
+  { src: mmx, alt: 'MMX' },
+];
+const url = (s: any) => (typeof s === 'string' ? s : s.src);
+---
+<section class="border-t border-b border-hairline bg-overlay">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-2 gap-12 items-center">
+    <div class="plinth">
+      <Image src={ams} alt="Multi-material panel with filament slots and status" widths={[480, 768, 1024]} sizes="(max-width: 1024px) 92vw, 46vw" />
+    </div>
+    <div>
+      <p class="ui text-[11px] uppercase tracking-[0.16em] text-warn mb-4">Multi-material</p>
+      <h2 class="text-3xl leading-tight mb-4">It doesn't care which multi-material system you bought.</h2>
+      <p class="text-base leading-relaxed text-ink-muted mb-4">
+        Happy Hare, AFC, ACE, AD5X IFS, Creality CFS, Snapmaker U1 with RFID spool
+        recognition, and tool changers. Filament paths render as 3D tubes with toolheads
+        animating as they move, and buffer health stays on screen for the whole print.
+      </p>
+      <p class="text-base leading-relaxed text-ink-muted mb-6">
+        I didn't set out to support seven of them. People kept asking, and the ones who
+        owned the hardware sent patches.
+      </p>
+      <p class="ui text-xs text-ink-muted mb-3">
+        Some of the AMS hardware those backends drive. Several units run on more than one,
+        so the backend is the thing being counted here, not the box on your bench.
+      </p>
+      <div class="flex flex-wrap gap-4 items-center">
+        {icons.map((i) => (
+          <img src={url(i.src)} alt={i.alt} width="34" height="34" class="opacity-60 hover:opacity-100 transition-opacity" />
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

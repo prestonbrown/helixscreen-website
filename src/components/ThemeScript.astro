@@ -1,0 +1,30 @@
+---
+// Must render inside <head> before any paint. Inline and synchronous on purpose.
+import themes from '../data/themes.generated.json';
+
+// Minimal slug -> modes lookup, generated at build time from the same
+// manifest ThemeSwitcher reads. Never hand-list dark-only slugs here: that
+// would drift the moment the catalog changes.
+const modesBySlug = Object.fromEntries(themes.map((t) => [t.slug, t.modes]));
+const modesJson = JSON.stringify(modesBySlug);
+---
+<script is:inline set:html={`(function () {
+  var MODES = ${modesJson};
+  var DEFAULT_THEME = 'helixscreen';
+  var DEFAULT_MODE = 'dark';
+  function resolve(theme, mode) {
+    var modes = MODES[theme];
+    if (!modes) return [DEFAULT_THEME, DEFAULT_MODE];
+    return [theme, modes.indexOf(mode) === -1 ? modes[0] : mode];
+  }
+  try {
+    var storedTheme = localStorage.getItem('hx-theme') || DEFAULT_THEME;
+    var storedMode = localStorage.getItem('hx-mode') || DEFAULT_MODE;
+    var resolved = resolve(storedTheme, storedMode);
+    document.documentElement.setAttribute('data-theme', resolved[0]);
+    document.documentElement.setAttribute('data-mode', resolved[1]);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
+    document.documentElement.setAttribute('data-mode', DEFAULT_MODE);
+  }
+})();`}></script>

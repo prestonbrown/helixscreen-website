@@ -1,0 +1,142 @@
+[
+  {
+    "slug": "ayu",
+    "name": "Ayu",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "catppuccin",
+    "name": "Catppuccin",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "chatgpt",
+    "name": "ChatGPT",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "cupertino",
+    "name": "Cupertino",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "dracula",
+    "name": "Dracula",
+    "modes": [
+      "dark"
+    ]
+  },
+  {
+    "slug": "everforest",
+    "name": "Everforest",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "gruvbox",
+    "name": "Gruvbox",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "hazard",
+    "name": "Hazard",
+    "modes": [
+      "dark"
+    ]
+  },
+  {
+    "slug": "helixscreen",
+    "name": "HelixScreen",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "kanagawa",
+    "name": "Kanagawa",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "material-design",
+    "name": "Material Design",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "midnight",
+    "name": "Midnight",
+    "modes": [
+      "dark"
+    ]
+  },
+  {
+    "slug": "nord",
+    "name": "Nord",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "onedark",
+    "name": "One Dark",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "rose-pine",
+    "name": "Rose Pine",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "solarized",
+    "name": "Solarized",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "tokyonight",
+    "name": "Tokyo Night",
+    "modes": [
+      "dark",
+      "light"
+    ]
+  },
+  {
+    "slug": "yami",
+    "name": "Yami",
+    "modes": [
+      "dark"
+    ]
+  }
+]

@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+@import './themes.generated.css';
+
+/* Fallback so an unstyled root still renders: HelixScreen dark. */
+:root {
+  --hx-screen-bg: #19191C;  --hx-overlay-bg: #333338;
+  --hx-card-bg: #202023;    --hx-elevated-bg: #4A4A52;
+  --hx-border: #36363C;     --hx-text: #E8E8EC;
+  --hx-text-muted: #B8B8C0; --hx-text-subtle: #787882;
+  --hx-primary: #3A7CC8;    --hx-secondary: #6A9CC8;
+  --hx-tertiary: #7C6CC8;   --hx-info: #3A7CC8;
+  --hx-success: #5CB85C;    --hx-warning: #E8A83A;
+  --hx-danger: #D94848;     --hx-focus: #3A7CC8;
+  --hx-radius: 3px;         --hx-border-width: 1px;
+}
+
+@theme {
+  --color-canvas: var(--hx-screen-bg);
+  --color-overlay: var(--hx-overlay-bg);
+  --color-card: var(--hx-card-bg);
+  --color-elevated: var(--hx-elevated-bg);
+  --color-hairline: var(--hx-border);
+  --color-ink: var(--hx-text);
+  --color-ink-muted: var(--hx-text-muted);
+  --color-accent: var(--hx-primary);
+  --color-secondary: var(--hx-secondary);
+  --color-ok: var(--hx-success);
+  --color-warn: var(--hx-warning);
+  --color-alert: var(--hx-danger);
+
+  --font-prose: 'Source Serif 4', Charter, Georgia, serif;
+  --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-token: var(--hx-radius);
+}
+
+@layer base {
+  body {
+    background-color: var(--hx-screen-bg);
+    color: var(--hx-text);
+    font-family: var(--font-prose);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Structural rules from the app's own theme schema. Not negotiable. */
+  * { box-shadow: none !important; text-shadow: none !important; }
+
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-prose); font-weight: 600; letter-spacing: -0.02em; }
+  code, pre, .tabular { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .ui { font-family: var(--font-ui); }
+
+  a { color: inherit; }
+  ::selection { background: var(--hx-primary); color: var(--hx-screen-bg); }
+  :focus-visible { outline: 2px solid var(--hx-focus); outline-offset: 2px; }
+}
+
+@layer components {
+  .rule { border: 0; border-top: var(--hx-border-width) solid var(--hx-border); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.7rem 1.25rem;
+    border: var(--hx-border-width) solid var(--hx-border);
+    border-radius: var(--hx-radius);
+    font-family: var(--font-ui); font-size: 0.875rem;
+    text-decoration: none; transition: border-color 0.15s, background-color 0.15s;
+  }
+  .btn:hover { border-color: var(--hx-primary); background: var(--hx-overlay-bg); }
+  .btn-strong { border-color: var(--hx-primary); color: var(--hx-primary); }
+  .btn-strong:hover { background: var(--hx-primary); color: var(--hx-screen-bg); }
+
+  /* Screenshots separate from the ground by plinth + hairline, never by glow. */
+  .plinth {
+    background: var(--hx-card-bg);
+    border: var(--hx-border-width) solid var(--hx-border);
+    border-radius: var(--hx-radius);
+    padding: 0.5rem;
+  }
+  .plinth img { display: block; width: 100%; border-radius: 0; }
+}

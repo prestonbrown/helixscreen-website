@@ -1,0 +1,61 @@
+---
+import themes from '../data/themes.generated.json';
+---
+<div class="relative ui text-xs">
+  <label class="sr-only" for="hx-theme-select">Theme</label>
+  <select
+    id="hx-theme-select"
+    class="bg-transparent border border-hairline rounded-[var(--hx-radius)] px-2 py-1 text-ink-muted"
+  >
+    {themes.map((t) => (
+      <option value={t.slug} data-modes={t.modes.join(',')}>{t.name}</option>
+    ))}
+  </select>
+  <button
+    id="hx-mode-toggle"
+    type="button"
+    class="ml-1 border border-hairline rounded-[var(--hx-radius)] px-2 py-1 text-ink-muted"
+    aria-label="Toggle light and dark mode"
+  >
+    <span id="hx-mode-label">dark</span>
+  </button>
+</div>
+
+<script>
+  const select = document.getElementById('hx-theme-select');
+  const toggle = document.getElementById('hx-mode-toggle');
+  const label = document.getElementById('hx-mode-label');
+  const root = document.documentElement;
+
+  function modesFor(slug) {
+    const opt = select.querySelector(`option[value="${slug}"]`);
+    return (opt?.dataset.modes ?? 'dark').split(',');
+  }
+
+  function apply(theme, mode) {
+    const modes = modesFor(theme);
+    const resolved = modes.includes(mode) ? mode : modes[0];
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', resolved);
+    label.textContent = resolved;
+    // A dark-only theme cannot be toggled; say so rather than no-op silently.
+    toggle.disabled = modes.length === 1;
+    toggle.style.opacity = modes.length === 1 ? '0.4' : '1';
+    try {
+      // Only touch storage for keys that actually changed — an unconditional
+      // rewrite on every mount is itself the split-write window a stale
+      // theme/mode pairing could land in.
+      if (localStorage.getItem('hx-theme') !== theme) localStorage.setItem('hx-theme', theme);
+      if (localStorage.getItem('hx-mode') !== resolved) localStorage.setItem('hx-mode', resolved);
+    } catch (e) { /* private mode: choice just won't persist */ }
+  }
+
+  select.value = root.getAttribute('data-theme') ?? 'helixscreen';
+  apply(select.value, root.getAttribute('data-mode') ?? 'dark');
+
+  select.addEventListener('change', () => apply(select.value, root.getAttribute('data-mode')));
+  toggle.addEventListener('click', () => {
+    const next = root.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
+    apply(select.value, next);
+  });
+</script>

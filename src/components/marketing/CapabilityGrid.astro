@@ -1,0 +1,46 @@
+---
+import { Image } from 'astro:assets';
+import printStatus from '../../assets/images/screenshots/print-status.png';
+import zoffset from '../../assets/images/screenshots/advanced-zoffset.png';
+import shaper from '../../assets/images/screenshots/advanced-shaper.png';
+import printSelect from '../../assets/images/screenshots/print-select.png';
+import history from '../../assets/images/screenshots/advanced-history.png';
+import spoolman from '../../assets/images/screenshots/advanced-spoolman.png';
+import ledControl from '../../assets/images/screenshots/led-control.png';
+
+const cells = [
+  { img: zoffset,     alt: 'Z-offset calibration panel showing the four-step paper test method', t: 'Follow four steps to Z-offset',  b: "Four numbered steps walk you through the paper-test method, from homing to a first layer that's actually seated — no nudging a number and hoping." },
+  { img: shaper,      alt: 'Input shaper panel showing a live frequency response graph after calibration', t: 'Input shaper without a laptop', b: 'Frequency response charts render on the printer. Everything from running the test to saving the result happens right there on the screen.' },
+  { img: printSelect, alt: 'File browser showing a grid of print files with 3D thumbnail previews', t: 'Files with real thumbnails',    b: 'Live 3D previews and filenames, fast enough to scroll through hundreds of files.' },
+  { img: history,     alt: 'Print history panel showing total prints, success rate, print time, and filament used', t: 'Every print leaves a record',   b: 'Total prints, success rate, print time, and filament used, plus Moonraker-Timelapse capture and playback.' },
+  { img: spoolman,    alt: 'Spoolman panel listing spools with material, color, and remaining weight', t: 'A proper Spoolman panel',        b: "66 material profiles with drying parameters. Track weight as it's used, and see exactly which spool is loaded in each AMS slot." },
+  { img: ledControl,  alt: 'LED control panel with light zone toggles, color presets, brightness slider, and effects', t: 'Lighting that follows the job', b: 'Klipper LEDs, output pins, WLED, led_effects and macros, switching per printer state.' },
+];
+---
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-hairline">
+  <article class="grid md:grid-cols-[280px_1fr] gap-6 items-center pb-10 mb-10 border-b border-hairline">
+    <div class="plinth">
+      <Image
+        src={printStatus}
+        alt="Print status panel showing live nozzle and bed temperature, layer progress, and tune, pause, and cancel controls"
+        widths={[320, 480, 640]}
+        sizes="(max-width: 768px) 92vw, 280px"
+      />
+    </div>
+    <div>
+      <h3 class="text-xl mb-1.5">The screen you actually watch</h3>
+      <p class="text-sm leading-relaxed text-ink-muted">Live nozzle and bed temperature, layer progress, and tune, pause, and cancel controls — on screen for the whole print, not tucked in a menu.</p>
+    </div>
+  </article>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+    {cells.map((c) => (
+      <article>
+        <div class="plinth mb-4">
+          <Image src={c.img} alt={c.alt} widths={[320, 480]} sizes="(max-width: 640px) 92vw, 30vw" />
+        </div>
+        <h3 class="text-lg mb-1.5">{c.t}</h3>
+        <p class="text-sm leading-relaxed text-ink-muted">{c.b}</p>
+      </article>
+    ))}
+  </div>
+</section>

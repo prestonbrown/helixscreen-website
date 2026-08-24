@@ -521,7 +521,7 @@ the translucent strip at the bottom of a g-code preview card, shared by
 `components/print_status_preview_card.xml` and `print_file_detail.xml`, which keep
 their own (genuinely different) placement inline.
 
-![Filament catalog rows at rest -- the wash appears only while a row is held](../images/screenshot-press-wash-row.png)
+![Filament catalog rows at rest -- the wash appears only while a row is held](../../../../assets/images/docs/screenshot-press-wash-row.png)
 
 Check `styles.xml` before writing a local `<style>` that is really a look another
 screen already has -- and when a second file copies one of your local styles, promote

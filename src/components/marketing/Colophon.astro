@@ -1,0 +1,26 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="border-t border-hairline">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-[1fr_auto] gap-8 items-end">
+    <div>
+      <p class="text-base text-ink-muted max-w-[52ch] leading-relaxed">
+        HelixScreen is written and maintained by Preston Brown, with patches from fifteen
+        other people who owned printers I didn't. It is GPL-3.0, and the source is the
+        same code that runs on the screen.
+      </p>
+      <p class="ui text-xs text-ink-muted mt-4">
+        <a href="https://github.com/prestonbrown/helixscreen" target="_blank" rel="noopener noreferrer" class="hover:text-ink">Source</a>
+        <span class="mx-2" aria-hidden="true">·</span>
+        <a href="https://github.com/prestonbrown/helixscreen/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="hover:text-ink">GPL-3.0</a>
+        <span class="mx-2" aria-hidden="true">·</span>
+        <a href="/legal/privacy/" class="hover:text-ink">Privacy</a>
+        <span class="mx-2" aria-hidden="true">·</span>
+        <a href="/legal/telemetry/" class="hover:text-ink">Telemetry</a>
+        <span class="mx-2" aria-hidden="true">·</span>
+        <a href="mailto:hello@helixscreen.org" class="hover:text-ink">hello@helixscreen.org</a>
+      </p>
+    </div>
+    <p class="ui text-xs text-ink-muted tabular">© {year}</p>
+  </div>
+</footer>

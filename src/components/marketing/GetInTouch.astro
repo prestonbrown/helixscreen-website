@@ -1,0 +1,66 @@
+---
+const routes = [
+  {
+    intent: 'Something is broken',
+    action: 'Open a bug report',
+    href: 'https://github.com/prestonbrown/helixscreen/issues/new?template=bug_report.yml',
+    external: true,
+    note: 'Include your printer model and the log. I read all of them.',
+    fallback: 'No GitHub account? Mail <a href="mailto:bugs@helixscreen.org" class="text-secondary underline underline-offset-2">bugs@helixscreen.org</a> instead.',
+  },
+  {
+    intent: "I want it to do something it doesn't",
+    action: 'Start a discussion',
+    href: 'https://github.com/prestonbrown/helixscreen/discussions',
+    external: true,
+    note: 'Feature requests live here so other people can pile on.',
+  },
+  {
+    intent: 'I have a question',
+    action: 'Ask on Discord',
+    href: 'https://discord.gg/RZCT2StKhr',
+    external: true,
+    note: "Fastest answer, usually from someone who's not me.",
+  },
+  {
+    intent: 'I want to contribute code',
+    action: 'Read CONTRIBUTING.md',
+    href: 'https://github.com/prestonbrown/helixscreen/blob/main/CONTRIBUTING.md',
+    external: true,
+    note: 'Everything from a translation fix to a new feature subsystem is welcome.',
+  },
+  {
+    intent: 'Anything else',
+    action: 'hello@helixscreen.org',
+    href: 'mailto:hello@helixscreen.org',
+    external: false,
+    note: 'Goes straight to me.',
+  },
+];
+---
+<section id="touch" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-hairline">
+  <h2 class="text-3xl leading-tight mb-3">Tell me what it's missing.</h2>
+  <p class="ui text-sm text-ink-muted mb-8 max-w-[62ch]">
+    Most of what HelixScreen does now exists because somebody asked for it. Pick whichever
+    of these fits — they all reach me.
+  </p>
+  <div class="border-t border-hairline">
+    {routes.map((r) => (
+      <div class="grid md:grid-cols-[1fr_auto] gap-2 md:gap-8 items-baseline py-4 border-b border-hairline">
+        <div>
+          <p class="text-base text-ink">{r.intent}</p>
+          <p class="ui text-xs text-ink-muted mt-1">{r.note}</p>
+          {r.fallback && <p class="ui text-xs text-ink-muted mt-1" set:html={r.fallback} />}
+        </div>
+        {r.external ? (
+          <a href={r.href} target="_blank" rel="noopener noreferrer" class="btn btn-strong shrink-0">{r.action}</a>
+        ) : (
+          <a href={r.href} class="btn btn-strong shrink-0">{r.action}</a>
+        )}
+      </div>
+    ))}
+  </div>
+  <p class="ui text-xs text-ink-muted mt-6">
+    Security issues go to <a href="mailto:security@helixscreen.org" class="text-secondary underline underline-offset-2">security@helixscreen.org</a> instead.
+  </p>
+</section>

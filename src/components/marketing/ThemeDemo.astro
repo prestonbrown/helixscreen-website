@@ -1,0 +1,62 @@
+---
+import themes from '../../data/themes.generated.json';
+---
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-hairline">
+  <h2 class="text-xl mb-4">{themes.length} themes ship with it. This page is running one.</h2>
+  <div class="border border-hairline rounded-[var(--hx-radius)] bg-card p-6">
+    <p class="ui text-sm text-ink-muted mb-5 max-w-[62ch]">
+      The palettes below are read straight out of the app's own theme files. Pick one and
+      this page changes with it, because it is the same data the printer's screen uses.
+    </p>
+    <div class="flex flex-wrap gap-2">
+      {themes.map((t) => (
+        <button
+          type="button"
+          data-theme-pick={t.slug}
+          aria-pressed="false"
+          class="ui text-[11px] text-ink-muted border border-hairline rounded-[var(--hx-radius)] px-3 py-1.5 hover:border-accent"
+        >{t.name}</button>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.documentElement;
+  const buttons = document.querySelectorAll('[data-theme-pick]');
+
+  // Reflects the page's actual current theme onto the button grid, whichever
+  // control changed it — a click here, the header select, or anything else
+  // that sets data-theme. Never assumes a default: it only ever reads the
+  // attribute ThemeScript/ThemeSwitcher already maintain on <html>.
+  function syncActive() {
+    const current = root.getAttribute('data-theme');
+    buttons.forEach((btn) => {
+      const active = btn.getAttribute('data-theme-pick') === current;
+      btn.setAttribute('aria-pressed', String(active));
+      btn.classList.toggle('border-accent', active);
+      btn.classList.toggle('text-ink', active);
+      btn.classList.toggle('border-hairline', !active);
+      btn.classList.toggle('text-ink-muted', !active);
+    });
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const slug = btn.getAttribute('data-theme-pick');
+      const select = document.getElementById('hx-theme-select');
+      if (select) {
+        select.value = slug;
+        select.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+
+  // Set initial state on mount, then stay in sync for the life of the page.
+  // A MutationObserver on data-theme (rather than a 'change' listener on the
+  // select) works regardless of which script runs first and regardless of
+  // what ends up changing the theme — the header switcher, these buttons, or
+  // anything else — because data-theme is the one place all of them agree.
+  syncActive();
+  new MutationObserver(syncActive).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+</script>

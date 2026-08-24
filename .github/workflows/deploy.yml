@@ -115,6 +115,9 @@ jobs:
             exit 1
           fi
 
+      - name: Verify the build passes the design-system and copy gate
+        run: npm test
+
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

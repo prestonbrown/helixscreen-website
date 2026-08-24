@@ -288,9 +288,27 @@ process_devel_file() {
     return
   fi
 
+  # Build relative path prefix from dest file to src/assets/images/docs/,
+  # same formula as process_file(): depth + 2 levels up lands on src/.
+  local ups=""
+  local i
+  for (( i = 0; i < depth + 2; i++ )); do
+    ups="../$ups"
+  done
+  local img_prefix="${ups}assets/images/docs"
+
   # Read file, strip the first # heading line (Starlight uses frontmatter title)
   local body
   body=$(sed '1{/^# /d;}' "$src_path")
+
+  # --- Image path rewriting ---
+  # Devel docs reference gallery images as ../images/foo.png. Without this the
+  # path survives into the output and Astro fails the build with ImageNotFound,
+  # because the file is copied to src/assets/images/docs/ under a different path.
+  body=$(echo "$body" | sed -E "s|(\\.\\./)*images/user/|${img_prefix}/|g")
+  body=$(echo "$body" | sed -E "s|(\\.\\./)*images/([^/]+\\.png)|${img_prefix}/\\2|g")
+  body=$(echo "$body" | sed -E "s|(\\.\\./)*images/([^/]+\\.jpg)|${img_prefix}/\\2|g")
+  body=$(echo "$body" | sed -E "s|(\\.\\./)*images/([^/]+\\.svg)|${img_prefix}/\\2|g")
 
   # --- User-doc link rewrites (../user/... or ../../user/...) ---
   # Map devel-side references to user docs onto their site URLs.
