@@ -46,7 +46,10 @@ export function buildAll(themesDir) {
     const slug = basename(file, '.json');
     const theme = JSON.parse(readFileSync(join(themesDir, file), 'utf8'));
     const modes = ['dark', 'light'].filter((m) => theme[m]);
-    if (modes.length === 0) continue;
+    if (modes.length === 0) {
+      console.warn(`[gen-themes] ${file} has neither a "dark" nor "light" palette; skipping.`);
+      continue;
+    }
     cssParts.push(themeBlocks(slug, theme));
     manifest.push({ slug, name: theme.name ?? slug, modes });
   }
