@@ -217,7 +217,7 @@ Once Bluetooth is enabled (either built-in or via dongle), test it from whicheve
 1. Put the scanner in pairing mode (check its manual — usually a long-press or a setup barcode)
 2. Go to **Settings → Hardware & Devices → Spoolman → Barcode Scanner**
 3. Tap **Scan for devices** — your scanner should appear in the list
-4. Tap to pair. See the [Barcode Scanner guide](/docs/guide/barcode-scanner/) for the full walkthrough.
+4. Tap to pair. See the [Barcode Scanner guide](/guide/barcode-scanner/) for the full walkthrough.
 
 If neither feature shows a Bluetooth option, HelixScreen didn't detect an adapter. Double-check with `bluetoothctl show`.
 
@@ -270,4 +270,4 @@ bluetoothctl select <MAC_ADDRESS>
 
 ---
 
-**Next:** [Label Printing](/docs/guide/label-printing/) | **Prev:** [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) | [Back to User Guide](/docs/)
+**Next:** [Label Printing](/guide/label-printing/) | **Prev:** [Filament Tracking & Spoolman](/guide/filament-tracking/) | [Back to User Guide](/guide/)

@@ -80,7 +80,7 @@ Tap the **About** row at the bottom of the Settings panel to open the About over
 | **Klipper** | Installed Klipper version (fetched from Moonraker) |
 | **Moonraker** | Installed Moonraker version |
 | **OS** | Operating system version |
-| **Print Hours** | Total print hours tracked — tap to open the [History Dashboard](/docs/guide/advanced/) |
+| **Print Hours** | Total print hours tracked — tap to open the [History Dashboard](/guide/advanced/) |
 | **Open Source Licenses** | View licenses for all open source libraries used by HelixScreen |
 
 ### Checking for Updates
@@ -127,4 +127,4 @@ When beta features are enabled:
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Prev: System](/docs/guide/settings/system/) | [Next: LED Settings](/docs/guide/settings/led-settings/)
+[Back to Settings](/guide/settings/) | [Prev: System](/guide/settings/system/) | [Next: LED Settings](/guide/settings/led-settings/)

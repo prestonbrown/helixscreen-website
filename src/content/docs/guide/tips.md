@@ -29,7 +29,7 @@ sidebar:
 | Can't extrude | Heat nozzle above minimum temp first |
 | AMS not showing | Check Happy Hare/AFC is configured in Klipper |
 
-For detailed troubleshooting, see [TROUBLESHOOTING.md](/docs/reference/troubleshooting/).
+For detailed troubleshooting, see [TROUBLESHOOTING.md](/reference/troubleshooting/).
 
 ---
 
@@ -51,11 +51,11 @@ For detailed troubleshooting, see [TROUBLESHOOTING.md](/docs/reference/troublesh
 
 ## Further Reading
 
-- [Troubleshooting](/docs/reference/troubleshooting/) — Solutions to common problems
-- [Configuration](/docs/reference/configuration/) — Detailed configuration options
-- [FAQ](/docs/reference/faq/) — Frequently asked questions
-- [Installation](/docs/installation/) — Installation instructions
+- [Troubleshooting](/reference/troubleshooting/) — Solutions to common problems
+- [Configuration](/reference/configuration/) — Detailed configuration options
+- [FAQ](/reference/faq/) — Frequently asked questions
+- [Installation](/installation/) — Installation instructions
 
 ---
 
-**Prev:** [Beta Features](/docs/guide/beta-features/) | [Back to User Guide](/docs/)
+**Prev:** [Beta Features](/guide/beta-features/) | [Back to User Guide](/guide/)

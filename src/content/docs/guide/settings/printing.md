@@ -188,4 +188,4 @@ Configure per-material macros in **Material Temperatures** (above). Each materia
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Prev: Display & Sound](/docs/guide/settings/display-sound/) | [Next: Hardware & Devices](/docs/guide/settings/hardware/)
+[Back to Settings](/guide/settings/) | [Prev: Display & Sound](/guide/settings/display-sound/) | [Next: Hardware & Devices](/guide/settings/hardware/)

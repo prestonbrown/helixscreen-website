@@ -284,7 +284,7 @@ To delete all locally queued telemetry events:
 1. Navigate to **Settings** > **Telemetry** > **View Telemetry Data**
 2. Tap **Clear All Events**
 
-This permanently removes all queued events from your device. Events that have already been transmitted to the server cannot be individually deleted (see the [Privacy Policy](/docs/legal/privacy/) for details on why server-side data is inherently anonymous).
+This permanently removes all queued events from your device. Events that have already been transmitted to the server cannot be individually deleted (see the [Privacy Policy](/legal/privacy/) for details on why server-side data is inherently anonymous).
 
 ---
 
@@ -334,4 +334,4 @@ For developers and the technically curious:
 - **Crash handling**: written to keep working even while the app is crashing, so a crash is still captured and queued for sending
 - **Schema version**: `2` (all events include `schema_version` for forward compatibility)
 - **Identity files**: `telemetry_device.json` (UUID + salt), `telemetry_config.json` (enabled state), `telemetry_queue.json` (event queue)
-- **Privacy policy**: [PRIVACY_POLICY.md](/docs/legal/privacy/)
+- **Privacy policy**: [PRIVACY_POLICY.md](/legal/privacy/)

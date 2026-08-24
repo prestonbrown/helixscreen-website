@@ -116,4 +116,4 @@ The E-Stop button (top-right of the Motion screen header, and on the Controls pa
 
 ---
 
-**Next:** [Filament Management](/docs/guide/filament/) | **Prev:** [Temperature Control](/docs/guide/temperature/) | [Back to User Guide](/docs/)
+**Next:** [Filament Management](/guide/filament/) | **Prev:** [Temperature Control](/guide/temperature/) | [Back to User Guide](/guide/)

@@ -17,7 +17,7 @@ Your printer's touchscreen should show you more than temperatures and a progress
 - **Looks good** — 17 theme presets with a live editor, responsive layouts from 480x320 to 1024x600, GPU-accelerated blur. Light and dark modes. (Ultrawide and portrait screens are alpha — see [Which displays are supported?](FAQ.md#which-displays-are-supported).)
 - **Smart setup** — A first-run wizard auto-detects your printer from a database of 80+ models and configures everything. 9 languages.
 
-![Home Panel](../../assets/images/docs/screenshot-home-panel.png)
+![Home Panel](../../../assets/images/docs/screenshot-home-panel.png)
 
 ---
 
@@ -35,97 +35,97 @@ Your printer's touchscreen should show you more than temperatures and a progress
 
 ## Guide Contents
 
-### [Getting Started](/docs/guide/getting-started/)
+### [Getting Started](/guide/getting-started/)
 Navigation basics, touch gestures, connection status, first-time setup wizard, WiFi configuration, and keyboard input.
 
-![Setup Wizard](../../assets/images/docs/wizard-wifi.png)
+![Setup Wizard](../../../assets/images/docs/wizard-wifi.png)
 
-### [Supported Printers](/docs/guide/supported-printers/)
+### [Supported Printers](/guide/supported-printers/)
 Which printers get deep, model-specific integration — and exactly what works on each. Covers the FlashForge Adventurer 5M/5X (IFS), Creality K1/K2 (CFS), QIDI Box, Snapmaker U1, Anycubic ACE, and how every other Klipper printer is auto-detected.
 
-### [Home Panel](/docs/guide/home-panel/)
+### [Home Panel](/guide/home-panel/)
 Your printer dashboard — status area, configurable home widgets (temperature, network, LED, AMS, power, notifications, and more), active tool badge for toolchanger printers, emergency stop, and the Printer Manager with custom images. Customize which widgets appear and their order in Edit Mode — long-press the dashboard, then tap the **+** button on the navigation bar to open the Widget Catalog. Long-press the lightbulb widget for full LED controls with color, brightness, effects, and WLED presets.
 
-### [Printing](/docs/guide/printing/)
+### [Printing](/guide/printing/)
 The full printing workflow — file selection, preview, pre-print options, monitoring active prints, tune overlay, Z-offset baby steps, pressure advance, exclude object, and post-print summary.
 
-![Print File Detail](../../assets/images/docs/print-detail.png)
+![Print File Detail](../../../assets/images/docs/print-detail.png)
 
-### [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/)
+### [Print Monitoring & Failure Detection](/guide/print-monitoring/)
 The pre-print filament check that catches an empty slot before a multi-color print starts, and the on-screen response to camera-based print-failure detection on supported printers (Snapmaker U1, Creality K2).
 
-### [Temperature Control](/docs/guide/temperature/)
+### [Temperature Control](/guide/temperature/)
 Nozzle and bed temperature panels, multi-extruder selector for printers with multiple extruders, material presets, and live temperature graphs.
 
-### [Motion & Positioning](/docs/guide/motion/)
+### [Motion & Positioning](/guide/motion/)
 Jog pad controls, homing, distance increments, and emergency stop.
 
-![Motion Controls](../../assets/images/docs/screenshot-motion-panel.png)
+![Motion Controls](../../../assets/images/docs/screenshot-motion-panel.png)
 
-### [Filament Management](/docs/guide/filament/)
+### [Filament Management](/guide/filament/)
 Extrusion controls, load/unload procedures, AMS multi-material systems with multi-backend support (run Happy Hare, AFC, ACE, or Tool Changer simultaneously), Spoolman integration, and dryer control.
 
-![AMS Panel](../../assets/images/docs/ams.png)
+![AMS Panel](../../../assets/images/docs/ams.png)
 
-### [Filament Tracking & Spoolman](/docs/guide/filament-tracking/)
+### [Filament Tracking & Spoolman](/guide/filament-tracking/)
 How HelixScreen tracks material, color, and remaining weight — with the built-in tracker or a connected Spoolman server. Covers the difference between the two modes, how usage is estimated during a print, connecting a Spoolman server, and browsing your spool inventory on the touchscreen.
 
-### [Bluetooth Setup](/docs/guide/bluetooth-setup/)
+### [Bluetooth Setup](/guide/bluetooth-setup/)
 Enable Bluetooth on Raspberry Pi or BTT Pi when it's disabled for UART, or add a USB Bluetooth dongle when your MCU uses the serial port.
 
-### [Label Printing](/docs/guide/label-printing/)
+### [Label Printing](/guide/label-printing/)
 Print spool labels to Brother QL, Phomemo, Niimbot, or MakeID thermal printers via Network, USB, or Bluetooth. Setup, label sizes, and troubleshooting.
 
-### [Barcode Scanner](/docs/guide/barcode-scanner/)
+### [Barcode Scanner](/guide/barcode-scanner/)
 Set up a USB or Bluetooth barcode scanner to read Spoolman QR codes. Includes the `ClassicBondedOnly=false` fix for Bluetooth HID scanners that fail the "bonded device" check.
 
-### [Calibration & Tuning](/docs/guide/calibration/)
+### [Calibration & Tuning](/guide/calibration/)
 Bed mesh visualization, screws tilt adjust, input shaper resonance testing, Z-offset calibration, and PID tuning.
 
-![Bed Mesh](../../assets/images/docs/screenshot-bed-mesh-panel.png)
+![Bed Mesh](../../../assets/images/docs/screenshot-bed-mesh-panel.png)
 
-### [Touch Calibration](/docs/guide/touch-calibration/)
+### [Touch Calibration](/guide/touch-calibration/)
 Fix taps that land in the wrong spot — run the calibration wizard from Settings, force it on any touchscreen, or recalibrate from the command line.
 
-### [Settings](/docs/guide/settings/)
+### [Settings](/guide/settings/)
 Display, theme, sound, LED, network, sensors, touch calibration, hardware issues, safety, machine limits, factory reset, help & support (debug bundles, Discord, docs), and About sub-overlay (version info, updates, branding, contributors).
 
-![Settings](../../assets/images/docs/screenshot-settings-panel.png)
+![Settings](../../../assets/images/docs/screenshot-settings-panel.png)
 
-### [Fans](/docs/guide/fans/)
+### [Fans](/guide/fans/)
 Discovered fans grouped by controllable vs. automatic, fan types, live speed control via animated dials, RPM readouts, and per-fan renaming.
 
-### [Sensors](/docs/guide/sensors/)
+### [Sensors](/guide/sensors/)
 Filament switch and motion sensors with per-sensor role assignment (None, Runout, Toolhead, Entry), read-only probe/width/humidity/accelerometer/color/temperature sensors, and chamber heater/sensor assignment.
 
-### [Security & Screen Lock](/docs/guide/security/)
+### [Security & Screen Lock](/guide/security/)
 Set, change, or remove a PIN screen lock, auto-lock tied to the display sleep timeout, the lock-screen keypad with emergency-stop access, and what a factory reset clears.
 
-### [Camera](/docs/guide/camera/)
+### [Camera](/guide/camera/)
 Webcam viewing via the home widget and standalone fullscreen viewer, rotation and flip configuration, stream status states, and performance throttling.
 
-### [Print History](/docs/guide/print-history/)
+### [Print History](/guide/print-history/)
 History dashboard with time-range statistics and trend charts, searchable/filterable/sortable job list, per-job details, and reprinting a previous job.
 
-### [Advanced Features](/docs/guide/advanced/)
+### [Advanced Features](/guide/advanced/)
 Console, macro execution, power device control (with home panel quick-toggle and device selection), print history, notification history, and timelapse settings.
 
-### [Beta Features](/docs/guide/beta-features/)
+### [Beta Features](/guide/beta-features/)
 How to enable beta features, the full beta feature list, and update channel selection.
 
-### [Tips & Best Practices](/docs/guide/tips/)
+### [Tips & Best Practices](/guide/tips/)
 Workflow shortcuts, quick troubleshooting table, and a "which panel do I use?" reference.
 
 ---
 
 ## Other Resources
 
-- [Troubleshooting](/docs/reference/troubleshooting/) — Solutions to common problems
-- [Configuration](/docs/reference/configuration/) — Detailed configuration options
-- [FAQ](/docs/reference/faq/) — Frequently asked questions
-- [Installation](/docs/installation/) — Installation instructions
+- [Troubleshooting](/reference/troubleshooting/) — Solutions to common problems
+- [Configuration](/reference/configuration/) — Detailed configuration options
+- [FAQ](/reference/faq/) — Frequently asked questions
+- [Installation](/installation/) — Installation instructions
 - [Creality K1C Setup](guide/creality-k1c-setup.md) — Rooting, community firmware, and HelixScreen install for the K1/K1C/K1 Max
-- [Upgrading](/docs/upgrading/) — Version upgrade instructions
+- [Upgrading](/upgrading/) — Version upgrade instructions
 
 ---
 

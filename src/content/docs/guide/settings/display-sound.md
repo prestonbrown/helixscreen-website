@@ -63,7 +63,7 @@ Turn the picture to match how the panel is physically mounted: **Normal**, **90�
 
 Changing the rotation applies the next time HelixScreen starts — when you pick a new value, HelixScreen offers to restart right away, and re-selecting the current rotation changes nothing. Touch input follows the new orientation automatically. The row is hidden on the desktop simulator, where you rotate the window from your operating system instead.
 
-> If taps land in the wrong places after rotating, that is a touch-calibration question, not a rotation one — see the [Touch Calibration guide](/docs/guide/touch-calibration/).
+> If taps land in the wrong places after rotating, that is a touch-calibration question, not a rotation one — see the [Touch Calibration guide](/guide/touch-calibration/).
 
 ### Dark Mode
 
@@ -283,4 +283,4 @@ Confirm your printer has audio hardware. For Klipper printers, verify `[output_p
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Next: Printing](/docs/guide/settings/printing/)
+[Back to Settings](/guide/settings/) | [Next: Printing](/guide/settings/printing/)

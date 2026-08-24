@@ -48,7 +48,7 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 | Zero G Mercury / Nebula / Hydra | **Tested** | Multiple variants supported |
 | Other Klipper printers | **Should work** | Any printer with Moonraker API access |
 
-> **Note:** "Tested" means the HelixScreen team has verified the platform on real hardware. "Community" means a community user has confirmed it working but we haven't tested it ourselves. "Preliminary" means support exists from the printer's published config but has not been verified on hardware. See the [Installation Guide](/docs/installation/) for platform-specific instructions, and [Supported Printers](/docs/guide/supported-printers/) for a feature-by-feature breakdown of what works on each specially-integrated model.
+> **Note:** "Tested" means the HelixScreen team has verified the platform on real hardware. "Community" means a community user has confirmed it working but we haven't tested it ourselves. "Preliminary" means support exists from the printer's published config but has not been verified on hardware. See the [Installation Guide](/installation/) for platform-specific instructions, and [Supported Printers](/guide/supported-printers/) for a feature-by-feature breakdown of what works on each specially-integrated model.
 
 ### Can I run HelixScreen on a separate device instead of on my printer?
 
@@ -212,7 +212,7 @@ Your configuration is safe. The installer preserves:
 - Custom printer images in `config/custom_images/`
 - Custom theme files in `config/themes/`
 
-Your Klipper configuration is never touched. See the [Upgrade Guide](/docs/upgrading/) for instructions.
+Your Klipper configuration is never touched. See the [Upgrade Guide](/upgrading/) for instructions.
 
 ### My display is upside down or rotated wrong
 
@@ -265,7 +265,7 @@ This enables SIMD-accelerated (hardware-optimized) JPEG decoding, which is 3-5x 
 - **Niimbot** — via Bluetooth (B21, D11, D110)
 - **MakeID** — via Bluetooth (E1, L1, M1 — 9/12/16mm continuous tape)
 
-Labels include spool name, material, color swatch, temperatures, and a QR code. See the [Label Printing Guide](/docs/guide/label-printing/) for setup.
+Labels include spool name, material, color swatch, temperatures, and a QR code. See the [Label Printing Guide](/guide/label-printing/) for setup.
 
 ### Does it support Happy Hare or AFC-Klipper?
 
@@ -372,7 +372,7 @@ HelixScreen ships with 9 languages: English, German, Spanish, French, Italian, J
 
 ### Does HelixScreen collect any data?
 
-**Only if you opt in.** Telemetry is off by default. When enabled, it collects anonymous usage data (display resolution, platform, print outcomes) to help improve the software. No filenames, G-code, IP addresses, or personal information is ever collected. You can view, disable, and delete your data at any time in **Settings** → **System** → **Share Usage Data**. See the [Telemetry page](/docs/legal/telemetry/) for full details.
+**Only if you opt in.** Telemetry is off by default. When enabled, it collects anonymous usage data (display resolution, platform, print outcomes) to help improve the software. No filenames, G-code, IP addresses, or personal information is ever collected. You can view, disable, and delete your data at any time in **Settings** → **System** → **Share Usage Data**. See the [Telemetry page](/legal/telemetry/) for full details.
 
 ---
 
@@ -485,7 +485,7 @@ helix-screen --wizard
 3. **Check firewall:** `sudo ufw status`
 4. **Verify IP:** `hostname -I`
 
-See [TROUBLESHOOTING.md](/docs/reference/troubleshooting/) for more solutions.
+See [TROUBLESHOOTING.md](/reference/troubleshooting/) for more solutions.
 
 ---
 
@@ -581,7 +581,7 @@ For a complete map of log locations and how they're wired up, see the [Logging](
 ---
 
 *For more details, see:*
-- *[Installation Guide](/docs/installation/)*
-- *[User Guide](/docs/)*
-- *[Configuration Reference](/docs/reference/configuration/)*
-- *[Troubleshooting](/docs/reference/troubleshooting/)*
+- *[Installation Guide](/installation/)*
+- *[User Guide](/guide/)*
+- *[Configuration Reference](/reference/configuration/)*
+- *[Troubleshooting](/reference/troubleshooting/)*

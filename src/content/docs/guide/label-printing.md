@@ -23,7 +23,7 @@ HelixScreen supports five families of label printers:
 | **Niimbot** | Bluetooth only | B21, D11, D110 |
 | **MakeID** | Bluetooth only | E1 (advertises as "YichipFPGA-XXXX"), L1, M1 — 9/12/16mm continuous tape |
 
-> **Note:** Bluetooth label printing requires a Bluetooth adapter on your HelixScreen device (Raspberry Pi 4/5 have built-in Bluetooth). Devices without Bluetooth hardware will only see Network and USB options. If Bluetooth is disabled for UART, see the [Bluetooth Setup Guide](/docs/guide/bluetooth-setup/).
+> **Note:** Bluetooth label printing requires a Bluetooth adapter on your HelixScreen device (Raspberry Pi 4/5 have built-in Bluetooth). Devices without Bluetooth hardware will only see Network and USB options. If Bluetooth is disabled for UART, see the [Bluetooth Setup Guide](/guide/bluetooth-setup/).
 
 ---
 
@@ -185,7 +185,7 @@ The **Start at** option lets you reuse a partially-used sheet: if you've already
 
 - Your device doesn't have Bluetooth hardware, or it's disabled
 - On Raspberry Pi, check that Bluetooth is enabled: `bluetoothctl show` should list an adapter
-- If Bluetooth is disabled for UART (common in Klipper setups), see the [Bluetooth Setup Guide](/docs/guide/bluetooth-setup/) for how to enable it or add a USB dongle
+- If Bluetooth is disabled for UART (common in Klipper setups), see the [Bluetooth Setup Guide](/guide/bluetooth-setup/) for how to enable it or add a USB dongle
 - The Bluetooth plugin (`libhelix-bluetooth.so`) must be present next to the HelixScreen binary
 
 ### "No USB printer detected"
@@ -222,4 +222,4 @@ The **Start at** option lets you reuse a partially-used sheet: if you've already
 
 ---
 
-**Next:** [Barcode Scanner](/docs/guide/barcode-scanner/) | **Prev:** [Bluetooth Setup](/docs/guide/bluetooth-setup/) | [Back to User Guide](/docs/)
+**Next:** [Barcode Scanner](/guide/barcode-scanner/) | **Prev:** [Bluetooth Setup](/guide/bluetooth-setup/) | [Back to User Guide](/guide/)

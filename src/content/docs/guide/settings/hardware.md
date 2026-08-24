@@ -31,7 +31,7 @@ Use this when adding or removing hardware to keep HelixScreen's expectations acc
 
 ## Printers
 
-> Only shown when [beta features](/docs/guide/beta-features/) are enabled.
+> Only shown when [beta features](/guide/beta-features/) are enabled.
 
 Manage all your configured printers. Tap to open the Printer Management overlay where you can:
 
@@ -97,7 +97,7 @@ Whether a sensor is a switch or a motion sensor is detected automatically — it
 
 Role assignments control what HelixScreen *watches*. One thing switches at the printer itself: when you engage bypass on a filament system, HelixScreen turns the toolhead runout sensor on at the printer if the filament system's own software had left it off (common on Creality printers), and turns it back off when you disengage — so a bypass print is still protected against running out. This is automatic and doesn't change your settings here.
 
-See [Sensors](/docs/guide/sensors/) for the full guide.
+See [Sensors](/guide/sensors/) for the full guide.
 
 ---
 
@@ -105,7 +105,7 @@ See [Sensors](/docs/guide/sensors/) for the full guide.
 
 > Only shown when LED hardware is detected.
 
-Tap to open the full LED configuration overlay. This is a large topic with its own page — see [LED Settings](/docs/guide/settings/led-settings/).
+Tap to open the full LED configuration overlay. This is a large topic with its own page — see [LED Settings](/guide/settings/led-settings/).
 
 ---
 
@@ -125,7 +125,7 @@ See [Power Device Control](../advanced.md#power-device-control) for full details
 
 Tap to open Spoolman integration settings. HelixScreen connects to your Spoolman server for spool tracking, weight sync, and barcode scanning.
 
-> For the bigger picture — how filament tracking works with and without Spoolman, and how remaining weight is kept current — see [Filament Tracking & Spoolman](/docs/guide/filament-tracking/).
+> For the bigger picture — how filament tracking works with and without Spoolman, and how remaining weight is kept current — see [Filament Tracking & Spoolman](/guide/filament-tracking/).
 
 ### Server Setup
 
@@ -151,8 +151,8 @@ If your scanner uses a generic name (e.g., "TMS HIDKeyBoard"), tap this setting 
 
 ### Label Printer
 
-Opens label printer configuration for printing spool labels with QR codes. See [Label Printing](/docs/guide/label-printing/) for full setup instructions and supported printers.
+Opens label printer configuration for printing spool labels with QR codes. See [Label Printing](/guide/label-printing/) for full setup instructions and supported printers.
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Prev: Printing](/docs/guide/settings/printing/) | [Next: Safety & Notifications](/docs/guide/settings/safety/)
+[Back to Settings](/guide/settings/) | [Prev: Printing](/guide/settings/printing/) | [Next: Safety & Notifications](/guide/settings/safety/)

@@ -143,4 +143,4 @@ From the right column:
 
 ---
 
-**Next:** [Motion & Positioning](/docs/guide/motion/) | **Prev:** [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/) | [Back to User Guide](/docs/)
+**Next:** [Motion & Positioning](/guide/motion/) | **Prev:** [Print Monitoring & Failure Detection](/guide/print-monitoring/) | [Back to User Guide](/guide/)

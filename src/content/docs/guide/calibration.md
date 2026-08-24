@@ -7,7 +7,7 @@ sidebar:
 
 HelixScreen provides built-in tools for the most common Klipper calibration tasks.
 
-> **Looking for touchscreen calibration?** See the [Touch Calibration Guide](/docs/guide/touch-calibration/).
+> **Looking for touchscreen calibration?** See the [Touch Calibration Guide](/guide/touch-calibration/).
 
 ---
 
@@ -186,7 +186,7 @@ The Belt Tension tool:
 
 ### Running a Belt Tension Check
 
-1. Navigate to **Advanced > Belt Tension** (requires [beta features](/docs/guide/beta-features/) enabled)
+1. Navigate to **Advanced > Belt Tension** (requires [beta features](/guide/beta-features/) enabled)
 2. Review the **hardware summary** card showing your detected kinematics, accelerometer status, strobe LED availability, and target frequency
 3. Tap **Start Check**
 4. The printer homes (if needed), then runs a resonance sweep on each belt path
@@ -296,7 +296,7 @@ Calibrate temperature controllers for stable heating. HelixScreen supports two c
 
 ### MPC Calibration (Beta — Kalico Only)
 
-If you are running Kalico firmware and have [beta features enabled](/docs/guide/beta-features/), a **Method** selector appears with MPC and PID options. HelixScreen auto-detects Kalico — the selector only appears when it is detected.
+If you are running Kalico firmware and have [beta features enabled](/guide/beta-features/), a **Method** selector appears with MPC and PID options. HelixScreen auto-detects Kalico — the selector only appears when it is detected.
 
 1. Navigate to **Advanced > Heater Calibration**
 2. Select **MPC** in the Method selector (marked with a BETA badge)
@@ -318,10 +318,10 @@ If you are running Kalico firmware and have [beta features enabled](/docs/guide/
 
 ## See Also
 
-- [Motion & Positioning](/docs/guide/motion/) — Jog controls used during manual calibration
-- [Settings: Printing](/docs/guide/settings/printing/) — Machine limits and Z movement configuration
-- [Printing](/docs/guide/printing/) — Z-offset fine-tuning during active prints
+- [Motion & Positioning](/guide/motion/) — Jog controls used during manual calibration
+- [Settings: Printing](/guide/settings/printing/) — Machine limits and Z movement configuration
+- [Printing](/guide/printing/) — Z-offset fine-tuning during active prints
 
 ---
 
-**Next:** [Settings](/docs/guide/settings/) | **Prev:** [Barcode Scanner](/docs/guide/barcode-scanner/) | [Back to User Guide](/docs/)
+**Next:** [Settings](/guide/settings/) | **Prev:** [Barcode Scanner](/guide/barcode-scanner/) | [Back to User Guide](/guide/)

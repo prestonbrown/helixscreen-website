@@ -167,7 +167,7 @@ With it on, the external spool appears on the filament path beside your slots. T
 
 **On Happy Hare, the bypass itself also works.** `MMU_SELECT_BYPASS` does not check `has_bypass` - it deselects the gear steppers and reports gate -2 either way. Turn the setting on if your MMU has a bypass but reports `has_bypass: 0`. That happens with `mmu_vendor: Other` (which includes a QIDI Box driven through Happy Hare) and with a type-A selector whose bypass offset is not calibrated yet.
 
-**On the other systems, the setting changes only what HelixScreen displays.** There is no bypass command to send, so the Bypass toggle reports that the operation is not supported. Use the external spool to record the material and color you loaded by hand: [filament tracking](/docs/guide/filament-tracking/), spool presets, and purge temperatures all read from it. Load and unload with your own macros or from the Extrusion panel.
+**On the other systems, the setting changes only what HelixScreen displays.** There is no bypass command to send, so the Bypass toggle reports that the operation is not supported. Use the external spool to record the material and color you loaded by hand: [filament tracking](/guide/filament-tracking/), spool presets, and purge temperatures all read from it. Load and unload with your own macros or from the Extrusion panel.
 
 **On the systems where bypass genuinely engages** (AFC, AD5X IFS, Happy Hare, Creality CFS), it also quiets the pre-print filament checks. Filament fed through the bypass never passes through a slot, so a print started that way would otherwise be flagged for every tool it uses. See [Pre-Print Filament Check](print-monitoring.md#pre-print-filament-check). On the display-only systems above nothing is suppressed, because bypass never actually engages there.
 
@@ -488,7 +488,7 @@ Spoolman is an optional filament-inventory server. Once it's connected, the AMS 
 - Remaining filament weight shown
 - Tap a slot's **Spool Info** or **Select Spool** to assign a saved spool — see [Editing Filament Properties](#editing-filament-properties) and the [Slot Context Menu](#slot-context-menu)
 
-Connecting a server, the full spool-inventory panel, the new-spool wizard, and how remaining weight is tracked all live on their own page: **[Filament Tracking & Spoolman](/docs/guide/filament-tracking/)**.
+Connecting a server, the full spool-inventory panel, the new-spool wizard, and how remaining weight is tracked all live on their own page: **[Filament Tracking & Spoolman](/guide/filament-tracking/)**.
 
 ---
 
@@ -552,12 +552,12 @@ The humidity readout and the **Material Comfort** guidance below it belong to th
 
 ## See Also
 
-- [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) — How remaining weight is tracked, with and without Spoolman, and how to connect a Spoolman server
-- [Temperature Control](/docs/guide/temperature/) — Preheat presets work with spool material info
-- [Bluetooth Setup](/docs/guide/bluetooth-setup/) — Required for Bluetooth-connected AMS and label printers
-- [Label Printing](/docs/guide/label-printing/) — Print physical spool labels with Spoolman data
-- [Settings: Hardware & Devices](/docs/guide/settings/hardware/) — AMS, Spoolman, and filament sensor configuration
+- [Filament Tracking & Spoolman](/guide/filament-tracking/) — How remaining weight is tracked, with and without Spoolman, and how to connect a Spoolman server
+- [Temperature Control](/guide/temperature/) — Preheat presets work with spool material info
+- [Bluetooth Setup](/guide/bluetooth-setup/) — Required for Bluetooth-connected AMS and label printers
+- [Label Printing](/guide/label-printing/) — Print physical spool labels with Spoolman data
+- [Settings: Hardware & Devices](/guide/settings/hardware/) — AMS, Spoolman, and filament sensor configuration
 
 ---
 
-**Next:** [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) | **Prev:** [Motion & Positioning](/docs/guide/motion/) | [Back to User Guide](/docs/)
+**Next:** [Filament Tracking & Spoolman](/guide/filament-tracking/) | **Prev:** [Motion & Positioning](/guide/motion/) | [Back to User Guide](/guide/)

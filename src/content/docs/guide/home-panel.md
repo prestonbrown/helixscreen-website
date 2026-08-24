@@ -655,7 +655,7 @@ For WLED network-connected strips:
 
 ### Macro Device Controls
 
-Custom macro devices you've configured in [LED Settings](/docs/guide/settings/led-settings/) appear with controls matching their type:
+Custom macro devices you've configured in [LED Settings](/guide/settings/led-settings/) appear with controls matching their type:
 
 - **On/Off devices**: Separate "Turn On" and "Turn Off" buttons
 - **Toggle devices**: A single "Toggle" button
@@ -820,7 +820,7 @@ A row of chips shows detected hardware capabilities: Probe, Bed Mesh, Heated Bed
 
 ### Managing Multiple Printers
 
-> Requires [beta features](/docs/guide/beta-features/) to be enabled and at least two printers configured.
+> Requires [beta features](/guide/beta-features/) to be enabled and at least two printers configured.
 
 When you have multiple printers configured, the Printer Manager overlay shows a **Manage Printers** button at the bottom. Tap it to open the printer management screen (same as Settings > Printers).
 
@@ -828,7 +828,7 @@ You can also switch printers directly from the **navigation bar**. When multiple
 
 #### Adding Your First Extra Printer
 
-1. Enable [beta features](/docs/guide/beta-features/) if you haven't already
+1. Enable [beta features](/guide/beta-features/) if you haven't already
 2. Go to **Settings** > **Printers** (under the Printer section)
 3. Tap **Add Printer**
 4. The Setup Wizard launches — enter the new printer's IP address and port, select hardware, and complete the wizard
@@ -857,4 +857,4 @@ You can also switch printers directly from the **navigation bar**. When multiple
 
 ---
 
-**Next:** [Printing](/docs/guide/printing/) | **Prev:** [Supported Printers](/docs/guide/supported-printers/) | [Back to User Guide](/docs/)
+**Next:** [Printing](/guide/printing/) | **Prev:** [Supported Printers](/guide/supported-printers/) | [Back to User Guide](/guide/)

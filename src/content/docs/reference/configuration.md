@@ -225,7 +225,7 @@ This is different from `sounds_enabled` — that toggle mutes playback but still
 ### `beta_features`
 **Type:** boolean
 **Default:** `false`
-**Description:** Enable beta features that are still under testing. Gates several Advanced panel features (Macro Browser, Input Shaping, Z-Offset Calibration, HelixPrint plugin management, PRINT_START configuration, Timelapse), the Plugins section in Settings, and the Update Channel selector. Always enabled automatically when running in `--test` mode. Can also be toggled by tapping the version button 7 times in Settings → About. See the [Beta Features](/docs/guide/beta-features/) guide for the full list.
+**Description:** Enable beta features that are still under testing. Gates several Advanced panel features (Macro Browser, Input Shaping, Z-Offset Calibration, HelixPrint plugin management, PRINT_START configuration, Timelapse), the Plugins section in Settings, and the Update Channel selector. Always enabled automatically when running in `--test` mode. Can also be toggled by tapping the version button 7 times in Settings → About. See the [Beta Features](/guide/beta-features/) guide for the full list.
 
 ---
 
@@ -354,7 +354,7 @@ Located in the `display` section:
 }
 ```
 
-> **Touch calibration data lives under `input.calibration`, not `display.calibration`.** See the [Input Configuration](#input-settings) section below and the [Touch Calibration Guide](/docs/guide/touch-calibration/). Older configs that placed it under `display` are automatically migrated on first load.
+> **Touch calibration data lives under `input.calibration`, not `display.calibration`.** See the [Input Configuration](#input-settings) section below and the [Touch Calibration Guide](/guide/touch-calibration/). Older configs that placed it under `display` are automatically migrated on first load.
 
 ### `animations_enabled`
 **Type:** boolean
@@ -549,7 +549,7 @@ Located in the `input` section:
 
 > **Tuning touch feel:** These four settings interact. See **[Touch Feel — Which Setting Do I Tune?](TROUBLESHOOTING.md#touch-feel--which-setting-do-i-tune)** in the troubleshooting guide for a symptom → setting map.
 >
-> **Touch calibration** (`input.calibration`) is set automatically by the wizard — don't edit the `a`–`f` coefficients by hand. See the [Touch Calibration Guide](/docs/guide/touch-calibration/) for the full reference.
+> **Touch calibration** (`input.calibration`) is set automatically by the wizard — don't edit the `a`–`f` coefficients by hand. See the [Touch Calibration Guide](/guide/touch-calibration/) for the full reference.
 
 ### `scroll_throw`
 **Type:** integer
@@ -1259,7 +1259,7 @@ Each widget object has:
 - Unknown widget IDs (from older versions) are silently ignored
 - Up to 8 pages are supported
 
-This is best configured via **Edit Mode** on the Home Panel (long-press the widget grid) rather than editing the JSON directly. See the [Home Panel guide](/docs/guide/home-panel/) for details on adding pages and arranging widgets.
+This is best configured via **Edit Mode** on the Home Panel (long-press the widget grid) rather than editing the JSON directly. See the [Home Panel guide](/guide/home-panel/) for details on adding pages and arranging widgets.
 
 ---
 
@@ -1467,7 +1467,7 @@ Located in the `security` section. Controls the optional PIN lock screen:
 
 ## Label Printer Settings
 
-Located in the `label_printer` section. Configures the thermal label printer used to print filament spool labels. This is best set up through **Settings > Hardware & Devices > Spoolman > Label Printer** — scanning and selecting a printer fills these fields in for you. The keys are documented here for reference. See the [Label Printing guide](/docs/guide/label-printing/) for the full walkthrough.
+Located in the `label_printer` section. Configures the thermal label printer used to print filament spool labels. This is best set up through **Settings > Hardware & Devices > Spoolman > Label Printer** — scanning and selecting a printer fills these fields in for you. The keys are documented here for reference. See the [Label Printing guide](/guide/label-printing/) for the full walkthrough.
 
 ```json
 {
@@ -1562,7 +1562,7 @@ Located in the `printers` section:
 ### `telemetry_enabled`
 **Type:** boolean
 **Default:** `false`
-**Description:** Enables anonymous usage telemetry. This is a top-level key (not nested in a section). **OFF by default — you must opt in**, either during the setup wizard or via **Settings > System > Share Usage Data**. While `false`, nothing is collected, queued, or transmitted. For a full breakdown of exactly what is and isn't collected, and how the data is anonymized, see the [Telemetry](/docs/legal/telemetry/) documentation.
+**Description:** Enables anonymous usage telemetry. This is a top-level key (not nested in a section). **OFF by default — you must opt in**, either during the setup wizard or via **Settings > System > Share Usage Data**. While `false`, nothing is collected, queued, or transmitted. For a full breakdown of exactly what is and isn't collected, and how the data is anonymized, see the [Telemetry](/legal/telemetry/) documentation.
 
 ---
 
@@ -2091,4 +2091,4 @@ Environment="HELIX_TOUCH_DEVICE=/dev/input/event0"
 
 ---
 
-*Back to: [User Guide](/docs/) | [Troubleshooting](/docs/reference/troubleshooting/)*
+*Back to: [User Guide](/guide/) | [Troubleshooting](/reference/troubleshooting/)*

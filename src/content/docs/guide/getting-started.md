@@ -94,7 +94,7 @@ The first time you launch HelixScreen, a setup wizard guides you through configu
 | **Input Shaper** | An accelerometer is detected on the printer |
 | **Help Improve HelixScreen** | Shown on preset printers in place of the Summary step (see below) |
 
-The **Help Improve HelixScreen** step asks whether to share anonymous usage statistics. No personal data is ever collected, and you can change this choice later in **Settings > System**. For details on what is and isn't collected, see the [Telemetry guide](/docs/legal/telemetry/).
+The **Help Improve HelixScreen** step asks whether to share anonymous usage statistics. No personal data is ever collected, and you can change this choice later in **Settings > System**. For details on what is and isn't collected, see the [Telemetry guide](/legal/telemetry/).
 
 The progress indicator (e.g., "Step 3 of 8") only counts the steps that apply to your setup — skipped steps aren't shown or counted.
 
@@ -104,13 +104,13 @@ Some printers (for example the Creality K1 or the FlashForge Adventurer 5M) ship
 
 ### Adding Another Printer
 
-If you have beta multi-printer support enabled, you can add a second printer later from the printer manager. This re-runs the wizard for the new printer, but skips the WiFi and Language steps (those are device-wide and already configured). On the first step, the button reads **Cancel** instead of **Back** — tapping it discards the new printer and returns you to the one you were using. See [Beta Features](/docs/guide/beta-features/) for how to enable multi-printer support.
+If you have beta multi-printer support enabled, you can add a second printer later from the printer manager. This re-runs the wizard for the new printer, but skips the WiFi and Language steps (those are device-wide and already configured). On the first step, the button reads **Cancel** instead of **Back** — tapping it discards the new printer and returns you to the one you were using. See [Beta Features](/guide/beta-features/) for how to enable multi-printer support.
 
 > **Tip:** You can always go back to previous steps using the **Back** button. The connection test in step 2 must pass before you can proceed.
 
-For details on touch screen calibration, see the [Touch Calibration Guide](/docs/guide/touch-calibration/).
+For details on touch screen calibration, see the [Touch Calibration Guide](/guide/touch-calibration/).
 
-**What's next:** Once you finish the wizard, HelixScreen drops you on the Home panel, your main dashboard for status, prints, and temperatures — see the [Home Panel guide](/docs/guide/home-panel/).
+**What's next:** Once you finish the wizard, HelixScreen drops you on the Home panel, your main dashboard for status, prints, and temperatures — see the [Home Panel guide](/guide/home-panel/).
 
 ### Network (WiFi) Configuration
 
@@ -151,7 +151,7 @@ If Moonraker is running locally — or your screen is attached directly to the p
 
 **Tap Test Connection** is the answer to any connection doubt during setup. Until you finish the wizard, HelixScreen has no address to try except its default of "this machine", so on a separate display it will not reach Moonraker yet — that is expected, not a fault, and the wizard will not interrupt you with a connection error while you are still setting up. **Test Connection** reports the result for the address you actually entered, right on this step.
 
-> **Changing the host later:** You can point HelixScreen at a different Moonraker host anytime from **Settings > System > Host** — see [System Settings](/docs/guide/settings/system/).
+> **Changing the host later:** You can point HelixScreen at a different Moonraker host anytime from **Settings > System > Host** — see [System Settings](/guide/settings/system/).
 
 ---
 
@@ -231,4 +231,4 @@ When using the SDL2 desktop simulator:
 
 ---
 
-**Next:** [Supported Printers](/docs/guide/supported-printers/) | [Back to User Guide](/docs/)
+**Next:** [Supported Printers](/guide/supported-printers/) | [Back to User Guide](/guide/)

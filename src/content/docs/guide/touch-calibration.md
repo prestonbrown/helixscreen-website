@@ -327,4 +327,4 @@ HELIX_DISPLAY_ROTATION=90
 
 ---
 
-**Prev:** [Calibration & Tuning](/docs/guide/calibration/) | [Back to User Guide](/docs/)
+**Prev:** [Calibration & Tuning](/guide/calibration/) | [Back to User Guide](/guide/)

@@ -86,4 +86,4 @@ The update channel can also be set via `update.channel` in the config file (0=St
 
 ---
 
-**Next:** [Tips & Best Practices](/docs/guide/tips/) | **Prev:** [Advanced Features](/docs/guide/advanced/) | [Back to User Guide](/docs/)
+**Next:** [Tips & Best Practices](/guide/tips/) | **Prev:** [Advanced Features](/guide/advanced/) | [Back to User Guide](/guide/)

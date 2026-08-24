@@ -191,7 +191,7 @@ This restores GuppyScreen automatically.
 | Blank screen after install | Check logs: `logread \| grep helix-screen \| tail -100` and `tail -100 /usr/data/helixscreen/logs/launcher.log` |
 | Touch not responding | Reboot: `reboot` |
 
-For more help: [Troubleshooting Guide](/docs/reference/troubleshooting/) | [Discord](https://discord.gg/RZCT2StKhr) | [GitHub Issues](https://github.com/prestonbrown/helixscreen/issues)
+For more help: [Troubleshooting Guide](/reference/troubleshooting/) | [Discord](https://discord.gg/RZCT2StKhr) | [GitHub Issues](https://github.com/prestonbrown/helixscreen/issues)
 
 ---
 

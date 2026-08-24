@@ -9,7 +9,7 @@ HelixScreen can read Spoolman QR codes from a USB or Bluetooth barcode scanner, 
 
 This guide covers both USB and Bluetooth scanners, and how to fix the most common Bluetooth pairing problem on Raspberry Pi.
 
-Scanning is a shortcut for assigning spools — see [Filament Tracking & Spoolman](/docs/guide/filament-tracking/) for what happens once a spool is linked.
+Scanning is a shortcut for assigning spools — see [Filament Tracking & Spoolman](/guide/filament-tracking/) for what happens once a spool is linked.
 
 ![Barcode Scanner Settings](../../../assets/images/docs/settings-barcode-scanner.png)
 
@@ -122,7 +122,7 @@ After the restart, HelixScreen no longer opens that device, and your other scann
 
 | Symptom | Fix |
 |---------|-----|
-| No scanner appears in the dropdown | Is Bluetooth enabled on your Pi? See [Bluetooth Setup](/docs/guide/bluetooth-setup/). |
+| No scanner appears in the dropdown | Is Bluetooth enabled on your Pi? See [Bluetooth Setup](/guide/bluetooth-setup/). |
 | "Pairing failed" (Connection timed out) | Scanner isn't in pairable mode. Power-cycle it and scan its Classic-mode config barcode. |
 | "Pairing failed" (Host is down) | Scanner is flashing but refusing Classic connections. Power-cycle and retry; some scanners get stuck between BLE and Classic advertising. |
 | "Scanner bonded but didn't attach as a keyboard" | Set `ClassicBondedOnly=false` — see above. |
@@ -139,4 +139,4 @@ After the restart, HelixScreen no longer opens that device, and your other scann
 
 ---
 
-**Next:** [Calibration & Tuning](/docs/guide/calibration/) | **Prev:** [Label Printing](/docs/guide/label-printing/) | [Back to User Guide](/docs/)
+**Next:** [Calibration & Tuning](/guide/calibration/) | **Prev:** [Label Printing](/guide/label-printing/) | [Back to User Guide](/guide/)

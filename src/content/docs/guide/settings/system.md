@@ -58,7 +58,7 @@ After changing the host, HelixScreen disconnects from the current printer and re
 
 ## Touch & Input
 
-Opens a sub-page that groups all touch-related settings: calibration, debug visualization, jitter filtering, and scroll feel. See [Touch & Input](/docs/guide/settings/touch-input/) for the full reference.
+Opens a sub-page that groups all touch-related settings: calibration, debug visualization, jitter filtering, and scroll feel. See [Touch & Input](/guide/settings/touch-input/) for the full reference.
 
 ---
 
@@ -82,7 +82,7 @@ The row description shows a live summary of host load. Tap to open the Performan
 
 Toggle anonymous usage telemetry that helps improve HelixScreen. Data collection is completely anonymous — no personal information, printer names, or file names are ever sent.
 
-When enabled, a **View Telemetry Data** row appears below the toggle. Tap it to see exactly what data will be sent. See the [Telemetry & Privacy](/docs/legal/telemetry/) documentation for full details on what is and isn't collected.
+When enabled, a **View Telemetry Data** row appears below the toggle. Tap it to see exactly what data will be sent. See the [Telemetry & Privacy](/legal/telemetry/) documentation for full details on what is and isn't collected.
 
 ---
 
@@ -123,4 +123,4 @@ Clears **all** HelixScreen settings and restarts the Setup Wizard. This resets:
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Prev: Safety & Notifications](/docs/guide/settings/safety/) | [Next: Help & About](/docs/guide/settings/help-about/)
+[Back to Settings](/guide/settings/) | [Prev: Safety & Notifications](/guide/settings/safety/) | [Next: Help & About](/guide/settings/help-about/)

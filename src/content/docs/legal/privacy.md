@@ -44,7 +44,7 @@ Because the data we collect is fully anonymized through irreversible cryptograph
 
 ## 4. Data Collected
 
-When telemetry is enabled, HelixScreen collects the categories of events described below. The three most detailed categories (Session, Print Outcome, Crash) have full field tables here; the remaining diagnostic and usage events are summarized in Section 4.4, with complete field-by-field detail in the user-facing [Telemetry documentation](/docs/legal/telemetry/).
+When telemetry is enabled, HelixScreen collects the categories of events described below. The three most detailed categories (Session, Print Outcome, Crash) have full field tables here; the remaining diagnostic and usage events are summarized in Section 4.4, with complete field-by-field detail in the user-facing [Telemetry documentation](/legal/telemetry/).
 
 ### 4.1 Session Events
 
@@ -96,7 +96,7 @@ Written to local storage at crash time using async-signal-safe functions. Picked
 
 ### 4.4 Diagnostic and Usage Events
 
-In addition to the three categories above, HelixScreen records the following diagnostic and usage events. Each contains only the data described; none contains filenames, G-code content, credentials, or free-text you have entered. Full field tables are in the [Telemetry documentation](/docs/legal/telemetry/).
+In addition to the three categories above, HelixScreen records the following diagnostic and usage events. Each contains only the data described; none contains filenames, G-code content, credentials, or free-text you have entered. Full field tables are in the [Telemetry documentation](/legal/telemetry/).
 
 | Event | When recorded | What it contains |
 |-------|---------------|------------------|

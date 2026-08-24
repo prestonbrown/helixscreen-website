@@ -180,7 +180,7 @@ curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/script
 If you encounter issues after upgrading:
 
 1. Ask in the [HelixScreen Discord](https://discord.gg/RZCT2StKhr) for quick help
-2. Check [TROUBLESHOOTING.md](/docs/reference/troubleshooting/) for common problems
+2. Check [TROUBLESHOOTING.md](/reference/troubleshooting/) for common problems
 3. View logs for error messages:
    - **Pi / x86 (systemd):** `sudo journalctl -u helixscreen -n 50`
    - **AD5M:** `tail -50 /opt/helixscreen/logs/launcher.log` and `grep helix-screen /var/log/messages | tail -50`
@@ -191,4 +191,4 @@ If you encounter issues after upgrading:
 
 ---
 
-*Back to: [Installation Guide](/docs/installation/) | [User Guide](/docs/)*
+*Back to: [Installation Guide](/installation/) | [User Guide](/guide/)*

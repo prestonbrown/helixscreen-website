@@ -127,7 +127,7 @@ Print Status panel rather than the file browser. Controls that would move the
 toolhead (jog controls, filament load/unload, tool changes) stay unavailable
 until the first layer actually begins.
 
-> **Note:** On a multi-color print, HelixScreen checks your loaded filament before it starts and will stop with a **Check filament** dialog if a required tool maps to an empty slot. Printing from bypass skips that check, since the filament never passes through a slot. On printers with camera-based failure detection, it can also react to a print going wrong mid-job. See [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/).
+> **Note:** On a multi-color print, HelixScreen checks your loaded filament before it starts and will stop with a **Check filament** dialog if a required tool maps to an empty slot. Printing from bypass skips that check, since the filament never passes through a slot. On printers with camera-based failure detection, it can also react to a print going wrong mid-job. See [Print Monitoring & Failure Detection](/guide/print-monitoring/).
 
 ---
 
@@ -293,7 +293,7 @@ This works on Creality's Klipper firmware (K1, K1C, K1 Max, K2 Plus, Ender 3 V3,
 
 The offer appears once per connection while the printer is idle; if it went unanswered, it comes back the next time HelixScreen connects.
 
-For everything else HelixScreen watches for during and around a print, see [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/).
+For everything else HelixScreen watches for during and around a print, see [Print Monitoring & Failure Detection](/guide/print-monitoring/).
 
 ---
 
@@ -301,10 +301,10 @@ For everything else HelixScreen watches for during and around a print, see [Prin
 
 ## See Also
 
-- [Calibration & Tuning](/docs/guide/calibration/) — Bed mesh, input shaper, and Z-offset affect print quality
-- [Advanced Features](/docs/guide/advanced/) — G-code console for manual commands during printing
-- [Temperature Control](/docs/guide/temperature/) — Detailed temperature management and presets
+- [Calibration & Tuning](/guide/calibration/) — Bed mesh, input shaper, and Z-offset affect print quality
+- [Advanced Features](/guide/advanced/) — G-code console for manual commands during printing
+- [Temperature Control](/guide/temperature/) — Detailed temperature management and presets
 
 ---
 
-**Next:** [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/) | **Prev:** [Home Panel](/docs/guide/home-panel/) | [Back to User Guide](/docs/)
+**Next:** [Print Monitoring & Failure Detection](/guide/print-monitoring/) | **Prev:** [Home Panel](/guide/home-panel/) | [Back to User Guide](/guide/)

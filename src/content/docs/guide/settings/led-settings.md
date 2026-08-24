@@ -181,4 +181,4 @@ For lights controlled via G-code macros (relay-switched enclosure lights, Klippe
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Prev: Help & About](/docs/guide/settings/help-about/)
+[Back to Settings](/guide/settings/) | [Prev: Help & About](/guide/settings/help-about/)

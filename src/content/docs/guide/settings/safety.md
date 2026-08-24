@@ -71,7 +71,7 @@ By default, HelixScreen won't run a filament load or unload while the nozzle is 
 
 A filament change heats the nozzle to material temperature. Left alone, it would sit there indefinitely — burning power and slowly cooking the filament in the melt zone. So HelixScreen turns the heater off once you're done. The delay (two minutes by default) is there so you can run several loads and unloads back to back without the nozzle cooling between them; each new operation restarts the clock. Nothing happens while a print is running — an active job manages its own heat.
 
-**Turn this off if your filament system already does it.** [AFC](/docs/guide/filament/) has its own post-operation cooldown, and other multi-material firmware is adding the same. Two independent timers driving one heater is confusing at best. Leave whichever one you prefer in charge, and switch the other off.
+**Turn this off if your filament system already does it.** [AFC](/guide/filament/) has its own post-operation cooldown, and other multi-material firmware is adding the same. Two independent timers driving one heater is confusing at best. Leave whichever one you prefer in charge, and switch the other off.
 
 The setting is per printer, so an AFC machine can opt out while your other printers keep the built-in behavior. To change the two-minute delay, see [`cooldown_delay_seconds`](../../CONFIGURATION.md#cooldown_delay_seconds).
 
@@ -109,4 +109,4 @@ Held-back notifications are not lost — they still land in the notification his
 
 ---
 
-[Back to Settings](/docs/guide/settings/) | [Prev: Hardware & Devices](/docs/guide/settings/hardware/) | [Next: System](/docs/guide/settings/system/)
+[Back to Settings](/guide/settings/) | [Prev: Hardware & Devices](/guide/settings/hardware/) | [Next: System](/guide/settings/system/)

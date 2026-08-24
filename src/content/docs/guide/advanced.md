@@ -134,7 +134,7 @@ HelixScreen's [pre-print skip toggles](printing.md#pre-print-options) — Auto b
 
 ### Opening the wizard
 
-1. Enable **Beta Features** first (see [Beta Features](/docs/guide/beta-features/)) — this tool lives behind the beta flag.
+1. Enable **Beta Features** first (see [Beta Features](/guide/beta-features/)) — this tool lives behind the beta flag.
 2. Navigate to **Advanced → Configure PRINT_START**.
 
 HelixScreen may also prompt you on its own: when it notices skippable steps in your macro, a notification reading **"PRINT_START has N skippable operations"** appears with a **Configure** button that opens the same wizard.
@@ -260,7 +260,7 @@ When no job is running, the device unlocks and toggles normally again — that i
 
 HelixScreen keeps a record of your completed, failed, and cancelled prints, sourced from Moonraker's job history. Open it from **Advanced > Print History**. You get a dashboard of statistics and trend charts, a searchable and sortable list of past jobs, and per-job details with reprint and delete.
 
-See [Print History](/docs/guide/print-history/) for the full guide.
+See [Print History](/guide/print-history/) for the full guide.
 
 ---
 
@@ -334,4 +334,4 @@ When frames have been captured during a print, a **render section** appears abov
 
 ---
 
-**Next:** [Beta Features](/docs/guide/beta-features/) | **Prev:** [Print History](/docs/guide/print-history/) | [Back to User Guide](/docs/)
+**Next:** [Beta Features](/guide/beta-features/) | **Prev:** [Print History](/guide/print-history/) | [Back to User Guide](/guide/)

@@ -71,7 +71,7 @@ See [Snapmaker U1](#snapmaker-u1) for details.
 
 After installation, the setup wizard will guide you through initial configuration.
 
-> **Upgrading from an older version?** If HelixScreen keeps showing the setup wizard after an update, see [UPGRADING.md](/docs/upgrading/) for how to fix configuration issues.
+> **Upgrading from an older version?** If HelixScreen keeps showing the setup wizard after an update, see [UPGRADING.md](/upgrading/) for how to fix configuration issues.
 
 ---
 
@@ -319,7 +319,7 @@ python3 -c "import urllib.request as u;u.urlretrieve('https://raw.githubusercont
 - Prebuilt `ad5x` binaries are included in GitHub releases
 - ZMOD manages installation and updates via Moonraker update manager
 - **Auto-detection:** HelixScreen automatically detects ZMOD firmware (by recognizing ZMOD-specific Klipper device names) and applies ZMOD-optimized presets for display, input, and fan configuration. No manual configuration needed.
-- IFS (4-channel filament system) supported — see [Filament Management](/docs/guide/filament/)
+- IFS (4-channel filament system) supported — see [Filament Management](/guide/filament/)
 
 #### Manual install from the command line (advanced)
 
@@ -457,7 +457,7 @@ The Snapmaker U1 is an all-in-one printer with a built-in touchscreen. HelixScre
 **Notes:**
 - **Reinstall after a firmware update** — any firmware update (stock or PAXX) resets system files and can overwrite HelixScreen; re-run the installer afterward.
 - **Remote screen ("gui" camera) works on PAXX firmware** — the built-in "gui" webcam in Mainsail/Fluidd shows the live HelixScreen UI, and you can tap it to control the printer remotely. Enable **Remote Screen** in the firmware settings web UI at `http://<printer-ip>/firmware-config/` — it registers the "gui" webcam and restarts HelixScreen and Moonraker for you (hand-editing the config value alone is not enough). The physical "case" camera is unaffected. Stock firmware is not yet confirmed to expose the feed. Setup steps: [Supported Printers → Snapmaker U1](guide/supported-printers.md#snapmaker-u1-snapswap).
-- **Two harmless Moonraker warnings are expected** — after install, the Mainsail/Fluidd "Moonraker warnings found" banner may show *"Unable to find DBus PolKit Interface"* and *"Unable to initialize System Update Provider for distribution: buildroot"*. Both are inherent to Moonraker on the U1's buildroot firmware (no PolKit, no OS package manager) and do **not** affect HelixScreen or printing. They are not specific to HelixScreen — installing simply restarts Moonraker, which re-surfaces them. See [Troubleshooting](/docs/reference/troubleshooting/).
+- **Two harmless Moonraker warnings are expected** — after install, the Mainsail/Fluidd "Moonraker warnings found" banner may show *"Unable to find DBus PolKit Interface"* and *"Unable to initialize System Update Provider for distribution: buildroot"*. Both are inherent to Moonraker on the U1's buildroot firmware (no PolKit, no OS package manager) and do **not** affect HelixScreen or printing. They are not specific to HelixScreen — installing simply restarts Moonraker, which re-surfaces them. See [Troubleshooting](/reference/troubleshooting/).
 
 ---
 
@@ -1327,7 +1327,7 @@ tail -100 <path>
 
 ### Common Issues
 
-See [TROUBLESHOOTING.md](/docs/reference/troubleshooting/) for solutions to:
+See [TROUBLESHOOTING.md](/reference/troubleshooting/) for solutions to:
 - Connection problems
 - Display issues
 - Touch not responding
@@ -1404,4 +1404,4 @@ If you experience memory issues:
 
 ---
 
-*Next: [User Guide](/docs/) - Learn how to use HelixScreen*
+*Next: [User Guide](/guide/) - Learn how to use HelixScreen*

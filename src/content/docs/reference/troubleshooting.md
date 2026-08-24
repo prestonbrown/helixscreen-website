@@ -668,7 +668,7 @@ Contributions are very welcome here and only need XML, not C++ — see the [UI C
 
 **Cause 1 - the widget was too wide for the grid (portrait screens).** On older versions, a widget that was wider than a portrait screen's grid could not be placed anywhere, so HelixScreen switched it off - and *saved* that off state to your settings. Fixing the placement logic does not undo the saved setting, so the widget stays off until you put it back yourself. It is not lost: it is sitting in the Widget Catalog as an available widget.
 
-**Cause 2 - the grid was genuinely full.** On older versions, a widget that fit fine but found every cell taken was also switched off, and the message came back on every launch because the switch-off usually never made it to disk. That is fixed: a widget that only lacks a free cell now keeps its **enabled** setting and simply has no position, so it places itself again as soon as a cell frees up, and the message appears only when the widget was actually on your screen and lost its spot. If you are still seeing it repeat, you are on an older version - [update HelixScreen](/docs/upgrading/).
+**Cause 2 - the grid was genuinely full.** On older versions, a widget that fit fine but found every cell taken was also switched off, and the message came back on every launch because the switch-off usually never made it to disk. That is fixed: a widget that only lacks a free cell now keeps its **enabled** setting and simply has no position, so it places itself again as soon as a cell frees up, and the message appears only when the widget was actually on your screen and lost its spot. If you are still seeing it repeat, you are on an older version - [update HelixScreen](/upgrading/).
 
 If your dashboard is full and you want a specific widget back, make room for it: remove a widget you care less about, or move it to a second page (see [Multiple Pages](guide/home-panel.md#multiple-pages)).
 
@@ -687,7 +687,7 @@ Enter Edit Mode and tap **Reset**. This restores the default layout *and* the de
 
 Reset is not free, though: it collapses **all pages back to a single page**, so any extra pages you created are removed, and every widget position and size goes back to default. If you have a layout you like and only lost one or two widgets, re-add them from the catalog instead.
 
-See [Home Panel](/docs/guide/home-panel/) for the full Edit Mode walkthrough.
+See [Home Panel](/guide/home-panel/) for the full Edit Mode walkthrough.
 
 ---
 
@@ -2103,7 +2103,7 @@ cat /proc/bus/input/devices
 ### Check Existing Resources
 
 1. **This troubleshooting guide** - search for your symptoms
-2. **[FAQ](/docs/reference/faq/)** - common questions
+2. **[FAQ](/reference/faq/)** - common questions
 3. **[GitHub Issues](https://github.com/prestonbrown/helixscreen/issues)** - known problems
 4. **[HelixScreen Discord](https://discord.gg/RZCT2StKhr)** - ask the community for help
 
@@ -2165,4 +2165,4 @@ Shows "Connection failed" error
 
 ---
 
-*Back to: [User Guide](/docs/) | [Installation](/docs/installation/)*
+*Back to: [User Guide](/guide/) | [Installation](/installation/)*
