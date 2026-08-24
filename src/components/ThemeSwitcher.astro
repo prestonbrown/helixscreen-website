@@ -42,8 +42,11 @@ import themes from '../data/themes.generated.json';
     toggle.disabled = modes.length === 1;
     toggle.style.opacity = modes.length === 1 ? '0.4' : '1';
     try {
-      localStorage.setItem('hx-theme', theme);
-      localStorage.setItem('hx-mode', resolved);
+      // Only touch storage for keys that actually changed — an unconditional
+      // rewrite on every mount is itself the split-write window a stale
+      // theme/mode pairing could land in.
+      if (localStorage.getItem('hx-theme') !== theme) localStorage.setItem('hx-theme', theme);
+      if (localStorage.getItem('hx-mode') !== resolved) localStorage.setItem('hx-mode', resolved);
     } catch (e) { /* private mode: choice just won't persist */ }
   }
 
