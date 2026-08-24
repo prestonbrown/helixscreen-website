@@ -1,4 +1,5 @@
 ---
+import ThemeScript from '../components/ThemeScript.astro';
 import '@fontsource/source-serif-4/400.css';
 import '@fontsource/source-serif-4/600.css';
 import '@fontsource/ibm-plex-sans/400.css';
@@ -16,6 +17,7 @@ const { title, description = 'The modern Klipper touchscreen UI.' } = Astro.prop
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <ThemeScript />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
@@ -29,21 +31,5 @@ const { title, description = 'The modern Klipper touchscreen UI.' } = Astro.prop
   </head>
   <body class="min-h-screen">
     <slot />
-    <script>
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-      document.querySelectorAll('.animate-on-scroll').forEach((el) => {
-        observer.observe(el);
-      });
-    </script>
   </body>
 </html>

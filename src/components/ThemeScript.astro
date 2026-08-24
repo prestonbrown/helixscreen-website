@@ -1,0 +1,16 @@
+---
+// Must render inside <head> before any paint. Inline and synchronous on purpose.
+---
+<script is:inline>
+  (function () {
+    try {
+      var t = localStorage.getItem('hx-theme') || 'helixscreen';
+      var m = localStorage.getItem('hx-mode') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.setAttribute('data-mode', m);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'helixscreen');
+      document.documentElement.setAttribute('data-mode', 'dark');
+    }
+  })();
+</script>
