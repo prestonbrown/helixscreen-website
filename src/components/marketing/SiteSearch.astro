@@ -9,7 +9,7 @@
 <button
   type="button"
   data-site-search-open
-  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors text-sm font-body"
+  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--hx-radius)] border border-hairline text-ink-muted hover:text-ink hover:border-accent transition-colors ui text-sm"
   aria-label="Search docs"
 >
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -27,11 +27,11 @@
   aria-modal="true"
   aria-label="Search docs"
 >
-  <div id="site-search-backdrop" class="absolute inset-0 bg-canvas/80 backdrop-blur-sm"></div>
+  <div id="site-search-backdrop" class="absolute inset-0 bg-canvas/80"></div>
   <div class="relative mx-auto mt-20 sm:mt-24 w-[92%] max-w-2xl">
-    <div class="rounded-xl border border-border bg-surface shadow-2xl overflow-hidden">
+    <div class="rounded-[var(--hx-radius)] border border-hairline bg-card overflow-hidden">
       <div id="pagefind-search"></div>
-      <p id="site-search-fallback" class="hidden p-6 text-text-secondary text-sm font-body">
+      <p id="site-search-fallback" class="hidden p-6 text-ink-muted text-sm ui">
         Search is available in the production build.
       </p>
     </div>

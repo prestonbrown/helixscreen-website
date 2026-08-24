@@ -12,7 +12,10 @@ import GetInTouch from '../components/marketing/GetInTouch.astro';
 import Colophon from '../components/marketing/Colophon.astro';
 import bedMesh from '../assets/images/screenshots/controls-bed-mesh.png';
 ---
-<MarketingLayout title="HelixScreen — a Klipper touch interface">
+<MarketingLayout
+  title="HelixScreen — a Klipper touch interface"
+  description="A touchscreen interface for Klipper 3D printers: 3D bed mesh, on-device calibration, and seven multi-material backends, running in about 15 MB of RAM."
+>
   <SiteNav />
   <main>
     <Hero />
@@ -21,7 +24,7 @@ import bedMesh from '../assets/images/screenshots/controls-bed-mesh.png';
       <Figure
         image={bedMesh}
         alt="Bed mesh rendered as a rotatable 3D surface"
-        caption="Bed mesh · cartographer · 7×7"
+        caption="Bed mesh · 7×7"
         annotation="this is the panel that started it. everything else came after."
       />
     </section>
