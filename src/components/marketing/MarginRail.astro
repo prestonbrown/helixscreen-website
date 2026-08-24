@@ -1,8 +1,8 @@
 ---
-interface Item { value: string; label: string; note?: string }
-const { items } = Astro.props as { items: Item[] };
+interface Props { items: { value: string; label: string; note?: string }[] }
+const { items } = Astro.props;
 ---
-<aside class="ui text-xs text-ink-subtle space-y-6">
+<aside class="ui text-xs text-ink-muted space-y-6">
   {items.map((i) => (
     <p>
       <span class="block tabular text-base text-ink">{i.value}</span>
@@ -10,5 +10,4 @@ const { items } = Astro.props as { items: Item[] };
       {i.note && <span class="block mt-1">{i.note}</span>}
     </p>
   ))}
-  <slot />
 </aside>

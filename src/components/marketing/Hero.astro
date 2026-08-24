@@ -4,15 +4,15 @@ import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
 
 const rail = [
-  { value: '11,778', label: 'commits since October 2025', note: 'About 98% mine. The rest are why it runs on printers I do not own.' },
-  { value: '~15 MB', label: 'resident on an armv7 printer board', note: 'No X11, no browser, no desktop underneath.' },
-  { value: '80+', label: 'printers it recognises without being told' },
+  { value: '11,778', label: 'commits since October 2025', note: "About 98% mine. The rest are why it runs on printers I don't own." },
+  { value: '~15 MB', label: 'resident on an armv7 printer board', note: 'No X11, no browser.' },
+  { value: '80+', label: 'printers it recognizes without being told' },
 ];
 
 const spec = [
   { k: 'RAM', v: '~15 MB' },
   { k: 'Disk', v: '~75 MB' },
-  { k: 'Dependencies', v: 'none', tone: 'ok' as const },
+  { k: 'Dependencies', v: 'no runtime deps', tone: 'ok' as const },
   { k: 'X11 / browser', v: 'not required', tone: 'subtle' as const },
   { k: 'Panels', v: '30' },
   { k: 'Themes', v: String(themes.length) },
@@ -23,27 +23,29 @@ const spec = [
 const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh';
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-[190px_1fr] gap-10 pt-16 pb-14">
-  <MarginRail items={rail} />
+  <div class="order-2 md:order-1">
+    <MarginRail items={rail} />
+  </div>
 
-  <div>
+  <div class="order-1 md:order-2">
     <p class="ui text-[11px] uppercase tracking-[0.16em] text-warn mb-5">Klipper touch interface</p>
     <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[19ch] mb-5">
       Everything your printer knows, on the screen it already has.
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
-      I started this because my Adventurer 5M Pro could not show me a bed mesh — I only
-      wanted to see how bad it was. Things snowballed. Ten months on it is a complete
-      touch interface, and it is hitting 1.0.
+      I started this because my Adventurer 5M Pro couldn't show me a bed mesh — I only
+      wanted to see how bad it was. Things snowballed. Ten months on it's a complete
+      touch interface, and it's hitting 1.0.
     </p>
 
     <SpecGrid rows={spec} />
 
     <div class="mt-8 flex items-center gap-2 border border-hairline border-l-2 border-l-alert rounded-[var(--hx-radius)] bg-overlay px-4 py-3">
       <span class="font-mono text-sm text-alert select-none">$</span>
-      <code id="install-command" class="font-mono text-sm text-ink overflow-x-auto whitespace-nowrap">{install}</code>
-      <button id="copy-btn" type="button" class="ml-auto ui text-[10px] uppercase tracking-[0.1em] text-ink-subtle hover:text-ink" aria-label="Copy install command">Copy</button>
+      <code id="hero-install-command" tabindex="0" class="font-mono text-sm text-ink overflow-x-auto whitespace-nowrap">{install}</code>
+      <button id="hero-copy-btn" type="button" aria-live="polite" class="ml-auto ui text-[10px] uppercase tracking-[0.1em] text-ink-muted hover:text-ink">Copy</button>
     </div>
-    <p class="ui text-sm text-ink-subtle mt-4">
+    <p class="ui text-sm text-ink-muted mt-4">
       Rather read first? <a href="/installation/" class="text-accent underline underline-offset-2">The install guide</a>
       covers every supported board, and remote-screen setup if the printer lives on the floor.
     </p>
@@ -51,13 +53,15 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
 </section>
 
 <script>
-  const btn = document.getElementById('copy-btn');
-  const cmd = document.getElementById('install-command');
+  const btn = document.getElementById('hero-copy-btn');
+  const cmd = document.getElementById('hero-install-command');
+  let resetTimer: ReturnType<typeof setTimeout> | undefined;
   btn?.addEventListener('click', async () => {
+    if (resetTimer) clearTimeout(resetTimer);
     try {
       await navigator.clipboard.writeText(cmd?.textContent ?? '');
       btn.textContent = 'Copied';
     } catch { btn.textContent = 'Failed'; }
-    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    resetTimer = setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
   });
 </script>

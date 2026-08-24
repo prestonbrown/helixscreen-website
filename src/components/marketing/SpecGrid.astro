@@ -1,13 +1,13 @@
 ---
-interface Row { k: string; v: string; tone?: 'ok' | 'subtle' }
-const { rows } = Astro.props as { rows: Row[] };
+interface Props { rows: { k: string; v: string; tone?: 'ok' | 'subtle' }[] }
+const { rows } = Astro.props;
 const toneClass = (t?: string) =>
-  t === 'ok' ? 'text-ok' : t === 'subtle' ? 'text-ink-subtle' : 'text-ink';
+  t === 'ok' ? 'text-ok' : t === 'subtle' ? 'text-ink-muted' : 'text-ink';
 ---
 <div class="grid grid-cols-2 md:grid-cols-4 border-t border-b border-hairline">
   {rows.map((r, i) => (
-    <div class:list={['py-3 pr-4', i % 4 !== 3 && 'md:border-r md:border-hairline']}>
-      <span class="ui block text-[10px] uppercase tracking-[0.13em] text-ink-subtle mb-1">{r.k}</span>
+    <div class:list={['py-3 pr-4', i % 4 !== 3 && i !== rows.length - 1 && 'md:border-r md:border-hairline']}>
+      <span class="ui block text-[10px] uppercase tracking-[0.13em] text-ink-muted mb-1">{r.k}</span>
       <span class:list={['tabular text-[15px]', toneClass(r.tone)]}>{r.v}</span>
     </div>
   ))}
