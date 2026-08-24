@@ -61,13 +61,12 @@
 | `src/layouts/MarketingLayout.astro` | Token layer, theme script, drop blanket scroll animation |
 | `src/components/marketing/SiteNav.astro` | Rebuilt with theme switcher and version |
 | `src/components/marketing/Hero.astro` | Rebuilt: rail + headline + spec grid + install |
-| `src/components/marketing/InstallBlock.astro` | Drop fake traffic lights |
 | `src/pages/index.astro` | Reassembled from the eleven sections |
 | `src/styles/marketing.css` | Strip the decorative classes |
 
 **Deleted**
 
-`src/components/marketing/ProductReveal.astro`, `FeatureStory.astro`, `StatsStrip.astro`, `ThemeStrip.astro`, `WhySwitch.astro`, `PrinterConstellation.astro`, `VisualComparison.astro`, `Community.astro`, `Footer.astro`.
+`src/components/marketing/ProductReveal.astro`, `FeatureStory.astro`, `StatsStrip.astro`, `ThemeStrip.astro`, `WhySwitch.astro`, `PrinterConstellation.astro`, `VisualComparison.astro`, `Community.astro`, `Footer.astro`, `InstallBlock.astro`.
 
 ---
 
@@ -892,7 +891,7 @@ git commit -m "feat(landing): annotated figure and comparison table"
 ```astro
 ---
 import { Image } from 'astro:assets';
-import bedMesh from '../../assets/images/screenshots/controls-bed-mesh.png';
+import zoffset from '../../assets/images/screenshots/advanced-zoffset.png';
 import shaper from '../../assets/images/screenshots/advanced-shaper.png';
 import printSelect from '../../assets/images/screenshots/print-select.png';
 import history from '../../assets/images/screenshots/advanced-history.png';
@@ -900,7 +899,7 @@ import spoolman from '../../assets/images/screenshots/advanced-spoolman.png';
 import controls from '../../assets/images/screenshots/controls.png';
 
 const cells = [
-  { img: bedMesh,     t: 'Bed mesh, in three dimensions', b: 'Rotate it with your finger. It is a surface, not a heatmap, and you can see exactly where the bed dips.' },
+  { img: zoffset,     t: 'Z-offset you can actually see', b: 'A live visual meter while you set first-layer height, rather than nudging a number and hoping.' },
   { img: shaper,      t: 'Input shaper without a laptop', b: 'Frequency response charts render on the printer. Run the test, read the graph, apply the result, all on the screen.' },
   { img: printSelect, t: 'Files with real thumbnails',    b: 'Live 3D previews and metadata, fast enough to scroll through hundreds of files.' },
   { img: history,     t: 'Every print, recorded',         b: 'Success rate, print time and filament used, plus Moonraker-Timelapse capture and playback.' },
@@ -1277,49 +1276,64 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
-const DIST = 'dist';
+// Scope: the CSS *we* author, and the landing page we build from it.
+//
+// These assertions deliberately do NOT scan all of dist/. That directory also
+// contains Starlight's and Pagefind's stylesheets, which ship 19 box-shadow
+// declarations and 8px/10px radii of their own — vendor code this phase does not
+// touch. Spec phase 3 brings the docs chrome under the token system; widening
+// this gate to dist/ belongs in that phase, not this one. Likewise the banned-copy
+// check reads only the landing page: doc pages are authored in the helixscreen
+// repo, and their prose is not ours to gate.
+const SRC = 'src';
+const LANDING = join('dist', 'index.html');
 
-function collect(dir, ext, acc = []) {
+function collect(dir, exts, acc = []) {
   for (const entry of readdirSync(dir)) {
     const p = join(dir, entry);
-    if (statSync(p).isDirectory()) collect(p, ext, acc);
-    else if (extname(p) === ext) acc.push(p);
+    if (statSync(p).isDirectory()) collect(p, exts, acc);
+    else if (exts.includes(extname(p))) acc.push(p);
   }
   return acc;
 }
 
-const read = (ext) => {
-  if (!existsSync(DIST)) throw new Error('run `npx astro build` before this test');
-  return collect(DIST, ext).map((f) => readFileSync(f, 'utf8')).join('\n');
+// Authored styles: standalone stylesheets plus inline <style> in components.
+// themes.generated.css is excluded — it is generated and asserted in Task 1.
+const authoredCss = () =>
+  collect(SRC, ['.css', '.astro'])
+    .filter((f) => !f.endsWith('themes.generated.css'))
+    .map((f) => readFileSync(f, 'utf8'))
+    .join('\n');
+
+const landing = () => {
+  if (!existsSync(LANDING)) throw new Error('run `npx astro build` before this test');
+  return readFileSync(LANDING, 'utf8');
 };
 
-test('no shadows survive in shipped CSS', () => {
-  const css = read('.css');
-  const hits = css.match(/box-shadow\s*:\s*(?!none)[^;}]+/g) ?? [];
+test('no shadows in authored CSS', () => {
+  const hits = authoredCss().match(/box-shadow\s*:\s*(?!none)[^;}!]+/g) ?? [];
   assert.deepEqual(hits, [], `found shadows: ${hits.slice(0, 3).join(' | ')}`);
 });
 
 test('no gradient-filled text', () => {
-  const css = read('.css');
-  assert.doesNotMatch(css, /-webkit-text-fill-color\s*:\s*transparent/);
+  assert.doesNotMatch(authoredCss(), /-webkit-text-fill-color\s*:\s*transparent/);
 });
 
 test('no radius above the 3px the theme schema allows', () => {
-  const css = read('.css');
-  const hits = css.match(/border-radius\s*:\s*(\d+)px/g) ?? [];
+  const hits = authoredCss().match(/border-radius\s*:\s*(\d+)px/g) ?? [];
   const bad = hits.filter((h) => Number(h.match(/(\d+)px/)[1]) > 3);
   assert.deepEqual(bad, [], `radius too large: ${bad.slice(0, 5).join(' | ')}`);
 });
 
 test('deleted decorative classes do not reappear', () => {
-  const all = read('.css') + read('.html');
+  const all = authoredCss() + landing();
   for (const cls of ['gradient-text', 'mesh-bg', 'mesh-drift', 'hero-gradient', 'screenshot-glow', 'scroll-indicator', 'fade-bounce']) {
     assert.ok(!all.includes(cls), `${cls} is back`);
   }
 });
 
-test('banned copy does not appear', () => {
-  const html = read('.html').toLowerCase();
+test('banned copy does not appear on the landing page', () => {
+  const html = landing().toLowerCase();
   for (const phrase of [
     'beautiful, customizable, community-driven',
     'built by makers, for makers',
@@ -1331,14 +1345,12 @@ test('banned copy does not appear', () => {
   }
 });
 
-test('Space Grotesk is gone', () => {
-  const all = read('.css') + read('.html');
-  assert.ok(!/space.?grotesk/i.test(all), 'Space Grotesk still referenced');
+test('Space Grotesk is gone from authored styles and the landing page', () => {
+  assert.ok(!/space.?grotesk/i.test(authoredCss() + landing()), 'Space Grotesk still referenced');
 });
 
 test('the headline is present exactly once on the landing page', () => {
-  const home = readFileSync(join(DIST, 'index.html'), 'utf8');
-  const matches = home.match(/Everything your printer knows, on the screen it already has\./g) ?? [];
+  const matches = landing().match(/Everything your printer knows, on the screen it already has\./g) ?? [];
   assert.equal(matches.length, 1);
 });
 ```
@@ -1346,7 +1358,7 @@ test('the headline is present exactly once on the landing page', () => {
 - [ ] **Step 2: Run it against the current build**
 
 Run: `npx astro build && node --test tests/no-tells.test.mjs`
-Expected: all pass. If the radius test fails on Pagefind's own CSS, scope the check to exclude `dist/pagefind/**` — Pagefind is a vendored dependency, not our design surface, and the exclusion belongs in `collect()` with a comment saying so.
+Expected: all pass. The scoping to authored CSS plus the landing page is deliberate and documented in the file's header comment — do not widen it to all of `dist/`, which carries Starlight and Pagefind CSS that this phase does not touch.
 
 - [ ] **Step 3: Run the whole suite**
 
