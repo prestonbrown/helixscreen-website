@@ -11,12 +11,12 @@ const rail = [
 
 const spec = [
   { k: 'RAM', v: '~15 MB' },
-  { k: 'Disk', v: '~75 MB' },
+  { k: 'Disk', v: '~75-115 MB' },
   { k: 'Dependencies', v: 'no runtime deps', tone: 'ok' as const },
   { k: 'X11 / browser', v: 'not required', tone: 'subtle' as const },
-  { k: 'Panels', v: '30' },
+  { k: 'Panels', v: '30+' },
   { k: 'Themes', v: String(themes.length) },
-  { k: 'MM backends', v: '7' },
+  { k: 'Multi-material', v: '7' },
   { k: 'License', v: 'GPL-3.0' },
 ];
 
@@ -41,12 +41,12 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
     <SpecGrid rows={spec} />
 
     <div class="mt-8 flex items-center gap-2 border border-hairline border-l-2 border-l-alert rounded-[var(--hx-radius)] bg-overlay px-4 py-3">
-      <span class="font-mono text-sm text-alert select-none">$</span>
+      <span class="font-mono text-sm text-ink-muted select-none">$</span>
       <code id="hero-install-command" tabindex="0" class="font-mono text-sm text-ink overflow-x-auto whitespace-nowrap">{install}</code>
       <button id="hero-copy-btn" type="button" aria-live="polite" class="ml-auto ui text-[10px] uppercase tracking-[0.1em] text-ink-muted hover:text-ink">Copy</button>
     </div>
     <p class="ui text-sm text-ink-muted mt-4">
-      Rather read first? <a href="/installation/" class="text-accent underline underline-offset-2">The install guide</a>
+      Rather read first? <a href="/installation/" class="text-secondary underline underline-offset-2">The install guide</a>
       covers every supported board, and remote-screen setup if the printer lives on the floor.
     </p>
   </div>

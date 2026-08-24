@@ -23,6 +23,7 @@
   --color-ink: var(--hx-text);
   --color-ink-muted: var(--hx-text-muted);
   --color-accent: var(--hx-primary);
+  --color-secondary: var(--hx-secondary);
   --color-ok: var(--hx-success);
   --color-warn: var(--hx-warning);
   --color-alert: var(--hx-danger);

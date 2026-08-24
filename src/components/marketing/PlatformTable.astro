@@ -4,7 +4,6 @@ const platforms = [
   { name: 'FlashForge AD5M / AD5X',       arch: 'armv7-a, MIPS32' },
   { name: 'Creality K1 / K2 series',      arch: 'MIPS32, ARM' },
   { name: 'QIDI',                         arch: 'aarch64' },
-  { name: 'Sovol',                        arch: 'aarch64' },
   { name: 'Elegoo Centauri Carbon',       arch: 'armv7-a' },
   { name: 'Snapmaker U1',                 arch: 'aarch64' },
 ];
@@ -22,10 +21,10 @@ const platforms = [
   </p>
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {platforms.map((p) => (
-      <div class="border border-hairline rounded-[var(--hx-radius)] bg-card px-4 py-3">
-        <p class="ui text-sm text-ink">{p.name}</p>
-        <p class="font-mono text-[11px] text-ink-muted tabular mt-1">{p.arch}</p>
-      </div>
+      <dl class="border border-hairline rounded-[var(--hx-radius)] bg-card px-4 py-3">
+        <dt class="ui text-sm text-ink">{p.name}</dt>
+        <dd class="font-mono text-[11px] text-ink-muted tabular mt-1">{p.arch}</dd>
+      </dl>
     ))}
   </div>
 </section>
