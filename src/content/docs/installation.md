@@ -15,8 +15,9 @@ This guide walks you through installing HelixScreen on your 3D printer's touchsc
 
 - [Quick Start](#quick-start)
 - [Remote Screen Setup (Run on a Separate Device)](#remote-screen-setup-run-on-a-separate-device)
+- [Android App (Experimental)](#android-app-experimental)
 - [Prerequisites](#prerequisites)
-- [MainsailOS Installation](#mainsailos-installation)
+- [MainsailOS Installation](#raspberry-pi--mainsailos-installation)
 - [Flashforge Adventurer 5M Installation](#flashforge-adventurer-5m-installation)
 - [Creality K1 Installation](#creality-k1-series)
 - [Creality K2 Series](#creality-k2-series)
@@ -100,6 +101,49 @@ To change the host later, go to **Settings > System > Host**, or edit `moonraker
 
 ---
 
+## Android App (Experimental)
+
+HelixScreen also runs on an Android phone or tablet. It is the same remote client described above, just on a device you already own: it talks to your printer's Moonraker over the network and does not install anything on the printer.
+
+> **This is experimental.** It works, but it has had less real-world use than the Linux builds. Expect rough edges and please report them.
+
+**What you need:**
+
+- Android 9.0 or newer
+- The phone or tablet on the same network as your printer
+- Your printer's IP address
+
+**Which file to download.** Grab it from the [latest release](https://github.com/prestonbrown/helixscreen/releases/latest):
+
+| File | Use it for |
+|------|-----------|
+| `helixscreen-android-arm64-v<VERSION>.apk` | Essentially every modern phone and tablet. **Start here** |
+| `helixscreen-android-x86_64-v<VERSION>.apk` | Emulators and x86 Chromebooks |
+| `helixscreen-android-universal-v<VERSION>.apk` | Works everywhere, but a larger download. Use it if arm64 refuses to install |
+
+Ignore the `.aab` file on the release page. That one is only for publishing to Google Play and will not install on a device.
+
+**Installing it.**
+
+1. Download the APK on the device, or transfer it there.
+2. Open it. Android will warn that it came from outside the Play Store and offer to let your browser or file manager install apps. Allow it for that app, then confirm the install.
+3. If you prefer a cable, `adb install helixscreen-android-arm64-v<VERSION>.apk` from a computer works too.
+
+**First run.** The setup wizard appears exactly as it does elsewhere. At [Step 4: Moonraker Connection](#step-4-moonraker-connection), enter your **printer's IP address** (for example `192.168.1.50`) and leave the port at `7125`.
+
+**Good to know:**
+
+- **It runs in landscape.** Turn the device sideways, or let auto-rotate handle it.
+- **It asks for very little.** Network access, and permission to keep the screen awake so a print you are watching does not black out. No location, storage, contacts, or camera.
+- **Updating means downloading the new APK** and installing over the old one. There is no in-app updater on Android yet, and the app will not update itself.
+- **Foldables and unusual screen shapes** can show layout quirks when the device folds or resizes. Reports with a screenshot are welcome.
+- **It cannot do the printer-side things.** Anything that requires running *on* the printer, like taking over the printer's own panel or configuring the printer's WiFi during the wizard, does not apply here. Printing, monitoring, and control all work normally.
+- **Power controls are hidden.** An Android app can't power off or reboot the device it runs on, so the shutdown widget never appears on the Home panel (it shows as "Not available on Android" in the widget catalog) and the **POWER** section of the Advanced panel is hidden too. Moonraker power *devices* (smart plugs and the like) are unaffected.
+
+**Coming to Google Play.** Play Store distribution is in progress. When it lands, installs from Play will be signed differently from these APKs, which means moving from a sideloaded install to the Play version will require uninstalling first and setting the app up again. Sideloading will keep working either way.
+
+---
+
 ## Prerequisites
 
 ### MainsailOS (Raspberry Pi)
@@ -116,9 +160,27 @@ This covers any Klipper printer with a Raspberry Pi running MainsailOS (or simil
   - MainsailOS installed and working
   - Klipper running and printing works via Mainsail web interface
   - SSH access to your Pi
+  - **Debian 11 (Bullseye) or newer** — glibc 2.31+. See the OS version note below.
   - About 100MB free disk space
 
 > **32-bit vs 64-bit:** The installer automatically detects your OS architecture and downloads the correct binary. If you're unsure which you have, run `uname -m` — `aarch64` means 64-bit, `armv7l` means 32-bit.
+
+> **OS version — Bullseye or newer.** The `pi` and `pi32` packages are dynamically linked
+> against **glibc 2.31**, the version in Debian 11 (Bullseye). They will not start on an
+> older release. Debian 10 (Buster) ships glibc 2.28, which is too old — the binary fails
+> at load with `version 'GLIBC_2.29' not found` or similar. Check yours with:
+>
+> ```bash
+> ldd --version | head -1        # glibc version
+> cat /etc/os-release | head -2  # distro release
+> ```
+>
+> This matters mainly on **stock printer images**, several of which still ship Buster even
+> though current Raspberry Pi OS and MainsailOS are well past it. If you are on one of
+> those and cannot upgrade the OS, install the **`cc1` package instead** — it is statically
+> linked and carries its own C library, so it runs on old armv7 systems regardless of what
+> glibc they have. It has been used successfully this way on non-Creality armv7 hardware
+> (e.g. Rockchip RV1126 boards). See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#binary-wont-start-glibc-version-not-found).
 
 ### Flashforge Adventurer 5M / 5M Pro
 
@@ -213,7 +275,7 @@ Installs to `/usr/data/helixscreen/`, boot service at `/etc/init.d/S99helixscree
 ### Creality K2 Series
 
 - **Hardware:**
-  - Creality K2 Max, K2 Plus, or K2 Pro
+  - Creality K2, K2 Plus, or K2 Pro
   - Stock 4.3" touchscreen display (480x800)
   - Network connection
 
@@ -269,7 +331,7 @@ ZMOD installs HelixScreen into a chroot rooted at `/usr/data/.mod/.zmod/`. When 
 ssh root@<printer-ip>
 chroot /usr/data/.mod/.zmod
 # now you're in the same view HelixScreen runs from:
-curl -fsSL https://get.helixscreen.org | sh
+curl -fsSL https://releases.helixscreen.org/install.sh | sh
 ```
 
 The same applies to the uninstaller — run `sh /tmp/install.sh --uninstall` from inside the chroot.
@@ -340,6 +402,16 @@ config-manager ui screen_ui grumpyscreen   # or atomscreen, guppyscreen, helixsc
 
 The Creality Sonic Pad is a standalone 7" touchscreen that can run Klipper. It uses a 32-bit ARM userspace (armhf) despite having a 64-bit capable processor (Allwinner H616).
 
+> **Tested firmware: [SonicPad-Debian](https://github.com/Jpe230/SonicPad-Debian) only.**
+> This is the only Sonic Pad firmware HelixScreen has been tested on. It replaces
+> Creality's stock OpenWrt image with Debian 11 (bullseye), which is what gives the
+> Pad a normal systemd + GNU userspace for HelixScreen to install into.
+>
+> HelixScreen is **not** tested on Creality's stock Sonic Pad firmware. The stock
+> image is a heavily cut-down OpenWrt build, so the installer's assumptions about
+> systemd, package tooling, and archive utilities do not hold there. If you are on
+> stock firmware, flash SonicPad-Debian first.
+
 HelixScreen requires Klipper and Moonraker to already be installed and working on the Sonic Pad. This is typically done via [KIAUH](https://github.com/dw-0/kiauh) or a similar tool. HelixScreen replaces whatever touchscreen UI you're currently using (e.g., KlipperScreen).
 
 - **Hardware:**
@@ -347,6 +419,7 @@ HelixScreen requires Klipper and Moonraker to already be installed and working o
   - Network connection (Ethernet)
 
 - **Software:**
+  - [SonicPad-Debian](https://github.com/Jpe230/SonicPad-Debian) (Debian 11 bullseye) — see the note above
   - Klipper and Moonraker installed and working (via KIAUH or similar)
   - SSH access (`sonic@<pad-ip>`)
   - About 100MB free disk space
@@ -383,7 +456,7 @@ The Snapmaker U1 is an all-in-one printer with a built-in touchscreen. HelixScre
 
 **Notes:**
 - **Reinstall after a firmware update** — any firmware update (stock or PAXX) resets system files and can overwrite HelixScreen; re-run the installer afterward.
-- **Remote screen ("gui" camera) is not yet supported** — the built-in firmware exposes a "gui" webcam in Mainsail/Fluidd that mirrors the printer's local touchscreen. Once HelixScreen takes over the display it owns the screen directly, so that feed shows "No Signal" and is expected. The physical "case" camera is unaffected. Streaming the HelixScreen UI to the web frontend is planned but not implemented; use Mainsail/Fluidd for remote monitoring in the meantime.
+- **Remote screen ("gui" camera) works on PAXX firmware** — the built-in "gui" webcam in Mainsail/Fluidd shows the live HelixScreen UI, and you can tap it to control the printer remotely. Enable **Remote Screen** in the firmware settings web UI at `http://<printer-ip>/firmware-config/` — it registers the "gui" webcam and restarts HelixScreen and Moonraker for you (hand-editing the config value alone is not enough). The physical "case" camera is unaffected. Stock firmware is not yet confirmed to expose the feed. Setup steps: [Supported Printers → Snapmaker U1](guide/supported-printers.md#snapmaker-u1-snapswap).
 - **Two harmless Moonraker warnings are expected** — after install, the Mainsail/Fluidd "Moonraker warnings found" banner may show *"Unable to find DBus PolKit Interface"* and *"Unable to initialize System Update Provider for distribution: buildroot"*. Both are inherent to Moonraker on the U1's buildroot firmware (no PolKit, no OS package manager) and do **not** affect HelixScreen or printing. They are not specific to HelixScreen — installing simply restarts Moonraker, which re-surfaces them. See [Troubleshooting](/docs/reference/troubleshooting/).
 
 ---
@@ -736,7 +809,7 @@ The wizard will test the connection before proceeding.
 ### Step 5: Printer Identification
 HelixScreen will try to identify your printer from its configuration. You can:
 - Confirm the detected printer type
-- Select from a database of 50+ printers
+- Select from a database of 90+ printers
 - Enter custom settings
 
 ### Step 6: Heater Selection
@@ -828,7 +901,7 @@ Touch coordinates are automatically adjusted to match the rotation — no separa
 
 If you experience any display issues with rotation, you can also force the framebuffer backend manually by setting `HELIX_DISPLAY_BACKEND=fbdev` (see below).
 
-### GPU Rendering (Experimental)
+### GPU Rendering
 
 By default, HelixScreen uses GPU-accelerated rendering via DRM/KMS when available. On boards where DRM is not supported, it falls back to CPU-based software rendering (`fbdev` backend).
 
@@ -979,7 +1052,7 @@ Or via SSH:
 # Path varies by platform:
 #   Pi: ~/helixscreen/bin/helix-screen (or /opt/helixscreen if no Klipper ecosystem)
 #   K1: /usr/data/helixscreen/bin/helix-screen
-#   K2: /opt/helixscreen/bin/helix-screen (assumed, untested)
+#   K2: /opt/helixscreen/bin/helix-screen
 #   AD5M Klipper Mod: /root/printer_software/helixscreen/bin/helix-screen
 ~/helixscreen/bin/helix-screen --version
 ```

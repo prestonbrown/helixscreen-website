@@ -16,15 +16,14 @@ Choose the toolhead icon shown on the Home Panel and Print Status screen. Option
 | Option | Description |
 |--------|-------------|
 | **Auto** (default) | HelixScreen detects your toolhead from the printer database or Klipper config |
-| **Default** | Generic toolhead icon |
+| **Stealthburner** | Voron StealthBurner toolhead |
 | **A4T** | Armored Turtle toolhead |
-| **Anthead** | Anthead toolhead |
-| **Jabberwocky** | Jabberwocky toolhead |
-| **StealthBurner** | Voron StealthBurner toolhead |
-| **Creality K1** | Creality K1 series toolhead |
-| **Creality K2** | Creality K2 series toolhead |
+| **AntHead** | AntHead toolhead |
+| **JabberWocky** | JabberWocky toolhead |
 
 Most users can leave this on **Auto**. Change it if HelixScreen picks the wrong icon or if you've swapped to an aftermarket toolhead.
+
+> **Note:** The native styles (**Default**, **Creality K1**, **Creality K2**) are auto-detected from your printer and don't appear as choices in the dropdown.
 
 ---
 
@@ -123,7 +122,7 @@ A quick **timelapse toggle** also appears on the print status panel, so you can 
 
 Changes are saved immediately and sent to Moonraker. If the timelapse plugin is not yet installed, HelixScreen shows an **Install Wizard** that walks you through the SSH commands to set it up — see [Advanced > Timelapse](../advanced.md#timelapse) for details.
 
-For browsing and playing recorded videos, see **Settings > Timelapse Videos** (also covered in [Advanced > Timelapse](../advanced.md#timelapse)).
+For browsing and playing recorded videos, see **Advanced > Timelapse Videos** (covered in [Advanced > Timelapse](../advanced.md#timelapse)).
 
 ---
 
@@ -173,6 +172,8 @@ HelixScreen auto-detects common macros from your Klipper configuration (e.g., it
 | **Heat Soak** | Chamber heat soak | HEAT_SOAK |
 
 If your printer doesn't have a matching macro, some slots fall back to HelixScreen helper macros (installed via **Settings > Advanced > Install HelixScreen Macros**). Leave a slot empty to disable that function.
+
+**Load Filament and Unload Filament on a multi-filament printer:** left on **(Auto)**, these two drive your filament system directly rather than running a macro. Choose a macro yourself and it takes over — your macro runs and the filament system's own handling is skipped for that operation, so anything it would have done becomes your macro's job. Set the slot back to **(Auto)** to hand the operation back. The other slots are unaffected. See [Customizing which macro runs](../filament.md#customizing-which-macro-runs).
 
 > **Looking for Load/Unload/Purge button customization?** See the [Filament guide](../filament.md#customizing-which-macro-runs) for a step-by-step walkthrough, including how these buttons interact with AMS systems.
 

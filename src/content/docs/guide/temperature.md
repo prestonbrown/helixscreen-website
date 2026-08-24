@@ -35,24 +35,26 @@ Built-in presets:
 | Material | Nozzle | Bed | Chamber |
 |----------|--------|-----|---------|
 | Off | 0°C | 0°C | 0°C |
-| PLA | 210°C | 60°C | — |
-| PETG | 240°C | 80°C | — |
-| ABS | 250°C | 100°C | 50°C |
+| PLA | 205°C | 60°C | — |
+| PETG | 245°C | 80°C | — |
+| ABS | 255°C | 100°C | 60°C |
 
 Tap a preset to set the target temperature immediately. If your printer has a chamber heater, presets that include a chamber temperature will set it automatically — materials that don't need an enclosed chamber (PLA, PETG) leave the chamber heater off.
 
 ### Reassigning a Preset's Filament Type
 
-The four preset buttons (PLA, PETG, ABS, TPU) aren't fixed — you can point any of
-them at a different filament type from the built-in materials database.
+The three preset buttons shown on the temperature panel (PLA, PETG, ABS) aren't
+fixed — you can point any of them at a different filament type from the built-in
+materials database. (A fourth default, TPU, ships with the presets but isn't shown
+on the temperature panel; it surfaces on the filament and PID calibration panels.)
 
 ![Choosing a filament type for a preset button](../../../assets/images/docs/filament-preset-picker.png)
 
 1. **Long-press** a preset button until the material picker appears.
 2. Scroll the list and tap the filament type you want. The button's label and its
    temperatures update immediately, and the choice is remembered across restarts.
-3. To undo all changes, long-press any preset button and tap **Reset all to
-   defaults** at the top of the list — this restores PLA / PETG / ABS / TPU.
+3. To undo all changes, long-press any preset button and tap **Reset to
+   defaults** at the top of the list — this restores PLA / PETG / ABS.
 
 > **Tip:** A short tap still just applies the button's temperatures. Only a long-press opens the picker.
 
@@ -141,4 +143,4 @@ From the right column:
 
 ---
 
-**Next:** [Motion & Positioning](/docs/guide/motion/) | **Prev:** [Printing](/docs/guide/printing/) | [Back to User Guide](/docs/)
+**Next:** [Motion & Positioning](/docs/guide/motion/) | **Prev:** [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/) | [Back to User Guide](/docs/)

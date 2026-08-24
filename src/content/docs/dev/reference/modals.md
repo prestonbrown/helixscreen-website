@@ -23,8 +23,8 @@ Modal class (C++ RAII lifecycle, show/hide, button wiring)
   +-> ui_dialog (XML custom widget, theme-aware card background)
   |
   +-> Reusable XML components:
-        modal_button_row  (divider + 2-button footer)
-        modal_header      (icon + title row)
+        modal_button_row  (divider + 2-button footer, optional 3rd action)
+        modal_header      (icon + title row, optional close button)
         modal_dialog      (generic title/message dialog)
 ```
 
@@ -51,7 +51,7 @@ Backdrops are always created in C++ -- never in XML. This avoids the old pattern
 
 **Rules of thumb:**
 - If the user must respond before continuing, use a **Modal**
-- If it replaces the current screen but can be "backed out" of, use an **Overlay** (`ui_nav_push_overlay()`)
+- If it replaces the current screen but can be "backed out" of, use an **Overlay** (`NavigationManager::instance().push_overlay()`)
 - If it's a primary navigation destination, use a **Panel**
 
 ---
@@ -64,11 +64,16 @@ The system supports three approaches, from simplest to most flexible.
 
 For standard "title + message + buttons" dialogs, use the helper functions. These use the built-in `modal_dialog.xml` component.
 
+> **Namespace:** every modal helper below lives in `namespace helix::ui` (declared in
+> `include/ui_modal.h`) — e.g. `helix::ui::modal_show_confirmation(...)`. There is no
+> `ui_modal_*` prefix. Snippets fully-qualify the calls; add a `using namespace helix::ui;`
+> if you prefer the short form.
+
 ```cpp
 #include "ui_modal.h"
 
 // Confirmation dialog (two buttons: confirm + cancel)
-dialog_ = ui_modal_show_confirmation(
+dialog_ = helix::ui::modal_show_confirmation(
     lv_tr("Delete File?"),
     lv_tr("This cannot be undone."),
     ModalSeverity::Warning,
@@ -76,13 +81,13 @@ dialog_ = ui_modal_show_confirmation(
     on_confirm_cb, on_cancel_cb, this);
 
 // Alert dialog (single OK button)
-ui_modal_show_alert(
+helix::ui::modal_show_alert(
     lv_tr("Tip of the Day"),
     lv_tr("You can long-press the home button..."),
     ModalSeverity::Info);
 ```
 
-`ui_modal_show_confirmation()` returns the dialog widget pointer for cleanup. Store it in a `ModalGuard` for RAII:
+`helix::ui::modal_show_confirmation()` returns the dialog widget pointer for cleanup. Store it in a `ModalGuard` for RAII:
 
 ```cpp
 #include "ui/ui_modal_guard.h"
@@ -91,7 +96,7 @@ class MyPanel {
     helix::ui::ModalGuard delete_dialog_;  // Auto-hides in destructor
 
     void show_delete() {
-        delete_dialog_ = ui_modal_show_confirmation(...);
+        delete_dialog_ = helix::ui::modal_show_confirmation(...);
     }
 };
 ```
@@ -239,7 +244,12 @@ The base container for all modal dialog cards. Registered as a custom LVGL XML w
 - Zero padding, zero border, zero shadow by default
 - Rounded corner clipping (for full-bleed bottom buttons)
 - Disabled state at 50% opacity
-- `LV_OBJ_FLAG_USER_1` flag for context-aware input styling
+- `LV_OBJ_FLAG_USER_1` flag for context-aware input styling. `ThemeManager`
+  answers "am I inside a dialog" by walking an object's parents looking for this
+  bit, so **nothing else may set it**, on any object, for any reason. It is one
+  of only four user flag bits; see the ledger in
+  [chapter 09 — Home panel widgets](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/architecture/09-home-widgets.md) before claiming
+  one
 
 Usage in XML:
 
@@ -253,7 +263,7 @@ Usage in XML:
 
 ### `modal_button_row`
 
-Reusable two-button footer with divider. Provides the standard "secondary | primary" button layout.
+Reusable button footer with divider. Provides the standard "secondary | primary" layout, plus an optional third (tertiary) leading action.
 
 **API props:**
 
@@ -263,10 +273,20 @@ Reusable two-button footer with divider. Provides the standard "secondary | prim
 | `secondary_text` | string | "Cancel" | Secondary (left) button label |
 | `primary_callback` | string | -- | Registered XML callback name |
 | `secondary_callback` | string | -- | Registered XML callback name |
-| `primary_bg_color` | string | "" | Override primary button color (e.g., `#danger`) |
+| `primary_tag` / `secondary_tag` | string | "" | Translation tag for the label |
+| `primary_icon` / `secondary_icon` | string | "" | Optional leading icon name |
+| `primary_variant` | string | "primary" | Primary button style variant (`primary`, `danger`, ...) |
 | `show_secondary` | string | "true" | Show/hide secondary button |
+| `tertiary_text` | string | "" | Optional third (leading) action label |
+| `tertiary_callback` | string | "" | Registered XML callback for the tertiary button |
+| `tertiary_tag` | string | "" | Translation tag for the tertiary label |
+| `tertiary_icon` | string | "" | Optional icon for the tertiary button |
+| `tertiary_variant` | string | "secondary" | Tertiary button style variant |
+| `hide_tertiary` | string | "true" | Hidden by default; pass `"false"` to reveal it |
 
-**Note:** `primary_bg_color` and `show_secondary` are declared in the XML API but not yet wired in the component template. They are currently no-ops.
+Use `primary_variant="danger"` (not a color override) for destructive primaries. The
+tertiary button is hidden by default so existing two-button callers are unaffected; a
+hidden flex child drops out of layout entirely.
 
 Usage in XML:
 
@@ -274,15 +294,15 @@ Usage in XML:
 <modal_button_row
     secondary_text="Cancel" secondary_callback="on_my_cancel"
     primary_text="Delete" primary_callback="on_my_confirm"
-    primary_bg_color="#danger"/>
+    primary_variant="danger"/>
 ```
 
-The component renders as:
+The component renders as (tertiary revealed):
 
 ```
-+--[divider_horizontal]---------+
-| [Cancel]    |    [Delete]     |
-+-------------------------------+
++--[divider_horizontal]-------------------+
+| [Reset]  [Cancel]    |    [Delete]      |
++-----------------------------------------+
 ```
 
 Buttons are edge-to-edge with zero radius, matching the `modal_dialog.xml` style.
@@ -297,8 +317,12 @@ Reusable icon + title row for modal headers.
 |------|------|---------|-------------|
 | `icon_src` | string | "" | Icon name (e.g., "alert", "alert_octagon") |
 | `icon_variant` | string | "accent" | Icon color variant |
+| `hide_icon` | string | "false" | Title-only modals pass `"true"` to drop the leading icon |
 | `title` | string | "" | Header text |
 | `title_tag` | string | "" | Translation tag |
+| `title_subject` | string | -- | Bind the title to a subject (attribute dropped when omitted) |
+| `hide_close` | string | "true" | Pass `"false"` to show a close (X) button |
+| `close_callback` | string | "" | Registered XML callback fired by the close button |
 
 Usage in XML:
 
@@ -309,14 +333,14 @@ Usage in XML:
 
 ### `modal_dialog`
 
-The generic title + message dialog used by `ui_modal_show_confirmation()` and `ui_modal_show_alert()`. Uses subject bindings for dynamic content:
+The generic title + message dialog used by `helix::ui::modal_show_confirmation()` and `helix::ui::modal_show_alert()`. Uses subject bindings for dynamic content:
 
 - `dialog_severity` -- controls which icon is shown (0=info, 1=warning, 2=error)
 - `dialog_show_cancel` -- toggles cancel button visibility
 - `dialog_primary_text` -- primary button label
 - `dialog_cancel_text` -- cancel button label
 
-You rarely interact with `modal_dialog` directly. Use `ui_modal_show_confirmation()` or `ui_modal_show_alert()` instead.
+You rarely interact with `modal_dialog` directly. Use `helix::ui::modal_show_confirmation()` or `helix::ui::modal_show_alert()` instead.
 
 ---
 
@@ -360,12 +384,41 @@ Key rules:
 - Use `modal_button_row` for standard two-button footers
 - Use `modal_header` for icon + title rows (or build custom headers)
 - Use design tokens for all spacing (`#space_lg`, `#space_md`, etc.)
+- Cap the card at `style_max_height="85%"` and the scroll area at a
+  `#dialog_content_*` token — see the next section
+
+### Height budget: the `#dialog_content_*` ladder family
+
+The card cap and the content cap are ONE piece of arithmetic, shared by every
+modal: the card is `height="content"` capped at **85% of the screen**, and the
+scrollable body is capped at a token whose per-breakpoint values were measured
+as (85% cap − that shape's chrome). There is no flex-shrink in LVGL, so a card
+whose children total more than its cap clips its LAST child off the bottom —
+the button row — and the modal cannot be dismissed.
+
+Pick the token by the card's chrome shape (values in `ui_xml/globals.xml`):
+
+| Token | Card shape | Measured on |
+|-------|------------|-------------|
+| `#dialog_content_max` | header + divider + scroll area + divider + ONE button row | `modal_dialog` |
+| `#dialog_content_pinned_max` | …plus ONE pinned block below the scroll area (a diagram, a status row) | `ams_loading_error_modal` |
+| `#dialog_content_tall_chrome_max` | …plus a SECOND button row with its divider | `klipper_recovery_dialog` |
+
+- Prefer moving content INSIDE the scroll container over pinning it — then
+  `#dialog_content_max` is correct by construction.
+- Never raise a card above 85% to fit extra chrome (klipper_recovery carried
+  90% for a while; #1277 ported it back onto the tall-chrome token). The
+  chrome-budget lint gate (`scripts/check_modal_chrome_budget.py`) flags both
+  the raised cap and an unbudgeted block below a scroll area.
+- A shape beyond one extra block (action_prompt's diagram + wrapping rows +
+  footer) fits no single ladder: measure it at every breakpoint with
+  `ctl demo` + `ctl geom` and mark the file `MODAL_CHROME_OK`.
 
 ---
 
 ## ModalGuard (RAII for Static API)
 
-When using `ui_modal_show_confirmation()` or `Modal::show()`, the returned `lv_obj_t*` must eventually be hidden. `ModalGuard` automates this:
+When using `helix::ui::modal_show_confirmation()` or `Modal::show()`, the returned `lv_obj_t*` must eventually be hidden. `ModalGuard` automates this:
 
 ```cpp
 #include "ui/ui_modal_guard.h"
@@ -376,14 +429,14 @@ class ControlsPanel {
 
     void confirm_disable_motors() {
         // ModalGuard::operator= hides any previous dialog first
-        motors_dialog_ = ui_modal_show_confirmation(
+        motors_dialog_ = helix::ui::modal_show_confirmation(
             lv_tr("Disable Motors?"),
             lv_tr("Release all stepper motors."),
             ModalSeverity::Warning, lv_tr("Disable"),
             on_confirm, on_cancel, this);
     }
 };
-// Panel destructor -> ModalGuard destructor -> ui_modal_hide() called automatically
+// Panel destructor -> ModalGuard destructor -> helix::ui::modal_hide() called automatically
 ```
 
 `ModalGuard` supports move semantics, assignment from raw `lv_obj_t*`, explicit `hide()`, and `release()` to take ownership.
@@ -398,8 +451,31 @@ class ControlsPanel {
 - **Top-modal queries**: `Modal::get_top()` returns the topmost dialog
 - **Animation state**: `mark_exiting()` prevents double-hide during exit animation
 - **Backdrop-to-dialog mapping**: Links each backdrop to its dialog
+- **Owner tracking**: Records the `Modal*` that shows each dialog, so a dialog can be traced back to the C++ instance behind it
 
 You should not interact with `ModalStack` directly. Use the `Modal` class API instead.
+
+### Why the stack records an owner
+
+The two `hide` overloads do different amounts of work. Instance `Modal::hide()` runs the
+full teardown — `lifetime_.invalidate()`, `user_data` clearing, `on_hide()`. Static
+`Modal::hide(lv_obj_t*)` only animates the widgets away.
+
+Most callers reach for the static one as `Modal::hide(Modal::get_top())` and cannot know
+whether the dialog on top belongs to a `Modal` subclass. Without the owner, hiding a
+subclass that way skipped `on_hide()`: the instance leaked, any `active_instance_` static
+stayed non-null, and `backdrop_`/`dialog_` dangled. The static overload now looks the
+owner up and delegates, so both spellings tear a modal down identically.
+
+`Modal::rebuild_top()` (the `HELIX_HOT_RELOAD=1` path) uses the owner differently — an
+instance-backed modal is hidden rather than rebuilt, because re-creating it from XML alone
+would skip `on_show()` and the subclass's button wiring and leave a dialog whose buttons do
+nothing.
+
+Instance `hide()` clears the owner before invoking `on_hide()`. A subclass that self-deletes
+from the hook is freed on the next LVGL tick while the stack entry lives until the exit
+animation finishes, and a hook that itself calls the static overload would otherwise be
+delegated straight back into the same `hide()`.
 
 ### Animations
 
@@ -411,18 +487,18 @@ You should not interact with `ModalStack` directly. Use the `Modal` class API in
 
 ## Advanced Patterns
 
-### Modals with Dynamic Content (AmsEditModal)
+### Modals with Dynamic Content (SpoolEditModal)
 
 For modals that manage their own subjects and complex state:
 
 ```cpp
-class AmsEditModal : public Modal {
+class SpoolEditModal : public Modal {
     SubjectManager subjects_;       // RAII subject lifecycle
     lv_subject_t color_subject_;    // Bound to XML elements
     char color_buf_[32] = {0};      // String buffer for subject
 
-    const char* get_name() const override { return "Edit Filament Modal"; }
-    const char* component_name() const override { return "ams_edit_modal"; }
+    const char* get_name() const override { return "Edit Spool Modal"; }
+    const char* component_name() const override { return "spoolman_edit_modal"; }
 
     void on_show() override {
         init_subjects();
@@ -434,6 +510,15 @@ class AmsEditModal : public Modal {
     }
 };
 ```
+
+> **Note:** The AMS slot editor is NOT a modal anymore — it is `AmsEditOverlay`,
+> a NavigationManager overlay hosting four internal views selected by the
+> `ams_edit_view` subject: overview (spool card + "Change filament" row),
+> Spoolman spool picker, a unified spool-edit view (identity + color +
+> logistics, `VIEW_SPOOL_EDIT`), and the color view. `SpoolEditModal`,
+> `ColorPicker`, and `FilamentCatalogPickerModal` remain standalone modals for
+> their other consumers (SpoolmanPanel, LED/theme pickers, FilamentPanel
+> presets).
 
 ### Modals with Many Buttons (RunoutGuidanceModal)
 
@@ -461,18 +546,18 @@ void on_quinary() override {
 
 ### Modals with Keyboard Input (WiFi Password)
 
-Use `ui_modal_register_keyboard()` to attach a keyboard to a textarea inside a modal:
+Use `helix::ui::modal_register_keyboard()` to attach a keyboard to a textarea inside a modal:
 
 ```cpp
 void on_show() override {
     lv_obj_t* textarea = find_widget("password_input");
-    ui_modal_register_keyboard(dialog(), textarea);
+    helix::ui::modal_register_keyboard(dialog(), textarea);
 }
 ```
 
 ### Modals with Custom Button Styling
 
-In XML, use `primary_bg_color` on `modal_button_row` for destructive actions:
+In XML, use `primary_variant` on `modal_button_row` for destructive actions:
 
 ```xml
 <modal_button_row
@@ -480,7 +565,7 @@ In XML, use `primary_bg_color` on `modal_button_row` for destructive actions:
     secondary_callback="on_dismiss"
     primary_text="Stop"
     primary_callback="on_confirm"
-    primary_bg_color="#danger"/>
+    primary_variant="danger"/>
 ```
 
 ---
@@ -546,10 +631,10 @@ lv_obj_add_flag(backdrop, LV_OBJ_FLAG_HIDDEN);
 **After** (Modal system):
 ```cpp
 // Showing
-lv_obj_t* dialog = ui_modal_show("my_modal");
+lv_obj_t* dialog = helix::ui::modal_show("my_modal");
 
 // Hiding
-ui_modal_hide(dialog);
+helix::ui::modal_hide(dialog);
 ```
 
 ### C++: Manual Button Wiring to Confirmation Helper
@@ -557,8 +642,8 @@ ui_modal_hide(dialog);
 **Before** (18+ lines):
 ```cpp
 const char* attrs[] = {"title", "Delete?", "message", "Cannot be undone.", nullptr};
-ui_modal_configure(ModalSeverity::Warning, true, "Delete", "Cancel");
-dialog_ = ui_modal_show("modal_dialog", attrs);
+helix::ui::modal_configure(ModalSeverity::Warning, true, "Delete", "Cancel");
+dialog_ = helix::ui::modal_show("modal_dialog", attrs);
 if (!dialog_) return;
 lv_obj_t* cancel = lv_obj_find_by_name(dialog_, "btn_secondary");
 if (cancel) lv_obj_add_event_cb(cancel, on_cancel, LV_EVENT_CLICKED, this);
@@ -568,7 +653,7 @@ if (confirm) lv_obj_add_event_cb(confirm, on_confirm, LV_EVENT_CLICKED, this);
 
 **After** (single call):
 ```cpp
-dialog_ = ui_modal_show_confirmation(
+dialog_ = helix::ui::modal_show_confirmation(
     "Delete?", "Cannot be undone.",
     ModalSeverity::Warning, "Delete",
     on_confirm, on_cancel, this);
@@ -627,17 +712,19 @@ See `include/async_lifetime_guard.h` for the full API documentation.
 
 ---
 
-## Legacy API
+## Free-function Wrappers
 
-The following `ui_modal_*()` functions are inline wrappers around the `Modal` class, preserved for backward compatibility:
+The `helix::ui::modal_*()` free functions are thin inline wrappers around the `Modal`
+class, provided for convenience. (There is no `ui_modal_*` prefix — those aliases were
+removed.) All live in `include/ui_modal.h`, `namespace helix::ui`:
 
-| Legacy | Current |
+| Free function | Underlying |
 |--------|---------|
-| `ui_modal_show(name)` | `Modal::show(name)` |
-| `ui_modal_hide(dialog)` | `Modal::hide(dialog)` |
-| `ui_modal_get_top()` | `Modal::get_top()` |
-| `ui_modal_is_visible()` | `Modal::any_visible()` |
-| `ui_modal_init_subjects()` | `modal_init_subjects()` |
-| `ui_modal_configure(...)` | `modal_configure(...)` |
+| `helix::ui::modal_show(name)` | `Modal::show(name)` |
+| `helix::ui::modal_hide(dialog)` | `Modal::hide(dialog)` |
+| `helix::ui::modal_get_top()` | `Modal::get_top()` |
+| `Modal::any_visible()` | (static method; no free-function wrapper) |
+| `helix::ui::modal_init_subjects()` | subject registration |
+| `helix::ui::modal_configure(...)` | configures the shared `modal_dialog` |
 
-New code should prefer the `Modal::` class methods or the `ui_modal_show_confirmation()` / `ui_modal_show_alert()` helpers.
+New code should prefer the `Modal::` class methods or the `helix::ui::modal_show_confirmation()` / `helix::ui::modal_show_alert()` helpers.

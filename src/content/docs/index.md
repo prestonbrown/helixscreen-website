@@ -14,7 +14,7 @@ Your printer's touchscreen should show you more than temperatures and a progress
 - **Multi-material that works** — AFC, Happy Hare, ACE, CFS, AD5X IFS, Snapmaker U1, tool changers. Seven backends, tested on real hardware. Per-unit dryer controls, environment monitoring, Spoolman integration.
 - **Exclude objects** — Tap the failing part on an overhead map to exclude it mid-print. No more scrapping an entire plate for one bad object.
 - **Runs on hardware you already own** — ~15MB RAM on embedded targets (a few times more on 64-bit Pi, still well under what other touchscreen UIs need). No X11, no browser, no desktop environment. Directly on the framebuffer. From a Creality K1 to a Pi Zero 2 W to a random mini-ITX box with an HDMI touchscreen.
-- **Looks good** — 17 theme presets with a live editor, responsive layouts from 480x320 to ultrawide, GPU-accelerated blur. Light and dark modes.
+- **Looks good** — 17 theme presets with a live editor, responsive layouts from 480x320 to 1024x600, GPU-accelerated blur. Light and dark modes. (Ultrawide and portrait screens are alpha — see [Which displays are supported?](FAQ.md#which-displays-are-supported).)
 - **Smart setup** — A first-run wizard auto-detects your printer from a database of 80+ models and configures everything. 9 languages.
 
 ![Home Panel](../../assets/images/docs/screenshot-home-panel.png)
@@ -40,13 +40,19 @@ Navigation basics, touch gestures, connection status, first-time setup wizard, W
 
 ![Setup Wizard](../../assets/images/docs/wizard-wifi.png)
 
+### [Supported Printers](/docs/guide/supported-printers/)
+Which printers get deep, model-specific integration — and exactly what works on each. Covers the FlashForge Adventurer 5M/5X (IFS), Creality K1/K2 (CFS), QIDI Box, Snapmaker U1, Anycubic ACE, and how every other Klipper printer is auto-detected.
+
 ### [Home Panel](/docs/guide/home-panel/)
-Your printer dashboard — status area, configurable home widgets (temperature, network, LED, AMS, power, notifications, and more), active tool badge for toolchanger printers, emergency stop, and the Printer Manager with custom images. Customize which widgets appear and their order via **Settings > Home Widgets**. Long-press the lightbulb widget for full LED controls with color, brightness, effects, and WLED presets.
+Your printer dashboard — status area, configurable home widgets (temperature, network, LED, AMS, power, notifications, and more), active tool badge for toolchanger printers, emergency stop, and the Printer Manager with custom images. Customize which widgets appear and their order in Edit Mode — long-press the dashboard, then tap the **+** button on the navigation bar to open the Widget Catalog. Long-press the lightbulb widget for full LED controls with color, brightness, effects, and WLED presets.
 
 ### [Printing](/docs/guide/printing/)
 The full printing workflow — file selection, preview, pre-print options, monitoring active prints, tune overlay, Z-offset baby steps, pressure advance, exclude object, and post-print summary.
 
 ![Print File Detail](../../assets/images/docs/print-detail.png)
+
+### [Print Monitoring & Failure Detection](/docs/guide/print-monitoring/)
+The pre-print filament check that catches an empty slot before a multi-color print starts, and the on-screen response to camera-based print-failure detection on supported printers (Snapmaker U1, Creality K2).
 
 ### [Temperature Control](/docs/guide/temperature/)
 Nozzle and bed temperature panels, multi-extruder selector for printers with multiple extruders, material presets, and live temperature graphs.
@@ -77,6 +83,9 @@ Set up a USB or Bluetooth barcode scanner to read Spoolman QR codes. Includes th
 Bed mesh visualization, screws tilt adjust, input shaper resonance testing, Z-offset calibration, and PID tuning.
 
 ![Bed Mesh](../../assets/images/docs/screenshot-bed-mesh-panel.png)
+
+### [Touch Calibration](/docs/guide/touch-calibration/)
+Fix taps that land in the wrong spot — run the calibration wizard from Settings, force it on any touchscreen, or recalibrate from the command line.
 
 ### [Settings](/docs/guide/settings/)
 Display, theme, sound, LED, network, sensors, touch calibration, hardware issues, safety, machine limits, factory reset, help & support (debug bundles, Discord, docs), and About sub-overlay (version info, updates, branding, contributors).
@@ -115,6 +124,7 @@ Workflow shortcuts, quick troubleshooting table, and a "which panel do I use?" r
 - [Configuration](/docs/reference/configuration/) — Detailed configuration options
 - [FAQ](/docs/reference/faq/) — Frequently asked questions
 - [Installation](/docs/installation/) — Installation instructions
+- [Creality K1C Setup](guide/creality-k1c-setup.md) — Rooting, community firmware, and HelixScreen install for the K1/K1C/K1 Max
 - [Upgrading](/docs/upgrading/) — Version upgrade instructions
 
 ---

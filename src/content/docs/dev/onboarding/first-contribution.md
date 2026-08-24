@@ -32,11 +32,11 @@ This doc focuses on the **settings overlay** tier (the most common real contribu
 
 ## Part 1: The walkthrough — Retraction Settings Overlay
 
-The retraction settings overlay is about as small as a real contribution gets: five sliders, a toggle, and a G-code send. It lives in three files:
+The retraction settings overlay is about as small as a real contribution gets: four sliders, a toggle, and a G-code send. It lives in three files:
 
 | File | Lines | Purpose |
 |---|---|---|
-| `ui_xml/retraction_settings_overlay.xml` | 174 | Layout, styling, bindings |
+| `ui_xml/retraction_settings_overlay.xml` | 175 | Layout, styling, bindings |
 | `include/ui_overlay_retraction_settings.h` | 162 | Class declaration, subject + widget references |
 | `src/ui/ui_overlay_retraction_settings.cpp` | 293 | Lifecycle, event handlers, G-code send |
 
@@ -57,7 +57,6 @@ The top of every overlay XML looks like this:
 <component>
   <view name="retraction_settings_overlay"
         extends="overlay_panel"
-        width="#overlay_panel_width_full"
         title="Retraction Settings"
         title_tag="Retraction Settings"
         bg_color="#screen_bg">
@@ -74,10 +73,11 @@ Notes:
 
 - **`extends="overlay_panel"`** — inherits the standard overlay chrome: title bar, back button, backdrop. You almost always want this.
 - **`title_tag="..."`** — the translation key. `title` is the English source; `title_tag` is what gets looked up in other languages. Both must be present for user-visible strings.
-- **`#overlay_panel_width_full`, `#space_lg`, `#screen_bg`** — design tokens. Never hardcode pixel widths or hex colors.
+- **No `width`** — overlay width is not yours to set. `NavigationManager::push_overlay()` decides it from how the user reached the overlay: full width inside Settings, gapped when it is a tool opened over something else. See `include/overlay_class.h`.
+- **`#space_lg`, `#screen_bg`** — design tokens. Never hardcode pixel spacing or hex colors.
 - **Inner `<lv_obj name="overlay_content">`** — the scrollable content area. The `overlay_panel` base provides the frame; you provide what's inside.
 
-Inside the content area, each setting is structured consistently (lines 37–66 of the real file, slightly abbreviated):
+Inside the content area, each setting is structured consistently (lines 40–66 of the real file, slightly abbreviated):
 
 ```xml
 <lv_obj name="retract_length_section"
@@ -124,7 +124,7 @@ The header declares a class that inherits `OverlayBase`:
 ```cpp
 class RetractionSettingsOverlay : public OverlayBase {
   public:
-    explicit RetractionSettingsOverlay(MoonrakerAPI* api);
+    explicit RetractionSettingsOverlay(IMoonrakerAPI* api);
     ~RetractionSettingsOverlay() override;
 
     // OverlayBase virtuals
@@ -161,13 +161,15 @@ class RetractionSettingsOverlay : public OverlayBase {
     char retract_length_buf_[16];
     // ... etc
 
-    MoonrakerAPI* api_ = nullptr;
+    IMoonrakerAPI* api_ = nullptr;
     bool syncing_from_state_ = false;
 };
 
 // Global accessor — constructed once by subject_initializer at boot
+// (IMoonrakerAPI is the consumer-facing interface — panels never name the
+// concrete MoonrakerAPI class)
 RetractionSettingsOverlay& get_global_retraction_settings();
-void init_global_retraction_settings(MoonrakerAPI* api);
+void init_global_retraction_settings(IMoonrakerAPI* api);
 ```
 
 Patterns to internalize:
@@ -362,7 +364,7 @@ The retraction overlay is the pattern the codebase *has*. Here's the pattern it'
 2. **Multi-instance becomes possible.** Nothing in the design forces one-instance-per-app. If two contexts ever want the same overlay shape with different data, dynamic allocation supports it; the global pattern doesn't.
 3. **Teardown is simpler.** No `StaticPanelRegistry::register_destroy` dance at shutdown. The overlay destroys when popped, full stop.
 
-This pattern isn't yet established in code — if you're writing a new overlay, you get to set the precedent. Flag it in your PR and Preston will help shape the exact API. Migrating the existing singleton overlays is tracked as post-1.0 work (see `ROADMAP.md` § "Planned post-1.0 refactoring").
+This pattern isn't yet established in code — if you're writing a new overlay, you get to set the precedent. Flag it in your PR and Preston will help shape the exact API. Migrating the existing singleton overlays is tracked as post-1.0 work (prestonbrown/helixscreen#1329).
 
 ---
 
@@ -370,7 +372,7 @@ This pattern isn't yet established in code — if you're writing a new overlay, 
 
 The AMS (Automatic Material System) panel is what a full-subsystem contribution looks like. You won't write one of these on your first PR, but knowing how it's decomposed helps you read it when you need to touch adjacent code, and it's the shape to aim for if you're proposing something big.
 
-AMS spans roughly 1700 lines of C++ (`src/ui/ui_panel_ams.cpp`) and 11 XML files. It's not monolithic — it's a set of small components that compose:
+AMS spans roughly 1700 lines of C++ (`src/ui/ui_panel_ams.cpp`) and 13 XML files (12 components plus a feature-tokens file, `ams_tokens.xml`). It's not monolithic — it's a set of small components that compose:
 
 | XML component | Role |
 |---|---|
@@ -380,8 +382,9 @@ AMS spans roughly 1700 lines of C++ (`src/ui/ui_panel_ams.cpp`) and 11 XML files
 | `ams_current_tool.xml` | "Currently loaded" display at the top |
 | `ams_device_section_detail.xml` | Detail pane showing humidity, temp, etc. |
 | `ams_device_operations.xml` | Action buttons (load, unload, purge) |
-| `ams_edit_modal.xml` | Edit filament assigned to a slot |
+| `ams_edit_overlay.xml` | Edit filament assigned to a slot |
 | `ams_context_menu.xml` | Long-press context menu |
+| `ams_selector_menu.xml` | Selector context menu (switch active lane) |
 | `ams_loading_error_modal.xml` | Error state dialog |
 | `ams_environment_overlay.xml` | Humidity / temp details |
 | `ams_overview_panel.xml` | Summary view for multi-unit setups |
@@ -404,16 +407,22 @@ AMS state (which units exist, what filament is in each slot, humidity readings) 
 
 This separation is what lets the panel be destroyed and recreated without the app losing its AMS knowledge.
 
-### 3. Dynamic collections use parallel observer vectors
+### 3. Dynamic collections rebuild their observers
 
-AMS units can appear and disappear at runtime (plug in a second unit, a firmware update changes the layout). The panel holds:
+AMS units can appear and disappear at runtime (plug in a second unit, a firmware update changes the layout). The panel keeps one `ObserverGuard` member per panel-lifetime subject, and for the per-slot subjects — one set per lane, alive only as long as that slot exists — a rebuildable vector (`include/ui_panel_ams.h`):
 
 ```cpp
-std::vector<ObserverGuard>   slot_observers_;
-std::vector<SubjectLifetime> slot_lifetimes_;
+// Panel-lifetime subjects: one named guard each
+ObserverGuard slots_version_observer_;
+ObserverGuard slot_count_observer_;
+
+// Per-slot subjects: guards rebuilt whenever the slot count changes
+std::vector<ObserverGuard> slot_path_observers_;
 ```
 
-These are kept aligned — pushed and popped in lockstep. When the set of units changes, lifetimes are cleared *before* observers. This is the pattern for any per-item observer collection; see lesson **L084** and the top of `ui_panel_ams.cpp` for a real example.
+When the set of units changes, `slot_path_observers_` is `clear()`ed first, then re-populated with one `ObserverGuard` per live slot as the slot widgets are recreated (`ui_panel_ams.cpp` — `clear()` at both teardown and rebuild, `push_back` per slot). Guards are RAII, so dropping the old vector elements un-observes the dead slots automatically. This is the pattern for any per-item observer collection: **the observer's lifetime is the item widget's lifetime.**
+
+One nuance: these particular subjects come from a static array owned by a singleton (`AmsState`), so they live for the whole app and need no `SubjectLifetime` token — the header comments say so explicitly. If your per-item subjects are owned by something shorter-lived (a backend, a panel), you must pair each observer with the owner's `SubjectLifetime` — see [THREADING.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/THREADING.md) and the `observer_factory.h` helpers.
 
 ### 4. Multi-backend abstraction
 
@@ -423,7 +432,7 @@ If you're adding a new filament backend, the pattern is: implement a backend cla
 
 ### 5. Modals and overlays are peers, not children
 
-`ams_edit_modal.xml` and `ams_environment_overlay.xml` are standalone classes (`Modal` subclass and `OverlayBase` subclass respectively). The main AMS panel launches them via `NavigationManager::push_overlay()` or `Modal::show()` — it doesn't own their widgets. This keeps each concern bounded.
+`ams_loading_error_modal.xml` and `ams_edit_overlay.xml` are standalone classes (`AmsLoadingErrorModal : Modal` and `AmsEditOverlay : OverlayBase` respectively). The main AMS panel launches them via `NavigationManager::push_overlay()` or `Modal::show()` — it doesn't own their widgets. This keeps each concern bounded.
 
 ---
 
@@ -437,7 +446,8 @@ Follow GitHub naming: `feature/<short-name>` for new features, `fix/<short-name>
 git switch -c feature/my-contribution
 ```
 
-For anything that spans more than a handful of files, use a worktree:
+For multi-file or risky changes, use a worktree — the threshold is in
+[DEVELOPMENT.md](/dev/onboarding/development/) § "Worktrees":
 
 ```bash
 scripts/setup-worktree.sh feature/my-contribution
@@ -451,11 +461,11 @@ make -j                              # build binary only
 make test-run                        # build and run the full test suite
 ```
 
-For UI iteration without rebuilding after every XML edit:
+For UI iteration without rebuilding after every XML edit — hot reload is ON by default for native builds, so just run:
 
 ```bash
-HELIX_HOT_RELOAD=1 ./build/bin/helix-screen --test -vv
-# edit XML → save → switch panels → see changes live
+./build/bin/helix-screen --test -vv
+# edit XML → save → active panel rebuilds in place within ~500ms
 ```
 
 Test at multiple breakpoints before submitting. At minimum: `-s 480x320`, `-s 800x480`, `-s 1024x600`. See `UI_CONTRIBUTOR_GUIDE.md` § Screen Breakpoints.
@@ -463,7 +473,7 @@ Test at multiple breakpoints before submitting. At minimum: `-s 480x320`, `-s 80
 ### Commit style
 
 - Subject line: `type(scope): summary` — e.g., `feat(retraction): add settings overlay`.
-- For bug fixes, include the GitHub issue reference: `fix(scope): thing (prestonbrown/helixscreen#123)`.
+- For bug fixes, cite the GitHub issue when one already exists: `fix(scope): thing (prestonbrown/helixscreen#123)`. Don't file an issue just to have one to cite — a commit without an issue reference is complete on its own.
 - Keep commits focused. One logical change per commit.
 
 ### Before you submit
@@ -490,3 +500,12 @@ Once the retraction overlay makes sense, these are the next docs to read in orde
 | `TRANSLATION_SYSTEM.md` | When you add user-visible strings |
 
 And if you hit a wall, the fastest debug is: find the closest-shaped sibling in `src/ui/` and diff your code against it.
+
+## Next: pick your subsystem
+
+You've seen one overlay end-to-end and toured a full subsystem. The rest of the
+codebase is organized the same way — one subsystem per chapter, about an hour
+each to read. Find yours:
+
+→ **[architecture/README.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/architecture/README.md)** — the "I want to work
+on..." index into the 15-chapter architecture guide.

@@ -62,7 +62,9 @@ You may need to recalibrate if:
 3. Tap the option — calibration starts immediately
 4. Complete the same 3-point crosshair flow described above
 
-> **Note:** The Touch Calibration option only appears in Settings if HelixScreen detected that your screen needs calibration. If you don't see it, your screen likely doesn't need it — but see the next section if you want to force calibration anyway.
+> **Note:** The Touch Calibration option appears in Settings for any touchscreen, whether or not HelixScreen thinks yours needs calibrating. That matters for one case in particular: a touch panel mounted at 90° to the display reports a perfectly ordinary controller and a coordinate range that matches the display exactly, so nothing HelixScreen can inspect reveals the mismatch — only you can. If your taps are rotated or mirrored, run the wizard even though nothing looks wrong to the software.
+>
+> If the option is missing entirely, HelixScreen didn't find a touchscreen at all (a mouse-only or HDMI-without-touch setup). See the next section to force it anyway.
 
 ---
 
@@ -277,7 +279,7 @@ For power users and developers. These override config file settings and are usef
 
 > **Note:** The MIN/MAX variables provide a simple linear calibration that bypasses the 3-point system. Most users should use the built-in calibration instead.
 >
-> **Jitter filter:** If taps are being misread as swipes, the jitter filter suppresses small coordinate noise from the touch controller. The default of 5 pixels is enough for most screens; raise it to 15–25 for very noisy controllers (common on Goodix GT9xx panels), or set to `0` to disable. See also [scroll_limit and scroll_guard](../CONFIGURATION.md#input) for related touch-feel tuning.
+> **Jitter filter:** If taps are being misread as swipes, the jitter filter suppresses small coordinate noise from the touch controller. The default of 5 pixels is enough for most screens; raise it to 15–25 for very noisy controllers (common on Goodix GT9xx panels), or set to `0` to disable. See also [scroll_limit and scroll_guard](../CONFIGURATION.md#input-settings) for related touch-feel tuning.
 
 **Setting environment variables on Raspberry Pi (systemd):**
 

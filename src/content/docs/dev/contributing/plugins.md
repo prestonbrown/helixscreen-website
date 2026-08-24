@@ -5,9 +5,9 @@ sidebar:
 ---
 
 
-**Last Updated:** January 2025
+**Last Updated:** July 2026
 **API Version:** 1.0
-**Minimum HelixScreen Version:** 2.0.0
+**Minimum HelixScreen Version:** 1.0
 
 ---
 
@@ -41,7 +41,7 @@ The HelixScreen plugin system allows third-party developers to extend the 3D pri
 ### Prerequisites
 
 - C++17 or later compiler
-- LVGL 9.4 knowledge (for UI development)
+- LVGL 9.5 knowledge (for UI development)
 - Familiarity with HelixScreen's declarative XML UI system
 - Understanding of the Klipper/Moonraker architecture (for printer integration)
 
@@ -70,7 +70,7 @@ plugins/
   "version": "1.0.0",
   "author": "Your Name",
   "description": "A minimal example plugin",
-  "helix_version": ">=2.0.0"
+  "helix_version": ">=1.0"
 }
 ```
 
@@ -148,8 +148,10 @@ clean:
 cd plugins/hello-world
 make
 
-# Run HelixScreen with plugins enabled
-./helix-screen --test --plugins-dir ./plugins -vv
+# Run HelixScreen. Plugins are discovered from ./plugins/ in the working
+# directory at startup — there is no --plugins-dir flag. Each plugin must
+# also be enabled in settings.json before it loads.
+./helix-screen --test -vv
 ```
 
 You should see in the logs:
@@ -184,7 +186,7 @@ plugins/
 | `id` | string | Yes | Unique identifier (alphanumeric, hyphens, underscores) |
 | `name` | string | Yes | Human-readable display name |
 | `version` | string | Yes | Semantic version (e.g., "1.2.3") |
-| `helix_version` | string | No | Required HelixScreen version (e.g., ">=2.0.0") |
+| `helix_version` | string | No | Required HelixScreen version (e.g., ">=1.0") |
 | `author` | string | No | Plugin author name |
 | `description` | string | No | Brief description |
 | `entry_point` | string | No | Init function name (default: "helix_plugin_init") |
@@ -197,7 +199,7 @@ plugins/
   "ui": {
     "settings_page": true,
     "navbar_panel": false,
-    "injection_points": ["panel_widget_area", "print_status_extras"]
+    "injection_points": ["print_status_extras"]
   }
 }
 ```
@@ -238,7 +240,7 @@ Plugins exist in one of four states:
 
 Plugins must be **explicitly enabled** in the configuration file. Simply placing a plugin in the `plugins/` directory does not activate it.
 
-**Config file location:** `~/.config/helix-screen/settings.json` (or platform equivalent)
+**Config file location:** `~/helixscreen/config/settings.json` (or platform equivalent)
 
 **Enable a plugin:**
 ```json
@@ -372,14 +374,18 @@ Returns the high-level Moonraker API for common printer operations.
 
 ```cpp
 if (auto* api = g_api->moonraker_api()) {
-    api->send_gcode("G28");  // Home all axes
+    // execute_gcode(gcode, on_success, on_error, timeout_ms=0, silent=false, source)
+    api->execute_gcode(
+        "G28",                                       // Home all axes
+        []() { /* on success */ },
+        [](const MoonrakerError& e) { /* on error */ });
 }
 ```
 
 #### moonraker_client()
 
 ```cpp
-MoonrakerClient* moonraker_client() const;
+helix::MoonrakerClient* moonraker_client() const;
 ```
 
 Returns the low-level WebSocket client for raw Moonraker communication.
@@ -398,7 +404,10 @@ Returns the reactive printer state object. Use this to read current values or ac
 
 ```cpp
 PrinterState& state = g_api->printer_state();
-float nozzle_temp = state.get_nozzle_temperature();
+// Temperatures are exposed as LVGL subjects, not plain getters. The no-lifetime
+// overload is for read-only reads (temps are stored in tenths of a degree).
+lv_subject_t* temp = state.get_extruder_temp_subject("extruder");
+int nozzle_deci = lv_subject_get_int(temp);   // e.g. 2105 == 210.5 °C
 ```
 
 #### config()
@@ -640,7 +649,7 @@ Inject an XML component into a designated injection point.
 **Returns:** `true` if injection succeeded.
 
 ```cpp
-api->inject_widget("panel_widget_area", "my_status_widget", {
+api->inject_widget("print_status_extras", "my_status_widget", {
     .on_create = [](lv_obj_t* widget) {
         g_api->log_debug("Widget created!");
     },
@@ -669,7 +678,7 @@ bool helix_plugin_init(PluginAPI* api, const char* plugin_dir) {
         return false;
     }
 
-    api->inject_widget("panel_widget_area", "status_widget");
+    api->inject_widget("print_status_extras", "status_widget");
     return true;
 }
 ```
@@ -736,7 +745,7 @@ bool helix_plugin_init(PluginAPI* api, const char* plugin_dir) {
     api->register_xml_component(plugin_dir, "my_widget.xml");
 
     // Inject into home panel
-    api->inject_widget("panel_widget_area", "my_status_widget");
+    api->inject_widget("print_status_extras", "my_status_widget");
 
     return true;
 }
@@ -746,10 +755,13 @@ bool helix_plugin_init(PluginAPI* api, const char* plugin_dir) {
 
 | Point ID | Location | Description |
 |----------|----------|-------------|
-| `panel_widget_area` | Home panel | Main widget area below status |
-| `print_status_extras` | Print Status panel | Extra widgets area in print status overlay |
+| `print_status_extras` | Print Status panel | Extra widgets area in the print status overlay |
 
-**Note:** More injection points may be added in future versions. Use `has_injection_point()` to check availability.
+**Note:** `print_status_extras` is currently the **only** registered injection point
+(registered in `src/ui/ui_panel_print_status.cpp`). Other points (a home-panel widget area,
+a settings section) are not yet registered — `has_injection_point()` returns `false` for
+them, so `inject_widget()` is a no-op. Always call `has_injection_point()` first, and expect
+more points to be added in future versions.
 
 ### Widget Lifecycle Callbacks
 
@@ -795,9 +807,9 @@ See [LVGL9_XML_GUIDE.md](/dev/reference/xml-guide/) for complete XML reference.
 2. **Moonraker callbacks run on a background thread** - NOT safe for LVGL
 3. **All `lv_*()` functions must be called from the main thread only**
 
-### The ui_async_call() Pattern
+### The helix::ui::queue_update() Pattern
 
-When you receive data on a background thread (e.g., Moonraker callback), use `ui_async_call()` to defer LVGL updates to the main thread:
+When you receive data on a background thread (e.g., Moonraker callback), use `helix::ui::queue_update()` to defer LVGL updates to the main thread:
 
 ```cpp
 #include "ui_update_queue.h"
@@ -809,7 +821,7 @@ api->subscribe_moonraker({"extruder"}, [](const json& update) {
         float temp = update["extruder"].value("temperature", 0.0f);
 
         // Defer LVGL update to main thread
-        ui_async_call([temp]() {
+        helix::ui::queue_update([temp]() {
             // This runs on MAIN thread - LVGL safe
             lv_subject_set_int(&s_temp_subject, static_cast<int>(temp));
         });
@@ -831,7 +843,7 @@ api->subscribe_moonraker({"extruder"}, [](const json& update) {
 
 // GOOD - Defer to main thread
 api->subscribe_moonraker({"extruder"}, [](const json& update) {
-    ui_async_call([]() {
+    helix::ui::queue_update([]() {
         lv_subject_set_int(&subject, 42);  // Safe on main thread
     });
 });
@@ -850,10 +862,10 @@ static EventSubscriptionId s_temp_sub = 0;
 bool helix_plugin_init(PluginAPI* api, const char*) {
     g_api = api;
 
-    // Check current temperature immediately
+    // Check current temperature immediately (subjects store tenths of a degree)
     PrinterState& state = api->printer_state();
-    float current = state.get_nozzle_temperature();
-    api->log_info("Current nozzle temp: " + std::to_string(current));
+    int current_deci = lv_subject_get_int(state.get_extruder_temp_subject("extruder"));
+    api->log_info("Current nozzle temp: " + std::to_string(current_deci / 10.0));
 
     // Subscribe to temperature changes
     s_temp_sub = api->on_event(events::TEMPERATURE_UPDATED, [](const EventData& e) {
@@ -991,7 +1003,7 @@ endif
 # Include paths
 INCLUDES = -I$(HELIX_INCLUDE) -I$(HELIX_ROOT)/lib/lvgl \
            -I$(HELIX_ROOT)/lib/spdlog/include \
-           -I$(HELIX_ROOT)/lib/nlohmann-json/include
+           -I$(HELIX_ROOT)/lib/libhv/include   # JSON via #include "hv/json.hpp"
 
 # Build targets
 all: $(OUTPUT)
@@ -1049,7 +1061,7 @@ ad5m:
 | `-vvv` | TRACE | Very verbose |
 
 ```bash
-./helix-screen --test --plugins-dir ./plugins -vv
+./helix-screen --test -vv
 ```
 
 ### Common Error Messages
@@ -1071,7 +1083,7 @@ ad5m:
 Always use `--test` flag when no real printer is connected:
 
 ```bash
-./helix-screen --test --plugins-dir ./plugins -vv
+./helix-screen --test -vv
 ```
 
 This enables mock data for printer state, temperatures, etc.
@@ -1085,7 +1097,7 @@ This enables mock data for printer state, temperatures, etc.
 
 2. **Check if services exist** before using:
    ```cpp
-   if (!api->has_injection_point("panel_widget_area")) {
+   if (!api->has_injection_point("print_status_extras")) {
        api->log_warn("Injection point not available yet");
    }
    ```
@@ -1108,7 +1120,7 @@ This enables mock data for printer state, temperatures, etc.
 - Store the `PluginAPI*` pointer globally for use in callbacks
 - Use `extern "C"` for all exported functions
 - Check for `nullptr` before using `moonraker_api()`, `moonraker_client()`, `config()`
-- Use `ui_async_call()` for LVGL updates from background threads
+- Use `helix::ui::queue_update()` for LVGL updates from background threads
 - Prefix subjects and services with your plugin ID
 - Use design tokens in XML for consistent theming
 - Handle exceptions in callbacks (uncaught exceptions may crash HelixScreen)
@@ -1116,7 +1128,7 @@ This enables mock data for printer state, temperatures, etc.
 
 ### Don't
 
-- Call `lv_*()` functions from Moonraker callbacks (use `ui_async_call()`)
+- Call `lv_*()` functions from Moonraker callbacks (use `helix::ui::queue_update()`)
 - Assume injection points are always available
 - Block in event callbacks (keep them fast)
 - Use raw pointers to PluginAPI after `helix_plugin_deinit()`
@@ -1145,7 +1157,7 @@ api->subscribe_moonraker({"extruder"}, [](const json& j) {
 
 // CORRECT
 api->subscribe_moonraker({"extruder"}, [](const json& j) {
-    ui_async_call([]() {
+    helix::ui::queue_update([]() {
         lv_subject_set_string(&subject, "safe update");
     });
 });
@@ -1154,11 +1166,11 @@ api->subscribe_moonraker({"extruder"}, [](const json& j) {
 **Mistake: Not checking for nullptr**
 ```cpp
 // WRONG - may crash if Moonraker not connected
-api->moonraker_api()->send_gcode("G28");
+api->moonraker_api()->execute_gcode("G28", []() {}, [](const MoonrakerError&) {});
 
 // CORRECT
 if (auto* mrapi = api->moonraker_api()) {
-    mrapi->send_gcode("G28");
+    mrapi->execute_gcode("G28", []() {}, [](const MoonrakerError&) {});
 }
 ```
 
@@ -1183,7 +1195,7 @@ This example creates a custom temperature display widget and injects it into the
   "author": "HelixScreen",
   "description": "Displays nozzle temperature with custom styling",
   "ui": {
-    "injection_points": ["panel_widget_area"]
+    "injection_points": ["print_status_extras"]
   }
 }
 ```
@@ -1237,7 +1249,7 @@ static void update_temperature(float temp) {
     oss << std::fixed << std::setprecision(1) << temp;
     strncpy(s_temp_buffer, oss.str().c_str(), sizeof(s_temp_buffer) - 1);
 
-    ui_async_call([]() {
+    helix::ui::queue_update([]() {
         lv_subject_set_pointer(&s_nozzle_temp_subject, s_temp_buffer);
     });
 }
@@ -1275,15 +1287,15 @@ extern "C" bool helix_plugin_init(PluginAPI* api, const char* plugin_dir) {
     // Inject widget when home panel is available
     api->on_event(events::NAVIGATION_CHANGED, [](const EventData& event) {
         if (event.payload.value("panel", "") == "home") {
-            if (g_api->has_injection_point("panel_widget_area")) {
-                g_api->inject_widget("panel_widget_area", "temp_display");
+            if (g_api->has_injection_point("print_status_extras")) {
+                g_api->inject_widget("print_status_extras", "temp_display");
             }
         }
     });
 
     // Try immediate injection (in case home is already showing)
-    if (api->has_injection_point("panel_widget_area")) {
-        api->inject_widget("panel_widget_area", "temp_display");
+    if (api->has_injection_point("print_status_extras")) {
+        api->inject_widget("print_status_extras", "temp_display");
     }
 
     api->log_info("Temperature Widget initialized");
@@ -1354,9 +1366,13 @@ extern "C" bool helix_plugin_init(PluginAPI* api, const char* plugin_dir) {
         send_led_gcode();
     });
 
-    // Register settings UI
+    // Register settings UI. NOTE: "settings_section" is not a registered injection
+    // point yet (only "print_status_extras" is), so this inject_widget() is a no-op
+    // today — guarded here to show the intended pattern once it lands.
     api->register_xml_component(plugin_dir, "led_settings.xml");
-    api->inject_widget("settings_section", "led_settings");
+    if (api->has_injection_point("settings_section")) {
+        api->inject_widget("settings_section", "led_settings");
+    }
 
     return true;
 }
@@ -1365,7 +1381,7 @@ static void send_led_gcode() {
     if (auto* mrapi = g_api->moonraker_api()) {
         std::string gcode = "SET_LED LED=status_led " +
                            s_controller.get_led_params();
-        mrapi->send_gcode(gcode);
+        mrapi->execute_gcode(gcode, []() {}, [](const MoonrakerError&) {});
     }
 }
 ```
@@ -1390,7 +1406,7 @@ Each injection point can only exist once in the UI at a time. Injected widgets a
 
 ### Subject Unregistration
 
-Subjects registered via `api->register_subject()` are tracked but not actually unregistered from LVGL's XML system during cleanup (LVGL 9.4 does not provide `lv_xml_unregister_subject()`). Re-loading a plugin with the same subject names works fine (registration is idempotent). Only affects development scenarios with frequent plugin reloads.
+Subjects registered via `api->register_subject()` are tracked but not actually unregistered from the XML system during cleanup — `lib/helix-xml/` provides no `lv_xml_unregister_subject()`. That is our own gap, not an upstream one: LVGL 9.5 has no XML engine at all, so nobody is going to add it for us (see `HELIX_XML_FORK.md`). Re-loading a plugin with the same subject names works fine (registration is idempotent). Only affects development scenarios with frequent plugin reloads.
 
 ---
 
