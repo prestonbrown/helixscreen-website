@@ -1,0 +1,32 @@
+---
+import themes from '../../data/themes.generated.json';
+---
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-hairline">
+  <h2 class="text-2xl mb-2">{themes.length} themes ship with it. This page is running one.</h2>
+  <p class="ui text-sm text-ink-muted mb-6 max-w-[62ch]">
+    The palettes below are read straight out of the app's own theme files. Pick one and
+    this page changes with it, because it is the same data the printer's screen uses.
+  </p>
+  <div class="flex flex-wrap gap-2">
+    {themes.map((t) => (
+      <button
+        type="button"
+        data-theme-pick={t.slug}
+        class="ui text-[11px] text-ink-muted border border-hairline rounded-[var(--hx-radius)] px-3 py-1.5 hover:border-accent"
+      >{t.name}</button>
+    ))}
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('[data-theme-pick]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const slug = btn.getAttribute('data-theme-pick');
+      const select = document.getElementById('hx-theme-select');
+      if (select) {
+        select.value = slug;
+        select.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+</script>
