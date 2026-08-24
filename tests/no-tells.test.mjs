@@ -110,8 +110,19 @@ test('no gradient-filled text', () => {
 // form `rounded-[var(--hx-radius)]` — is the one asserted-safe indirection
 // (the schema caps it at 3px) and always passes. An unrecognized length unit
 // or utility suffix is flagged conservatively rather than silently passed.
+//
+// RADIUS_SCALE_PX is a hand-copied snapshot of Tailwind's default radius
+// scale, taken from node_modules/tailwindcss/theme.css (`--radius-xs`
+// through `--radius-4xl`, plus the bare `--radius` used by unsuffixed
+// `rounded`). It is not read from that file at runtime — a test that
+// crashes because a dependency's internal file layout changed is worse than
+// a stale constant. Re-check this table by hand against theme.css on any
+// Tailwind major-version upgrade.
 const RADIUS_SCALE_PX = { none: 0, xs: 2, sm: 4, md: 6, lg: 8, xl: 12, '2xl': 16, '3xl': 24, '4xl': 32, full: Infinity };
 
+// Assumes a 16px root font size when converting rem/em to px — true for
+// this site (no root font-size override), but worth stating since it's not
+// derived from anything at runtime.
 function lengthToPx(token) {
   if (/^var\(/i.test(token)) return 0;
   const m = token.match(/^(-?\d*\.?\d+)(px|rem|em|%)?$/i);
@@ -121,6 +132,23 @@ function lengthToPx(token) {
   if (unit === 'rem' || unit === 'em') return num * 16;
   if (unit === '%') return num > 0 ? Infinity : 0; // not measurable in px; any nonzero % is suspect
   return num;
+}
+
+// Tailwind's directional/corner infixes: `rounded-{dir}-{size}`, e.g.
+// `rounded-t-lg`, `rounded-tl-[var(--hx-radius)]`. The two-letter corner
+// tokens are tried before the one-letter side tokens so `tl-xl` isn't
+// misread as side `t` plus a leftover `l-xl` — though in practice the
+// required `-` immediately after the token already prevents that ambiguity
+// (`tr-xl` doesn't start with `t-`). Strips the direction and leaves the
+// size suffix (`lg`, `none`, `[var(--hx-radius)]`, …) for the existing
+// scale/arbitrary-value logic to evaluate unchanged.
+const RADIUS_DIRECTIONS = ['tl', 'tr', 'bl', 'br', 'ss', 'se', 'es', 'ee', 't', 'b', 'l', 'r', 's', 'e'];
+
+function stripRadiusDirection(suffix) {
+  for (const dir of RADIUS_DIRECTIONS) {
+    if (suffix.startsWith(`${dir}-`)) return suffix.slice(dir.length + 1);
+  }
+  return suffix;
 }
 
 function cssRadiusHits(css) {
@@ -150,7 +178,8 @@ function classRadiusHits(css) {
   const re = /\brounded(?:-([^\s"'`]+))?(?![a-zA-Z0-9])/g;
   let m;
   while ((m = re.exec(css))) {
-    const suffix = m[1];
+    const rawSuffix = m[1];
+    const suffix = rawSuffix === undefined ? undefined : stripRadiusDirection(rawSuffix);
     let px;
     if (suffix === undefined) px = 4; // bare `rounded` = --radius = 0.25rem
     else if (suffix in RADIUS_SCALE_PX) px = RADIUS_SCALE_PX[suffix];
