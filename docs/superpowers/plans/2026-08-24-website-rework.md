@@ -1349,6 +1349,16 @@ test('Space Grotesk is gone from authored styles and the landing page', () => {
   assert.ok(!/space.?grotesk/i.test(authoredCss() + landing()), 'Space Grotesk still referenced');
 });
 
+// `ink-subtle` maps to the app's `text_subtle`, a hint-text token meant for a touch
+// panel at large sizes. Every use of it on this site was 10-12px, where it measures
+// 4.02:1 on canvas and 2.88:1 on overlay — both under AA's 4.5:1. Three tiers
+// (ink, ink-muted, accent) carry enough hierarchy, so it is simply not used for text.
+test('ink-subtle is not used for text in landing components', () => {
+  const files = collect(join(SRC, 'components', 'marketing'), ['.astro']);
+  const offenders = files.filter((f) => readFileSync(f, 'utf8').includes('ink-subtle'));
+  assert.deepEqual(offenders, [], `ink-subtle used in: ${offenders.join(', ')}`);
+});
+
 test('the headline is present exactly once on the landing page', () => {
   const matches = landing().match(/Everything your printer knows, on the screen it already has\./g) ?? [];
   assert.equal(matches.length, 1);
