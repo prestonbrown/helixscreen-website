@@ -4,9 +4,8 @@
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 /* Load custom fonts for docs pages */
-@import '@fontsource/space-grotesk/400.css';
-@import '@fontsource/space-grotesk/500.css';
-@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/source-serif-4/400.css';
+@import '@fontsource/source-serif-4/600.css';
 @import '@fontsource/ibm-plex-sans/400.css';
 @import '@fontsource/ibm-plex-sans/500.css';
 @import '@fontsource/ibm-plex-sans/600.css';
@@ -34,7 +33,7 @@
   --sl-font-system-mono: 'IBM Plex Mono', monospace;
 
   /* Heading font */
-  --__sl-font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --__sl-font-heading: 'Source Serif 4', Charter, Georgia, serif;
 }
 
 /* Apply heading font to Starlight headings */
@@ -45,7 +44,7 @@
 :root .sl-markdown-content h5,
 :root .sl-markdown-content h6,
 .site-title {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Source Serif 4', Charter, Georgia, serif;
 }
 
 /* Smoother font rendering */
