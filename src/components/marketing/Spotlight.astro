@@ -37,7 +37,10 @@ const url = (s: any) => (typeof s === 'string' ? s : s.src);
         I didn't set out to support seven of them. People kept asking, and the ones who
         owned the hardware sent patches.
       </p>
-      <p class="ui text-xs text-ink-muted mb-3">The hardware underneath those seven backends:</p>
+      <p class="ui text-xs text-ink-muted mb-3">
+        Some of the AMS hardware those backends drive. Several units run on more than one,
+        so the backend is the thing being counted here, not the box on your bench.
+      </p>
       <div class="flex flex-wrap gap-4 items-center">
         {icons.map((i) => (
           <img src={url(i.src)} alt={i.alt} width="34" height="34" class="opacity-60 hover:opacity-100 transition-opacity" />
