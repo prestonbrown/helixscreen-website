@@ -96,6 +96,18 @@ test('no gradient-filled text', () => {
   assert.doesNotMatch(css, /\b(-webkit-)?background-clip\s*:\s*text\b/i);
 });
 
+// The two tests above catch gradients used specifically to fill text, and
+// the "deleted decorative classes" test below catches the removed
+// `.hero-gradient` class by name — but neither catches a `linear-gradient`,
+// `radial-gradient`, or `conic-gradient` used anywhere else (a band, a
+// button, a card background under a new class name). The spec bans gradient
+// fills outright, so the property itself is flagged, prefixed or not, in
+// both the CSS we author and the page we build from it.
+test('no gradient fills anywhere in authored CSS or the landing page', () => {
+  const all = authoredCss() + landing();
+  assert.doesNotMatch(all, /(-webkit-|-moz-)?\b(linear|radial|conic)-gradient\s*\(/i);
+});
+
 // Radius is authored on two surfaces here: literal CSS `border-radius`
 // values, and Tailwind's `rounded-*` utility classes in .astro markup. Both
 // must be checked — this codebase writes radius almost exclusively as the
@@ -250,4 +262,98 @@ test('ink-subtle is not used for text anywhere in src', () => {
 test('the headline is present exactly once on the landing page', () => {
   const matches = landing().match(/Everything your printer knows, on the screen it already has\./g) ?? [];
   assert.equal(matches.length, 1);
+});
+
+// --- WCAG contrast gate, default theme only --------------------------------
+//
+// The `ink-subtle` test above is a contrast ruling too, just a blunt one
+// ("never use this token for text"). This extends the same ruling to a live
+// computation: read the DEFAULT theme's actual hex values out of the
+// generated CSS — never hardcoded here, since themes.generated.css is
+// regenerated from the app on every build — and fail if a foreground/
+// background pair this page actually renders small text with falls under
+// AA's 4.5:1 threshold.
+//
+// Scoped to `[data-theme="helixscreen"][data-mode="dark"]` only: that's the
+// theme+mode every first-time visitor sees, and the one this gate exists to
+// hold. The other 31 theme×mode combinations are the app's own palettes, a
+// design decision for the site owner, not this branch's to enforce.
+//
+// SMALL_TEXT_PAIRS is a hand-built inventory of which foreground token rides
+// on which background token, for every place the page sets text under the
+// ~24px/18pt large-text threshold. Headings (text-2xl and up) are exempt:
+// they clear the large-text 3:1 bar comfortably even in the one case
+// (`ink` on `canvas`) they'd also need to pass at the stricter 4.5:1. This
+// list can't be derived from a generic HTML/CSS scan — Tailwind classes
+// don't carry their ancestor's background with them — so add to it by hand
+// whenever a new small-text color/background combination is introduced.
+const THEMES_CSS = join('src', 'styles', 'themes.generated.css');
+const THEME_VARS = {
+  canvas: '--hx-screen-bg',
+  overlay: '--hx-overlay-bg',
+  card: '--hx-card-bg',
+  ink: '--hx-text',
+  'ink-muted': '--hx-text-muted',
+  secondary: '--hx-secondary',
+  ok: '--hx-success',
+  warn: '--hx-warning',
+};
+
+function defaultThemeTokens() {
+  const css = readFileSync(THEMES_CSS, 'utf8');
+  const block = css.match(/\[data-theme="helixscreen"\]\[data-mode="dark"\]\s*\{([\s\S]*?)\n\}/);
+  if (!block) throw new Error('could not find the helixscreen/dark block in themes.generated.css');
+  const body = block[1];
+  const tokens = {};
+  for (const [name, varName] of Object.entries(THEME_VARS)) {
+    const m = body.match(new RegExp(`${varName}:\\s*(#[0-9a-fA-F]{6})\\s*;`));
+    if (!m) throw new Error(`${varName} not found in the helixscreen/dark block`);
+    tokens[name] = m[1];
+  }
+  return tokens;
+}
+
+function srgbToLinear(channel) {
+  const c = channel / 255;
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance(hex) {
+  const n = hex.replace('#', '');
+  const r = parseInt(n.slice(0, 2), 16);
+  const g = parseInt(n.slice(2, 4), 16);
+  const b = parseInt(n.slice(4, 6), 16);
+  return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+}
+
+function contrastRatio(hexA, hexB) {
+  const lA = relativeLuminance(hexA);
+  const lB = relativeLuminance(hexB);
+  const lighter = Math.max(lA, lB);
+  const darker = Math.min(lA, lB);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+// [pair name, foreground token, background token, where it's used]
+const SMALL_TEXT_PAIRS = [
+  ['ink on canvas',        'ink',       'canvas',  'body copy, table cells, Figure annotation'],
+  ['ink-muted on canvas',  'ink-muted', 'canvas',  'the great majority of body/caption/label text'],
+  ['ink-muted on overlay', 'ink-muted', 'overlay', 'Hero $ prompt, SiteNav mobile menu links'],
+  ['secondary on canvas',  'secondary', 'canvas',  'inline links: Hero install guide, GetInTouch bugs@/security@'],
+  ['warn on canvas',       'warn',      'canvas',  'Hero and Spotlight eyebrow labels'],
+  ['ok on canvas',         'ok',        'canvas',  'ComparisonTable/SpecGrid "ok"-tone values'],
+  ['ink on card',          'ink',       'card',    'PlatformTable <dt> platform name'],
+  ['ink-muted on card',    'ink-muted', 'card',    'PlatformTable <dd> architecture, ThemeDemo body text'],
+];
+
+test('default theme (helixscreen/dark) clears AA 4.5:1 for every small-text pair the landing page uses', () => {
+  const tokens = defaultThemeTokens();
+  const failures = SMALL_TEXT_PAIRS
+    .map(([name, fg, bg, where]) => ({ name, where, ratio: contrastRatio(tokens[fg], tokens[bg]) }))
+    .filter(({ ratio }) => ratio < 4.5);
+  assert.deepEqual(
+    failures,
+    [],
+    failures.map((f) => `${f.name} (${f.where}): ${f.ratio.toFixed(2)}:1`).join('; ')
+  );
 });
