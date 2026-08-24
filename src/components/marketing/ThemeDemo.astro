@@ -12,6 +12,7 @@ import themes from '../../data/themes.generated.json';
       <button
         type="button"
         data-theme-pick={t.slug}
+        aria-pressed="false"
         class="ui text-[11px] text-ink-muted border border-hairline rounded-[var(--hx-radius)] px-3 py-1.5 hover:border-accent"
       >{t.name}</button>
     ))}
@@ -19,7 +20,26 @@ import themes from '../../data/themes.generated.json';
 </section>
 
 <script>
-  document.querySelectorAll('[data-theme-pick]').forEach((btn) => {
+  const root = document.documentElement;
+  const buttons = document.querySelectorAll('[data-theme-pick]');
+
+  // Reflects the page's actual current theme onto the button grid, whichever
+  // control changed it — a click here, the header select, or anything else
+  // that sets data-theme. Never assumes a default: it only ever reads the
+  // attribute ThemeScript/ThemeSwitcher already maintain on <html>.
+  function syncActive() {
+    const current = root.getAttribute('data-theme');
+    buttons.forEach((btn) => {
+      const active = btn.getAttribute('data-theme-pick') === current;
+      btn.setAttribute('aria-pressed', String(active));
+      btn.classList.toggle('border-accent', active);
+      btn.classList.toggle('text-ink', active);
+      btn.classList.toggle('border-hairline', !active);
+      btn.classList.toggle('text-ink-muted', !active);
+    });
+  }
+
+  buttons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const slug = btn.getAttribute('data-theme-pick');
       const select = document.getElementById('hx-theme-select');
@@ -29,4 +49,12 @@ import themes from '../../data/themes.generated.json';
       }
     });
   });
+
+  // Set initial state on mount, then stay in sync for the life of the page.
+  // A MutationObserver on data-theme (rather than a 'change' listener on the
+  // select) works regardless of which script runs first and regardless of
+  // what ends up changing the theme — the header switcher, these buttons, or
+  // anything else — because data-theme is the one place all of them agree.
+  syncActive();
+  new MutationObserver(syncActive).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 </script>
