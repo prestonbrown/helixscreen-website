@@ -1,0 +1,62 @@
+---
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Colophon from '../components/marketing/Colophon.astro';
+import data from '../data/whatsnew.generated.json';
+
+const CHANGELOG = 'https://github.com/prestonbrown/helixscreen/blob/main/CHANGELOG.md';
+---
+<MarketingLayout
+  title="What's new — HelixScreen"
+  description="Release notes for HelixScreen, written before each release ships."
+>
+  <SiteNav />
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h1 class="text-3xl leading-tight mb-3">Every release is written down before it ships.</h1>
+    <p class="ui text-sm text-ink-muted mb-12 max-w-[62ch]">
+      The current build is
+      <span class="font-mono tabular text-ink">{data.version}</span>.
+      What follows is the short version of the recent ones. The
+      <a href={CHANGELOG} target="_blank" rel="noopener noreferrer" class="text-secondary underline underline-offset-2">full changelog</a>
+      has every fix in every release.
+    </p>
+
+    {data.featured.map((r) => (
+      <article class="border-t border-hairline py-8">
+        <div class="flex items-baseline gap-3 mb-3">
+          <h2 class="font-mono tabular text-lg text-ink">{r.version}</h2>
+          <p class="ui text-xs text-ink-muted tabular">{r.date}</p>
+        </div>
+        {r.lead && <p class="text-base text-ink mb-4 max-w-[62ch]">{r.lead}</p>}
+        <ul class="max-w-[62ch]">
+          {r.bullets.map((b) => (
+            <li class="ui text-sm text-ink-muted py-1.5 border-b border-hairline last:border-b-0">{b}</li>
+          ))}
+        </ul>
+      </article>
+    ))}
+
+    <section class="border-t border-hairline pt-8 mt-8">
+      <h2 class="text-xl mb-4">Recent releases</h2>
+      <table class="w-full max-w-lg">
+        <caption class="sr-only">The most recent HelixScreen releases</caption>
+        <tbody>
+          {data.history.map((h) => (
+            <tr class="border-b border-hairline">
+              <td class="font-mono tabular text-sm text-ink py-2">{h.version}</td>
+              <td class="ui text-xs text-ink-muted tabular py-2">{h.date}</td>
+              <td class="ui text-xs py-2 text-right">
+                {h.withdrawn && <span class="text-alert">withdrawn</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="ui text-xs text-ink-muted mt-4 max-w-[62ch]">
+        A withdrawn release is one that shipped and was pulled. It stays on the list because
+        deleting it would not make it not have happened.
+      </p>
+    </section>
+  </main>
+  <Colophon />
+</MarketingLayout>
