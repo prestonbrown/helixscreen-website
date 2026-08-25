@@ -11,30 +11,77 @@
 @import '@fontsource/ibm-plex-sans/600.css';
 @import '@fontsource/ibm-plex-mono/400.css';
 
-/* Match marketing dark theme: canvas #0C0C0E, surface #161619, border #2A2A2F */
-:root {
-  /* Accent (brand blue) */
-  --sl-color-accent-low: #1A3050;
-  --sl-color-accent: #3A7CC8;
-  --sl-color-accent-high: #8DB8E8;
+@import './hx-vars.css';
 
-  /* Gray scale mapped to marketing tokens */
-  --sl-color-gray-1: #E8E8EC; /* text-primary */
-  --sl-color-gray-2: #C4C4CC;
-  --sl-color-gray-3: #8E8E96; /* text-secondary */
-  --sl-color-gray-4: #5A5A64; /* text-muted */
-  --sl-color-gray-5: #2A2A2F; /* border */
-  --sl-color-gray-6: #161619; /* surface */
-  --sl-color-gray-7: #0C0C0E; /* canvas */
+/* Starlight's palette, expressed entirely in HelixScreen's tokens.
+ *
+ * These rules are deliberately UNLAYERED. Starlight declares its own palette
+ * inside @layer starlight.base, and unlayered styles outrank every layered
+ * style regardless of specificity — which is why a plain :root here beats
+ * Starlight's :root[data-theme='light']. One mapping covers both modes,
+ * because the --hx-* values themselves change with the mode.
+ */
+:root {
+  --sl-color-accent-low: var(--hx-overlay-bg);
+  --sl-color-accent: var(--hx-primary);
+  --sl-color-accent-high: var(--hx-secondary);
+
+  /* Starlight's white/black are semantic, not literal: they flip with mode. */
+  --sl-color-white: var(--hx-text);
+  --sl-color-black: var(--hx-screen-bg);
+
+  --sl-color-gray-1: var(--hx-text);
+  --sl-color-gray-2: var(--hx-text-muted);
+  --sl-color-gray-3: var(--hx-text-subtle);
+  --sl-color-gray-4: var(--hx-border);
+  --sl-color-gray-5: var(--hx-border);
+  --sl-color-gray-6: var(--hx-card-bg);
+  --sl-color-gray-7: var(--hx-overlay-bg);
+
+  --sl-color-text: var(--hx-text);
+  --sl-color-text-accent: var(--hx-primary);
+  --sl-color-text-invert: var(--hx-screen-bg);
+
+  --sl-color-bg: var(--hx-screen-bg);
+  --sl-color-bg-nav: var(--hx-card-bg);
+  --sl-color-bg-sidebar: var(--hx-card-bg);
+  --sl-color-bg-inline-code: var(--hx-overlay-bg);
+  --sl-color-bg-accent: var(--hx-primary);
+
+  --sl-color-hairline: var(--hx-border);
+  --sl-color-hairline-light: var(--hx-border);
+  --sl-color-hairline-shade: var(--hx-border);
+  --sl-color-backdrop-overlay: var(--hx-overlay-bg);
+
+  /* Aside families. The -low variants tint the ground rather than paint it,
+   * so an aside reads as itself in both light and dark without a second table. */
+  --sl-color-blue: var(--hx-info);
+  --sl-color-blue-high: var(--hx-info);
+  --sl-color-blue-low: color-mix(in srgb, var(--hx-info) 15%, var(--hx-screen-bg));
+  --sl-color-green: var(--hx-success);
+  --sl-color-green-high: var(--hx-success);
+  --sl-color-green-low: color-mix(in srgb, var(--hx-success) 15%, var(--hx-screen-bg));
+  --sl-color-orange: var(--hx-warning);
+  --sl-color-orange-high: var(--hx-warning);
+  --sl-color-orange-low: color-mix(in srgb, var(--hx-warning) 15%, var(--hx-screen-bg));
+  --sl-color-purple: var(--hx-tertiary);
+  --sl-color-purple-high: var(--hx-tertiary);
+  --sl-color-purple-low: color-mix(in srgb, var(--hx-tertiary) 15%, var(--hx-screen-bg));
+  --sl-color-red: var(--hx-danger);
+  --sl-color-red-high: var(--hx-danger);
+  --sl-color-red-low: color-mix(in srgb, var(--hx-danger) 15%, var(--hx-screen-bg));
 
   /* Fonts */
   --sl-font: 'IBM Plex Sans', system-ui, sans-serif;
   --sl-font-system: 'IBM Plex Sans', system-ui, sans-serif;
   --sl-font-system-mono: 'IBM Plex Mono', monospace;
 
-  /* Heading font */
   --__sl-font-heading: 'Source Serif 4', Charter, Georgia, serif;
 }
+
+/* The app's theme schema sets shadow_intensity to 0. Starlight ships shadows on
+ * its search dialog and dropdowns; the docs obey the same rule as everything else. */
+* { box-shadow: none !important; text-shadow: none !important; }
 
 /* Apply heading font to Starlight headings */
 :root .sl-markdown-content h1,
