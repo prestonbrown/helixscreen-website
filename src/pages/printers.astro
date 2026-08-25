@@ -42,7 +42,10 @@ const rows = db.printers.map((p) => ({
         autocomplete="off"
         class="ui text-sm bg-transparent text-ink border border-hairline rounded-[var(--hx-radius)] px-3 py-2 w-full max-w-sm"
       />
-      <p id="printer-count" class="ui text-xs text-ink-muted tabular shrink-0">
+      <!-- The one live region on the page. It always changes when the filter runs,
+           including down to "0 of 91", so it covers the empty case too — announcing
+           the empty-state paragraph as well would just say the same thing twice. -->
+      <p id="printer-count" aria-live="polite" class="ui text-xs text-ink-muted tabular shrink-0">
         {db.count} of {db.count}
       </p>
     </div>
