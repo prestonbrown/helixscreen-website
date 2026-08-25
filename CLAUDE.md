@@ -6,7 +6,7 @@ Astro + Starlight documentation site for [helixscreen.org](https://helixscreen.o
 
 - **Framework:** Astro 5.17 + Starlight 0.37 (static docs site generator)
 - **Styling:** Tailwind CSS v4, custom fonts (Space Grotesk headings, IBM Plex Sans body, IBM Plex Mono code)
-- **Theme:** Forced dark mode only (no light toggle) via `ForceDarkTheme.astro` component
+- **Theme:** 18 themes generated from the app's own theme files, each with dark mode and, where the theme defines it, light mode. Chosen at runtime via the switcher, persisted to `localStorage`, and applied to both the marketing site and the docs pages.
 - **Search:** Pagefind (built-in with Starlight, indexes all pages at build time)
 - **Hosting:** Cloudflare Pages, deployed by `.github/workflows/deploy.yml` (auto-deploys on push to main, on `repository_dispatch` from helixscreen releases, or via `workflow_dispatch`)
 
@@ -131,7 +131,7 @@ helixscreen-website/
 ├── scripts/sync-docs.sh      # Doc sync from helixscreen repo
 ├── src/
 │   ├── assets/images/        # Logo, doc screenshots
-│   ├── components/           # ForceDarkTheme, EmptyComponent, landing page components
+│   ├── components/           # ThemeSwitcher, DocsThemeProvider, landing page components
 │   ├── content/docs/         # Synced documentation (DO NOT EDIT — overwritten by sync)
 │   └── styles/               # Custom Starlight CSS
 ├── public/                   # Static assets (favicon, etc.)

@@ -44,7 +44,7 @@ import themes from '../../data/themes.generated.json';
   buttons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const slug = btn.getAttribute('data-theme-pick');
-      const select = document.getElementById('hx-theme-select');
+      const select = document.querySelector('.hx-theme-select');
       if (select) {
         select.value = slug;
         select.dispatchEvent(new Event('change'));

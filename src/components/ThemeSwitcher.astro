@@ -2,14 +2,16 @@
 import themes from '../data/themes.generated.json';
 ---
 <div class="hx-switcher">
-  <label class="hx-sr-only" for="hx-theme-select">Theme</label>
-  <select id="hx-theme-select">
-    {themes.map((t) => (
-      <option value={t.slug} data-modes={t.modes.join(',')}>{t.name}</option>
-    ))}
-  </select>
-  <button id="hx-mode-toggle" type="button" aria-label="Toggle light and dark mode">
-    <span id="hx-mode-label">dark</span>
+  <label class="hx-switcher-field">
+    <span class="hx-sr-only">Theme</span>
+    <select class="hx-theme-select">
+      {themes.map((t) => (
+        <option value={t.slug} data-modes={t.modes.join(',')}>{t.name}</option>
+      ))}
+    </select>
+  </label>
+  <button class="hx-mode-toggle" type="button" aria-label="Toggle light and dark mode">
+    <span class="hx-mode-label">dark</span>
   </button>
 </div>
 
@@ -23,6 +25,7 @@ import themes from '../data/themes.generated.json';
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
     font-size: 0.75rem;
   }
+  .hx-switcher-field { display: inline-flex; }
   .hx-switcher select,
   .hx-switcher button {
     background: transparent;
@@ -42,24 +45,34 @@ import themes from '../data/themes.generated.json';
 </style>
 
 <script>
-  const select = document.getElementById('hx-theme-select');
-  const toggle = document.getElementById('hx-mode-toggle');
-  const label = document.getElementById('hx-mode-label');
-  const root = document.documentElement;
+  // Starlight renders ThemeSelect in two places — the desktop header and the
+  // mobile drawer — so this component can exist more than once per page. It
+  // therefore carries no ids: every lookup is scoped to an instance, and a
+  // change to one instance updates them all.
+  const roots = Array.from(document.querySelectorAll('.hx-switcher'));
+  const html = document.documentElement;
 
   function modesFor(slug) {
-    const opt = select.querySelector(`option[value="${slug}"]`);
+    const opt = roots[0]?.querySelector(`option[value="${slug}"]`);
     return (opt?.dataset.modes ?? 'dark').split(',');
   }
 
   function apply(theme, mode) {
     const modes = modesFor(theme);
     const resolved = modes.includes(mode) ? mode : modes[0];
-    root.setAttribute('data-hx-theme', theme);
-    root.setAttribute('data-theme', resolved);
-    label.textContent = resolved;
-    // A dark-only theme cannot be toggled; say so rather than no-op silently.
-    toggle.disabled = modes.length === 1;
+    html.setAttribute('data-hx-theme', theme);
+    html.setAttribute('data-theme', resolved);
+
+    for (const root of roots) {
+      const select = root.querySelector('.hx-theme-select');
+      const toggle = root.querySelector('.hx-mode-toggle');
+      const label = root.querySelector('.hx-mode-label');
+      if (select) select.value = theme;
+      if (label) label.textContent = resolved;
+      // A dark-only theme cannot be toggled; say so rather than no-op silently.
+      if (toggle) toggle.disabled = modes.length === 1;
+    }
+
     try {
       // Only touch storage for keys that actually changed — an unconditional
       // rewrite on every mount is itself the split-write window a stale
@@ -69,12 +82,14 @@ import themes from '../data/themes.generated.json';
     } catch (e) { /* private mode: choice just won't persist */ }
   }
 
-  select.value = root.getAttribute('data-hx-theme') ?? 'helixscreen';
-  apply(select.value, root.getAttribute('data-theme') ?? 'dark');
+  apply(html.getAttribute('data-hx-theme') ?? 'helixscreen', html.getAttribute('data-theme') ?? 'dark');
 
-  select.addEventListener('change', () => apply(select.value, root.getAttribute('data-theme')));
-  toggle.addEventListener('click', () => {
-    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    apply(select.value, next);
-  });
+  for (const root of roots) {
+    root.querySelector('.hx-theme-select')?.addEventListener('change', (event) => {
+      apply(event.target.value, html.getAttribute('data-theme'));
+    });
+    root.querySelector('.hx-mode-toggle')?.addEventListener('click', () => {
+      apply(html.getAttribute('data-hx-theme'), html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+  }
 </script>

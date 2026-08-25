@@ -371,7 +371,17 @@ test('docs pages carry the no-flash theme script', () => {
 
 test('docs pages carry the theme switcher', () => {
   const html = readFileSync(DOCS_PAGE, 'utf8');
-  assert.match(html, /id="hx-theme-select"/);
+  assert.match(html, /hx-theme-select/);
+});
+
+// Starlight renders ThemeSelect in both the header and the mobile drawer. An id
+// anywhere in that component would be duplicated, and every getElementById would
+// bind the second instance to the first one's node, leaving it rendered but inert.
+test('the theme switcher uses no ids, because it is rendered more than once', () => {
+  const html = readFileSync(DOCS_PAGE, 'utf8');
+  assert.doesNotMatch(html, /id="hx-(theme-select|mode-toggle|mode-label)"/);
+  const instances = (html.match(/hx-switcher/g) ?? []).length;
+  assert.ok(instances >= 2, `expected the switcher in header and mobile drawer, found ${instances}`);
 });
 
 test('the forced-dark override is gone from docs pages', () => {
