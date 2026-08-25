@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * Read release sections out of a Keep-a-Changelog file.
+ *
+ * A heading looks like `## [0.99.115] - 2026-08-20`, optionally suffixed
+ * `[WITHDRAWN]`. Headings without a date (`## [Unreleased]`) are not releases
+ * and are dropped.
+ */
+export function parseChangelog(md) {
+  return md
+    .split(/^## \[/m)
+    .slice(1)
+    .map((raw) => {
+      const nl = raw.indexOf('\n');
+      const head = nl === -1 ? raw : raw.slice(0, nl);
+      const body = nl === -1 ? '' : raw.slice(nl + 1);
+
+      const heading = head.match(/^([^\]]+)\]\s*-\s*(\S+)(.*)$/);
+      if (!heading) return null;
+      const [, version, date, rest] = heading;
+
+      const block = body.match(/<!--\s*whatsnew\s*([\s\S]*?)-->/);
+      let summary = null;
+      if (block) {
+        const lines = block[1].split('\n').map((l) => l.trim()).filter(Boolean);
+        summary = {
+          lead: lines.find((l) => !l.startsWith('- ')) ?? null,
+          bullets: lines.filter((l) => l.startsWith('- ')).map((l) => l.slice(2).trim()),
+        };
+      }
+
+      return { version, date, withdrawn: /WITHDRAWN/i.test(rest), summary };
+    })
+    .filter(Boolean);
+}
+
+export function buildWhatsNew(md, version, historyLimit = 12) {
+  const releases = parseChangelog(md);
+  return {
+    version,
+    // A withdrawn release is one we asked people not to run. It keeps its row in
+    // the history so the record stays honest, but it is never featured.
+    featured: releases
+      .filter((r) => r.summary && !r.withdrawn)
+      .map((r) => ({
+        version: r.version,
+        date: r.date,
+        lead: r.summary.lead,
+        bullets: r.summary.bullets,
+      })),
+    history: releases.slice(0, historyLimit).map((r) => ({
+      version: r.version,
+      date: r.date,
+      withdrawn: r.withdrawn,
+    })),
+  };
+}
+
+const isMain = process.argv[1] &&
+  fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMain) {
+  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const src = join(root, '..', 'helixscreen');
+  let built;
+  try {
+    built = buildWhatsNew(
+      readFileSync(join(src, 'CHANGELOG.md'), 'utf8'),
+      readFileSync(join(src, 'VERSION.txt'), 'utf8').trim()
+    );
+  } catch (err) {
+    // Committed output means a checkout without the sibling repo still builds.
+    console.warn(`[gen-whatsnew] ${src} unavailable (${err.code ?? err.message}); keeping committed output.`);
+    process.exit(0);
+  }
+  mkdirSync(join(root, 'src', 'data'), { recursive: true });
+  writeFileSync(
+    join(root, 'src', 'data', 'whatsnew.generated.json'),
+    JSON.stringify(built, null, 2) + '\n'
+  );
+  console.log(`[gen-whatsnew] version ${built.version}, ${built.featured.length} featured, ${built.history.length} in history`);
+}

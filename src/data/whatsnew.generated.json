@@ -1,0 +1,95 @@
+{
+  "version": "0.99.115",
+  "featured": [
+    {
+      "version": "0.99.115",
+      "date": "2026-08-20",
+      "lead": "The second 1.0 release candidate. Highlights:",
+      "bullets": [
+        "Printers are no longer guessed at from thin evidence, and you can correct the model yourself",
+        "The window between pressing Print and the first layer is now tracked properly",
+        "Buttons no longer send macros your printer does not have",
+        "Input shaper sweeps your printer's real frequency range and shows what changed",
+        "K2 Auto Bed Mesh actually meshes, at the job's own temperatures",
+        "Fixes for crashes in the power panel and panel navigation"
+      ]
+    },
+    {
+      "version": "0.99.114",
+      "date": "2026-08-16",
+      "lead": "The 1.0 release candidate. Highlights:",
+      "bullets": [
+        "Fixes a lit-but-frozen screen on Centauri Carbon and AD5M",
+        "Idle printers no longer refuse jogs as \"busy\"",
+        "A Klipper shutdown is no longer displayed as Ready",
+        "CFS: checks filament really moved, plus fan and recovery fixes on K1",
+        "AFC: correct buffer health, tool numbers and spool names",
+        "Single-hotend printers stop reporting tools they do not have",
+        "Dialogs fit on small screens",
+        "New Hazard theme, and lower memory use throughout"
+      ]
+    }
+  ],
+  "history": [
+    {
+      "version": "0.99.115",
+      "date": "2026-08-20",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.114",
+      "date": "2026-08-16",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.113",
+      "date": "2026-08-13",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.112",
+      "date": "2026-08-13",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.111",
+      "date": "2026-08-12",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.110",
+      "date": "2026-08-11",
+      "withdrawn": true
+    },
+    {
+      "version": "0.99.109",
+      "date": "2026-08-10",
+      "withdrawn": true
+    },
+    {
+      "version": "0.99.108",
+      "date": "2026-08-09",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.107",
+      "date": "2026-08-07",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.106",
+      "date": "2026-07-31",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.105",
+      "date": "2026-07-29",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.103",
+      "date": "2026-07-26",
+      "withdrawn": false
+    }
+  ]
+}

@@ -8,8 +8,9 @@
     "sync-docs": "./scripts/sync-docs.sh",
     "gen-themes": "node scripts/gen-themes.mjs",
     "gen-printers": "node scripts/gen-printers.mjs",
+    "gen-whatsnew": "node scripts/gen-whatsnew.mjs",
     "test": "node --test tests/*.test.mjs",
-    "prebuild": "./scripts/sync-docs.sh && node scripts/gen-themes.mjs && node scripts/gen-printers.mjs",
+    "prebuild": "./scripts/sync-docs.sh && node scripts/gen-themes.mjs && node scripts/gen-printers.mjs && node scripts/gen-whatsnew.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
