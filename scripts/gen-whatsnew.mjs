@@ -11,7 +11,10 @@ import { fileURLToPath } from 'node:url';
  * and are dropped.
  */
 export function parseChangelog(md) {
-  return md
+  // Normalise line endings before anything else: a lone \r left on a heading line
+  // defeats the heading regex silently, and every release drops out with no error.
+  const text = md.replace(/\r\n/g, '\n');
+  return text
     .split(/^## \[/m)
     .slice(1)
     .map((raw) => {
@@ -23,7 +26,10 @@ export function parseChangelog(md) {
       if (!heading) return null;
       const [, version, date, rest] = heading;
 
-      const block = body.match(/<!--\s*whatsnew\s*([\s\S]*?)-->/);
+      // The terminator must be on its own line. A bare lazy match to the first
+      // `-->` truncates the block at any bullet that happens to contain one,
+      // dropping the rest of the summary with no error.
+      const block = body.match(/<!--\s*whatsnew\s*\n([\s\S]*?)\n\s*-->/);
       let summary = null;
       if (block) {
         const lines = block[1].split('\n').map((l) => l.trim()).filter(Boolean);
@@ -66,17 +72,24 @@ const isMain = process.argv[1] &&
 if (isMain) {
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   const src = join(root, '..', 'helixscreen');
-  let built;
+  let md, built;
   try {
-    built = buildWhatsNew(
-      readFileSync(join(src, 'CHANGELOG.md'), 'utf8'),
-      readFileSync(join(src, 'VERSION.txt'), 'utf8').trim()
-    );
+    md = readFileSync(join(src, 'CHANGELOG.md'), 'utf8');
+    built = buildWhatsNew(md, readFileSync(join(src, 'VERSION.txt'), 'utf8').trim());
   } catch (err) {
     // Committed output means a checkout without the sibling repo still builds.
     console.warn(`[gen-whatsnew] ${src} unavailable (${err.code ?? err.message}); keeping committed output.`);
     process.exit(0);
   }
+
+  // Parsing nothing out of a non-empty changelog means the format moved out from
+  // under this regex. Writing that result would replace good committed data with
+  // an empty page and still exit clean, so refuse and keep what is already there.
+  if (built.history.length === 0 && md.trim() !== '') {
+    console.warn('[gen-whatsnew] parsed 0 releases from a non-empty CHANGELOG.md; keeping committed output.');
+    process.exit(0);
+  }
+
   mkdirSync(join(root, 'src', 'data'), { recursive: true });
   writeFileSync(
     join(root, 'src', 'data', 'whatsnew.generated.json'),

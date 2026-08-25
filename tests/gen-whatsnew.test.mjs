@@ -82,3 +82,51 @@ test('a changelog with no whatsnew block yields no featured entries, not a crash
   assert.deepEqual(out.featured, []);
   assert.equal(out.history.length, 1);
 });
+
+test('CRLF line endings parse identically to LF', () => {
+  const crlf = MD.replace(/\n/g, '\r\n');
+  assert.deepEqual(
+    parseChangelog(crlf).map((r) => r.version),
+    parseChangelog(MD).map((r) => r.version)
+  );
+  const r = parseChangelog(crlf).find((x) => x.version === '0.99.115');
+  assert.equal(r.summary.lead, 'The second 1.0 release candidate. Highlights:');
+  assert.equal(r.summary.bullets.length, 2);
+  // A trailing \r must not survive into the rendered text.
+  assert.ok(!r.summary.bullets.some((b) => b.includes('\r')));
+});
+
+test('a bullet containing an arrow does not truncate the block', () => {
+  const md = `## [1.0.0] - 2026-09-01
+
+<!-- whatsnew
+Highlights:
+
+- The print job moves from Idle --> Printing without a stall
+- A second bullet that must survive
+-->
+
+### Added
+
+- Something.
+`;
+  const r = parseChangelog(md)[0];
+  assert.equal(r.summary.bullets.length, 2);
+  assert.match(r.summary.bullets[0], /Idle --> Printing/);
+  assert.equal(r.summary.bullets[1], 'A second bullet that must survive');
+});
+
+test('an unterminated whatsnew block yields no summary rather than swallowing the file', () => {
+  const md = `## [1.0.0] - 2026-09-01
+
+<!-- whatsnew
+Highlights:
+
+- A bullet with no closing marker
+
+### Added
+
+- Something.
+`;
+  assert.equal(parseChangelog(md)[0].summary, null);
+});
