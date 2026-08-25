@@ -3,17 +3,31 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, lstatSync, existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
-// Scope: the CSS *we* author, and the landing page we build from it.
+// Scope: the CSS *we* author, and every page whose markup and copy we write.
 //
 // These assertions deliberately do NOT scan all of dist/. That directory also
 // contains Starlight's and Pagefind's stylesheets, which ship 19 box-shadow
-// declarations and 8px/10px radii of their own — vendor code this phase does not
-// touch. Spec phase 3 brings the docs chrome under the token system; widening
-// this gate to dist/ belongs in that phase, not this one. Likewise the banned-copy
-// check reads only the landing page: doc pages are authored in the helixscreen
-// repo, and their prose is not ours to gate.
+// declarations and 8px/10px radii of their own — vendor code this project does
+// not control. Likewise the banned-copy check never reads doc pages: those are
+// authored in the helixscreen repo and synced, so their prose is not ours to
+// gate.
 const SRC = 'src';
-const LANDING = join('dist', 'index.html');
+
+// Every page whose markup and copy we write. Doc pages are deliberately absent:
+// they are authored in the helixscreen repo and synced, so their prose is not
+// ours to gate. Vendor CSS (Starlight, Pagefind) stays out for the same reason
+// it always has — it ships shadows and 8px radii this project does not control.
+const AUTHORED_PAGES = [
+  join('dist', 'index.html'),
+  join('dist', 'printers', 'index.html'),
+  join('dist', 'whats-new', 'index.html'),
+  join('dist', 'contact', 'index.html'),
+];
+const LANDING = AUTHORED_PAGES[0];
+
+function readAuthoredPages() {
+  return AUTHORED_PAGES.filter(existsSync).map((p) => [p, readFileSync(p, 'utf8')]);
+}
 
 // lstat, not stat: a symlink under src/ must not be followed (cycle risk,
 // and it would mean scanning something outside this repo's authored tree).
@@ -53,6 +67,13 @@ const landing = () => {
   if (!existsSync(LANDING)) throw new Error('run `npx astro build` before this test');
   return readFileSync(LANDING, 'utf8');
 };
+
+// readAuthoredPages filters to files that exist, so a typo'd path would
+// silently gate nothing. This keeps the set honest.
+test('every authored page is present to be gated', () => {
+  const missing = AUTHORED_PAGES.filter((p) => !existsSync(p));
+  assert.deepEqual(missing, [], `built pages missing from dist/: ${missing.join(', ')}`);
+});
 
 // tokens.css intentionally carries `box-shadow: none !important` (and the
 // same for text-shadow below) as the enforcement mechanism for "no shadows,
@@ -103,9 +124,12 @@ test('no gradient-filled text', () => {
 // button, a card background under a new class name). The spec bans gradient
 // fills outright, so the property itself is flagged, prefixed or not, in
 // both the CSS we author and the page we build from it.
-test('no gradient fills anywhere in authored CSS or the landing page', () => {
-  const all = authoredCss() + landing();
-  assert.doesNotMatch(all, /(-webkit-|-moz-)?\b(linear|radial|conic)-gradient\s*\(/i);
+test('no gradient fills anywhere in authored CSS or any authored page', () => {
+  const gradientRe = /(-webkit-|-moz-)?\b(linear|radial|conic)-gradient\s*\(/i;
+  assert.doesNotMatch(authoredCss(), gradientRe, 'authored CSS contains a gradient fill');
+  for (const [path, html] of readAuthoredPages()) {
+    assert.doesNotMatch(html, gradientRe, `${path} contains a gradient fill`);
+  }
 });
 
 // Radius is authored on two surfaces here: literal CSS `border-radius`
@@ -210,39 +234,52 @@ test('no radius above the 3px the theme schema allows', () => {
   assert.deepEqual(hits, [], `radius too large: ${hits.slice(0, 5).join(' | ')}`);
 });
 
-test('deleted decorative classes do not reappear', () => {
-  const all = authoredCss() + landing();
-  for (const cls of ['gradient-text', 'mesh-bg', 'mesh-drift', 'hero-gradient', 'screenshot-glow', 'scroll-indicator', 'fade-bounce']) {
-    assert.ok(!all.includes(cls), `${cls} is back`);
+const DELETED_CLASSES = ['gradient-text', 'mesh-bg', 'mesh-drift', 'hero-gradient', 'screenshot-glow', 'scroll-indicator', 'fade-bounce'];
+
+test('deleted decorative classes do not reappear in authored CSS', () => {
+  const css = authoredCss();
+  for (const cls of DELETED_CLASSES) {
+    assert.ok(!css.includes(cls), `${cls} is back in authored CSS`);
   }
 });
+
+test('deleted decorative classes do not reappear on any authored page', () => {
+  for (const [path, html] of readAuthoredPages()) {
+    for (const cls of DELETED_CLASSES) {
+      assert.ok(!html.includes(cls), `${path} reintroduces .${cls}`);
+    }
+  }
+});
+
+const BANNED_COPY = [
+  'beautiful, customizable, community-driven',
+  'built by makers, for makers',
+  'your printer deserves',
+  'multi-material, mastered',
+  'seamless', 'effortless', 'unleash',
+];
 
 // Marketing prose gets wrapped in inline tags (`<em>`, `<strong>`) and the
 // build can introduce line breaks mid-phrase, so a banned phrase can survive
 // on the rendered page while failing a raw substring match against the HTML.
 // Stripping tags and collapsing whitespace before matching closes both gaps.
-function normalizedLandingText() {
-  return landing()
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .toLowerCase();
-}
-
-test('banned copy does not appear on the landing page', () => {
-  const html = normalizedLandingText();
-  for (const phrase of [
-    'beautiful, customizable, community-driven',
-    'built by makers, for makers',
-    'your printer deserves',
-    'multi-material, mastered',
-    'seamless', 'effortless', 'unleash',
-  ]) {
-    assert.ok(!html.includes(phrase), `banned copy present: "${phrase}"`);
+test('banned copy does not appear on any authored page', () => {
+  for (const [path, html] of readAuthoredPages()) {
+    const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+    for (const phrase of BANNED_COPY) {
+      assert.ok(!text.includes(phrase), `${path} contains banned copy: "${phrase}"`);
+    }
   }
 });
 
-test('Space Grotesk is gone from authored styles and the landing page', () => {
-  assert.ok(!/space.?grotesk/i.test(authoredCss() + landing()), 'Space Grotesk still referenced');
+test('Space Grotesk is gone from authored styles', () => {
+  assert.ok(!/space.?grotesk/i.test(authoredCss()), 'Space Grotesk still referenced in authored CSS');
+});
+
+test('Space Grotesk is gone from every authored page', () => {
+  for (const [path, html] of readAuthoredPages()) {
+    assert.doesNotMatch(html, /space.?grotesk/i, `${path} still loads Space Grotesk`);
+  }
 });
 
 // `ink-subtle` maps to the app's `text_subtle`, a hint-text token meant for a touch
