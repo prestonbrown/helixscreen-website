@@ -1,25 +1,45 @@
 ---
 import themes from '../data/themes.generated.json';
 ---
-<div class="relative ui text-xs">
-  <label class="sr-only" for="hx-theme-select">Theme</label>
-  <select
-    id="hx-theme-select"
-    class="bg-transparent border border-hairline rounded-[var(--hx-radius)] px-2 py-1 text-ink-muted"
-  >
+<div class="hx-switcher">
+  <label class="hx-sr-only" for="hx-theme-select">Theme</label>
+  <select id="hx-theme-select">
     {themes.map((t) => (
       <option value={t.slug} data-modes={t.modes.join(',')}>{t.name}</option>
     ))}
   </select>
-  <button
-    id="hx-mode-toggle"
-    type="button"
-    class="ml-1 border border-hairline rounded-[var(--hx-radius)] px-2 py-1 text-ink-muted"
-    aria-label="Toggle light and dark mode"
-  >
+  <button id="hx-mode-toggle" type="button" aria-label="Toggle light and dark mode">
     <span id="hx-mode-label">dark</span>
   </button>
 </div>
+
+<style>
+  /* Self-contained on purpose: this component renders in both the marketing
+   * bundle and the Starlight docs bundle, which do not share Tailwind utilities. */
+  .hx-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 0.75rem;
+  }
+  .hx-switcher select,
+  .hx-switcher button {
+    background: transparent;
+    color: var(--hx-text-muted);
+    border: var(--hx-border-width) solid var(--hx-border);
+    border-radius: var(--hx-radius);
+    padding: 0.25rem 0.5rem;
+    font: inherit;
+    cursor: pointer;
+  }
+  .hx-switcher button[disabled] { cursor: default; opacity: 0.4; }
+  .hx-sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+</style>
 
 <script>
   const select = document.getElementById('hx-theme-select');
@@ -40,7 +60,6 @@ import themes from '../data/themes.generated.json';
     label.textContent = resolved;
     // A dark-only theme cannot be toggled; say so rather than no-op silently.
     toggle.disabled = modes.length === 1;
-    toggle.style.opacity = modes.length === 1 ? '0.4' : '1';
     try {
       // Only touch storage for keys that actually changed — an unconditional
       // rewrite on every mount is itself the split-write window a stale

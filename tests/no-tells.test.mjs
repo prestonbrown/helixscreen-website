@@ -357,3 +357,24 @@ test('default theme (helixscreen/dark) clears AA 4.5:1 for every small-text pair
     failures.map((f) => `${f.name} (${f.where}): ${f.ratio.toFixed(2)}:1`).join('; ')
   );
 });
+
+// Docs pages went a whole phase without the theme system; a reader who picked a
+// theme on the landing page landed on a differently-coloured site. These three
+// assertions are the tripwire for that regressing.
+const DOCS_PAGE = join('dist', 'guide', 'index.html');
+
+test('docs pages carry the no-flash theme script', () => {
+  const html = readFileSync(DOCS_PAGE, 'utf8');
+  assert.match(html, /localStorage\.getItem\('hx-theme'\)/);
+  assert.match(html, /setAttribute\('data-hx-theme'/);
+});
+
+test('docs pages carry the theme switcher', () => {
+  const html = readFileSync(DOCS_PAGE, 'utf8');
+  assert.match(html, /id="hx-theme-select"/);
+});
+
+test('the forced-dark override is gone from docs pages', () => {
+  const html = readFileSync(DOCS_PAGE, 'utf8');
+  assert.doesNotMatch(html, /dataset\.theme = 'dark'/);
+});

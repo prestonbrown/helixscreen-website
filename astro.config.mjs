@@ -14,8 +14,8 @@ export default defineConfig({
         { icon: 'github', label: 'GitHub', href: 'https://github.com/prestonbrown/helixscreen' },
       ],
       components: {
-        ThemeProvider: './src/components/ForceDarkTheme.astro',
-        ThemeSelect: './src/components/EmptyComponent.astro',
+        ThemeProvider: './src/components/DocsThemeProvider.astro',
+        ThemeSelect: './src/components/ThemeSwitcher.astro',
       },
       customCss: ['./src/styles/starlight-custom.css'],
       sidebar: [

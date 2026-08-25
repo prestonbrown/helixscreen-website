@@ -1,0 +1,12 @@
+---
+// Starlight's ThemeProvider slot. Renders inside <head>, before first paint.
+// Reuses the marketing no-flash script verbatim so the two surfaces can never
+// disagree about how a stored theme resolves.
+import ThemeScript from './ThemeScript.astro';
+---
+<script is:inline>
+  // Starlight calls this after its own theme changes. Our switcher owns the
+  // control, so there is nothing to sync, but the symbol must exist.
+  window.StarlightThemeProvider = { updatePickers() {} };
+</script>
+<ThemeScript />
