@@ -1,18 +1,5 @@
 @import 'tailwindcss';
-@import './themes.generated.css';
-
-/* Fallback so an unstyled root still renders: HelixScreen dark. */
-:root {
-  --hx-screen-bg: #19191C;  --hx-overlay-bg: #333338;
-  --hx-card-bg: #202023;    --hx-elevated-bg: #4A4A52;
-  --hx-border: #36363C;     --hx-text: #E8E8EC;
-  --hx-text-muted: #B8B8C0; --hx-text-subtle: #787882;
-  --hx-primary: #3A7CC8;    --hx-secondary: #6A9CC8;
-  --hx-tertiary: #7C6CC8;   --hx-info: #3A7CC8;
-  --hx-success: #5CB85C;    --hx-warning: #E8A83A;
-  --hx-danger: #D94848;     --hx-focus: #3A7CC8;
-  --hx-radius: 3px;         --hx-border-width: 1px;
-}
+@import './hx-vars.css';
 
 @theme {
   --color-canvas: var(--hx-screen-bg);
