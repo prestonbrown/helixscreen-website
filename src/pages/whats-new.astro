@@ -40,13 +40,26 @@ const CHANGELOG = 'https://github.com/prestonbrown/helixscreen/blob/main/CHANGEL
       <h2 class="text-xl mb-4">Recent releases</h2>
       <table class="w-full max-w-lg">
         <caption class="sr-only">The most recent HelixScreen releases</caption>
+        <thead>
+          <tr class="ui text-xs text-ink-muted text-left">
+            <th scope="col" class="font-normal py-2">Version</th>
+            <th scope="col" class="font-normal py-2">Date</th>
+            <!-- Named because the cell is empty for most releases. Without a header,
+                 a screen reader navigating the table reads a blank with no clue that
+                 blank is the normal case and means "not withdrawn". -->
+            <th scope="col" class="font-normal py-2 text-right">Status</th>
+          </tr>
+        </thead>
         <tbody>
           {data.history.map((h) => (
             <tr class="border-b border-hairline">
               <td class="font-mono tabular text-sm text-ink py-2">{h.version}</td>
               <td class="ui text-xs text-ink-muted tabular py-2">{h.date}</td>
               <td class="ui text-xs py-2 text-right">
-                {h.withdrawn && <span class="text-alert">withdrawn</span>}
+                {/* warn, not alert: `danger` on the canvas is 4.15:1, under the 4.5:1
+                    AA floor for text this size. `warning` clears it at 8.43:1, and a
+                    pulled release is a caution rather than an error anyway. */}
+                {h.withdrawn && <span class="text-warn">withdrawn</span>}
               </td>
             </tr>
           ))}

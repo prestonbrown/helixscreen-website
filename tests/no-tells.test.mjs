@@ -259,6 +259,18 @@ test('ink-subtle is not used for text anywhere in src', () => {
   assert.deepEqual(offenders, [], `ink-subtle used in: ${offenders.join(', ')}`);
 });
 
+// `alert` (--hx-danger, #D94848) is 4.15:1 on the default canvas — under the 4.5:1
+// AA floor for small text. It is fine as a border, where the 3:1 non-text bar
+// applies, but it must not carry text. The contrast gate below cannot catch this
+// on its own: it walks a hand-built pair list, and a token nothing declares a pair
+// for is simply never checked. This is how the whats-new "withdrawn" marker
+// shipped at 4.15:1 in the first place.
+test('alert is not used for text anywhere in src', () => {
+  const files = collect(SRC, ['.astro']);
+  const offenders = files.filter((f) => readFileSync(f, 'utf8').includes('text-alert'));
+  assert.deepEqual(offenders, [], `text-alert used in: ${offenders.join(', ')}`);
+});
+
 test('the headline is present exactly once on the landing page', () => {
   const matches = landing().match(/Everything your printer knows, on the screen it already has\./g) ?? [];
   assert.equal(matches.length, 1);
@@ -340,7 +352,7 @@ const SMALL_TEXT_PAIRS = [
   ['ink-muted on canvas',  'ink-muted', 'canvas',  'the great majority of body/caption/label text'],
   ['ink-muted on overlay', 'ink-muted', 'overlay', 'Hero $ prompt, SiteNav mobile menu links'],
   ['secondary on canvas',  'secondary', 'canvas',  'inline links: Hero install guide, GetInTouch bugs@/security@'],
-  ['warn on canvas',       'warn',      'canvas',  'Hero and Spotlight eyebrow labels'],
+  ['warn on canvas',       'warn',      'canvas',  'Hero and Spotlight eyebrow labels, whats-new "withdrawn" marker'],
   ['ok on canvas',         'ok',        'canvas',  'ComparisonTable/SpecGrid "ok"-tone values'],
   ['ink on card',          'ink',       'card',    'PlatformTable <dt> platform name'],
   ['ink-muted on card',    'ink-muted', 'card',    'PlatformTable <dd> architecture, ThemeDemo body text'],
