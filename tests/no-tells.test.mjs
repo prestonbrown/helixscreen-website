@@ -380,8 +380,11 @@ test('docs pages carry the theme switcher', () => {
 test('the theme switcher uses no ids, because it is rendered more than once', () => {
   const html = readFileSync(DOCS_PAGE, 'utf8');
   assert.doesNotMatch(html, /id="hx-(theme-select|mode-toggle|mode-label)"/);
-  const instances = (html.match(/hx-switcher/g) ?? []).length;
-  assert.ok(instances >= 2, `expected the switcher in header and mobile drawer, found ${instances}`);
+  // Count the rendered element, not the bare substring: the component's scoped
+  // <style> block mentions `hx-switcher` several times on its own, so a substring
+  // count passes even when nothing rendered at all.
+  const instances = (html.match(/<div class="hx-switcher[\s"]/g) ?? []).length;
+  assert.equal(instances, 2, `expected the switcher in header and mobile drawer, found ${instances}`);
 });
 
 test('the forced-dark override is gone from docs pages', () => {
