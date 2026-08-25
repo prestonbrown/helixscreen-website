@@ -1,0 +1,116 @@
+---
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Colophon from '../components/marketing/Colophon.astro';
+import db from '../data/printers.generated.json';
+
+// One lowercase haystack per row so the filter is a substring test, not a
+// per-keystroke walk over three fields and an array.
+const rows = db.printers.map((p) => ({
+  ...p,
+  haystack: [p.name, p.manufacturer, ...p.aliases].join(' ').toLowerCase(),
+}));
+---
+<MarketingLayout
+  title="Supported printers — HelixScreen"
+  description={`The ${db.count} printer models HelixScreen recognizes automatically, and what happens if yours is not one of them.`}
+>
+  <SiteNav />
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h1 class="text-3xl leading-tight mb-3">
+      HelixScreen recognizes {db.count} printers without being told.
+    </h1>
+    <p class="ui text-sm text-ink-muted mb-3 max-w-[62ch]">
+      The setup wizard fingerprints your machine over Moonraker and fills in its name, image,
+      bed size, probe type and preset options. This is the whole list, generated from the same
+      database the app ships.
+    </p>
+    <p class="ui text-sm text-ink-muted mb-8 max-w-[62ch]">
+      If yours is not here it still works. Every control runs against any Klipper printer with
+      Moonraker; a machine outside the database misses only the name, picture and presets.
+      For what is verified on real hardware, see
+      <a href="/guide/supported-printers/" class="text-secondary underline underline-offset-2">Supported Printers</a>
+      and the <a href="/reference/faq/" class="text-secondary underline underline-offset-2">FAQ</a>.
+    </p>
+
+    <div class="flex items-baseline gap-3 mb-4">
+      <label class="sr-only" for="printer-filter">Filter printers</label>
+      <input
+        id="printer-filter"
+        type="search"
+        placeholder="Filter by model or manufacturer"
+        autocomplete="off"
+        class="ui text-sm bg-transparent text-ink border border-hairline rounded-[var(--hx-radius)] px-3 py-2 w-full max-w-sm"
+      />
+      <p id="printer-count" class="ui text-xs text-ink-muted tabular shrink-0">
+        {db.count} of {db.count}
+      </p>
+    </div>
+
+    <table class="w-full border-t border-hairline">
+      <caption class="sr-only">Printer models in the HelixScreen auto-detection database</caption>
+      <thead>
+        <tr class="ui text-xs text-ink-muted text-left">
+          <th scope="col" class="font-normal py-2 pr-4">Model</th>
+          <th scope="col" class="font-normal py-2 pr-4">Manufacturer</th>
+          <th scope="col" class="font-normal py-2">Notes</th>
+        </tr>
+      </thead>
+      <tbody id="printer-rows">
+        {rows.map((p) => (
+          <tr data-haystack={p.haystack} class="border-t border-hairline align-baseline">
+            <td class="py-2 pr-4 text-sm text-ink">
+              {p.name}
+              {p.aliases.length > 0 && (
+                <span class="ui text-xs text-ink-muted"> · also {p.aliases.join(', ')}</span>
+              )}
+            </td>
+            <td class="py-2 pr-4 ui text-sm text-ink-muted">{p.manufacturer}</td>
+            <td class="py-2 ui text-xs text-ink-muted max-w-[46ch]">{p.notes}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <p id="printer-empty" class="ui text-sm text-ink-muted py-6 hidden">
+      Nothing matches that. It will still run — see
+      <a href="/installation/" class="text-secondary underline underline-offset-2">the install guide</a>.
+    </p>
+  </main>
+  <Colophon />
+</MarketingLayout>
+
+<style>
+  /* Belt-and-suspenders: no rule in the marketing bundle currently sets
+     `display` on table rows, so the `hidden` attribute's UA-stylesheet
+     `[hidden] { display: none }` already wins over `tr { display: table-row }`.
+     This rule pins that outcome explicitly so a future table-row style can't
+     silently defeat the filter while the count still claims rows are hidden. */
+  #printer-rows tr[hidden] {
+    display: none;
+  }
+</style>
+
+<script>
+  const input = document.getElementById('printer-filter');
+  const count = document.getElementById('printer-count');
+  const empty = document.getElementById('printer-empty');
+  const rows = Array.from(document.querySelectorAll('#printer-rows tr'));
+  const total = rows.length;
+
+  function filter() {
+    const q = input.value.trim().toLowerCase();
+    let shown = 0;
+    for (const row of rows) {
+      const hit = q === '' || row.dataset.haystack.includes(q);
+      row.hidden = !hit;
+      if (hit) shown++;
+    }
+    count.textContent = `${shown} of ${total}`;
+    empty.classList.toggle('hidden', shown > 0);
+  }
+
+  input.addEventListener('input', filter);
+  // The input can hold a value across a soft reload; never trust it to be empty.
+  filter();
+</script>
