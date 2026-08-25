@@ -2,11 +2,12 @@
 import MarginRail from './MarginRail.astro';
 import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
+import printers from '../../data/printers.generated.json';
 
 const rail = [
   { value: '11,778', label: 'commits since October 2025', note: "About 98% mine. The rest are why it runs on printers I don't own." },
   { value: '~15 MB', label: 'resident on an armv7 printer board', note: 'No X11, no browser.' },
-  { value: '80+', label: 'printers it recognizes without being told' },
+  { value: String(printers.count), label: 'printers it recognizes without being told' },
 ];
 
 const spec = [

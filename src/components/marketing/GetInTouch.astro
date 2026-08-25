@@ -37,9 +37,16 @@ const routes = [
     note: 'Goes straight to me.',
   },
 ];
+
+interface Props {
+  /** `h1` on the standalone /contact/ page, `h2` as a landing-page section. */
+  headingLevel?: 'h1' | 'h2';
+}
+const { headingLevel = 'h2' } = Astro.props;
+const Heading = headingLevel;
 ---
 <section id="touch" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-hairline">
-  <h2 class="text-3xl leading-tight mb-3">Tell me what it's missing.</h2>
+  <Heading class="text-3xl leading-tight mb-3">Tell me what it's missing.</Heading>
   <p class="ui text-sm text-ink-muted mb-8 max-w-[62ch]">
     Most of what HelixScreen does now exists because somebody asked for it. Pick whichever
     of these fits — they all reach me.
