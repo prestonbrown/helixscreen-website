@@ -30,7 +30,9 @@ export function themeBlocks(slug, theme) {
     const radius = theme.border_radius_size ?? DEFAULT_RADIUS;
     const borderWidth = theme.border_width ?? DEFAULT_BORDER_WIDTH;
     blocks.push(
-      `[data-theme="${slug}"][data-mode="${mode}"] {\n${decls}\n` +
+      // Starlight owns `data-theme` and only ever tests it against 'light', so the
+      // mode lives there and the slug gets its own attribute. Never merge these.
+      `[data-hx-theme="${slug}"][data-theme="${mode}"] {\n${decls}\n` +
       `  --hx-radius: ${radius}px;\n` +
       `  --hx-border-width: ${borderWidth}px;\n}`
     );

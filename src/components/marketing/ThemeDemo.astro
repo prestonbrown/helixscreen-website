@@ -27,10 +27,10 @@ import themes from '../../data/themes.generated.json';
 
   // Reflects the page's actual current theme onto the button grid, whichever
   // control changed it — a click here, the header select, or anything else
-  // that sets data-theme. Never assumes a default: it only ever reads the
+  // that sets data-hx-theme. Never assumes a default: it only ever reads the
   // attribute ThemeScript/ThemeSwitcher already maintain on <html>.
   function syncActive() {
-    const current = root.getAttribute('data-theme');
+    const current = root.getAttribute('data-hx-theme');
     buttons.forEach((btn) => {
       const active = btn.getAttribute('data-theme-pick') === current;
       btn.setAttribute('aria-pressed', String(active));
@@ -53,10 +53,10 @@ import themes from '../../data/themes.generated.json';
   });
 
   // Set initial state on mount, then stay in sync for the life of the page.
-  // A MutationObserver on data-theme (rather than a 'change' listener on the
+  // A MutationObserver on data-hx-theme (rather than a 'change' listener on the
   // select) works regardless of which script runs first and regardless of
   // what ends up changing the theme — the header switcher, these buttons, or
-  // anything else — because data-theme is the one place all of them agree.
+  // anything else — because data-hx-theme is the one place all of them agree.
   syncActive();
-  new MutationObserver(syncActive).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(syncActive).observe(root, { attributes: true, attributeFilter: ['data-hx-theme'] });
 </script>

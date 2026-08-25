@@ -1,5 +1,7 @@
 ---
 // Must render inside <head> before any paint. Inline and synchronous on purpose.
+// Writes two attributes: `data-hx-theme` carries the slug, `data-theme` carries
+// the mode. Starlight reads `data-theme` and understands only 'dark' and 'light'.
 import themes from '../data/themes.generated.json';
 
 // Minimal slug -> modes lookup, generated at build time from the same
@@ -21,10 +23,10 @@ const modesJson = JSON.stringify(modesBySlug);
     var storedTheme = localStorage.getItem('hx-theme') || DEFAULT_THEME;
     var storedMode = localStorage.getItem('hx-mode') || DEFAULT_MODE;
     var resolved = resolve(storedTheme, storedMode);
-    document.documentElement.setAttribute('data-theme', resolved[0]);
-    document.documentElement.setAttribute('data-mode', resolved[1]);
+    document.documentElement.setAttribute('data-hx-theme', resolved[0]);
+    document.documentElement.setAttribute('data-theme', resolved[1]);
   } catch (e) {
-    document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
-    document.documentElement.setAttribute('data-mode', DEFAULT_MODE);
+    document.documentElement.setAttribute('data-hx-theme', DEFAULT_THEME);
+    document.documentElement.setAttribute('data-theme', DEFAULT_MODE);
   }
 })();`}></script>

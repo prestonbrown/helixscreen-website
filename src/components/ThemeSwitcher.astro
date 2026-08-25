@@ -35,8 +35,8 @@ import themes from '../data/themes.generated.json';
   function apply(theme, mode) {
     const modes = modesFor(theme);
     const resolved = modes.includes(mode) ? mode : modes[0];
-    root.setAttribute('data-theme', theme);
-    root.setAttribute('data-mode', resolved);
+    root.setAttribute('data-hx-theme', theme);
+    root.setAttribute('data-theme', resolved);
     label.textContent = resolved;
     // A dark-only theme cannot be toggled; say so rather than no-op silently.
     toggle.disabled = modes.length === 1;
@@ -50,12 +50,12 @@ import themes from '../data/themes.generated.json';
     } catch (e) { /* private mode: choice just won't persist */ }
   }
 
-  select.value = root.getAttribute('data-theme') ?? 'helixscreen';
-  apply(select.value, root.getAttribute('data-mode') ?? 'dark');
+  select.value = root.getAttribute('data-hx-theme') ?? 'helixscreen';
+  apply(select.value, root.getAttribute('data-theme') ?? 'dark');
 
-  select.addEventListener('change', () => apply(select.value, root.getAttribute('data-mode')));
+  select.addEventListener('change', () => apply(select.value, root.getAttribute('data-theme')));
   toggle.addEventListener('click', () => {
-    const next = root.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     apply(select.value, next);
   });
 </script>

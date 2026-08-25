@@ -24,12 +24,12 @@ const DARK_ONLY = { name: 'Dracula', dark: DUAL.dark, border_radius_size: 3, bor
 // `|| DEFAULT` (0 is falsy and would be coerced back to 1px).
 const ZERO_BORDER = { name: 'Cupertino', dark: DUAL.dark, border_radius_size: 3, border_width: 0 };
 
-// Pulls the `{ ... }` body out of one [data-theme][data-mode] selector from
+// Pulls the `{ ... }` body out of one [data-hx-theme][data-theme] selector from
 // a themeBlocks() result, so a test can assert on one mode's declarations
 // without a bug confined to the other mode masking it.
 function extractBlock(css, slug, mode) {
   const match = css.match(
-    new RegExp(`\\[data-theme="${slug}"\\]\\[data-mode="${mode}"\\] \\{([\\s\\S]*?)\\n\\}`)
+    new RegExp(`\\[data-hx-theme="${slug}"\\]\\[data-theme="${mode}"\\] \\{([\\s\\S]*?)\\n\\}`)
   );
   return match ? match[1] : null;
 }
@@ -47,8 +47,8 @@ test('converts snake_case keys to prefixed kebab-case custom properties', () => 
 
 test('emits one selector block per supported mode', () => {
   const css = themeBlocks('gruvbox', DUAL);
-  assert.match(css, /\[data-theme="gruvbox"\]\[data-mode="dark"\]/);
-  assert.match(css, /\[data-theme="gruvbox"\]\[data-mode="light"\]/);
+  assert.match(css, /\[data-hx-theme="gruvbox"\]\[data-theme="dark"\]/);
+  assert.match(css, /\[data-hx-theme="gruvbox"\]\[data-theme="light"\]/);
 });
 
 test('emits every palette key in each block', () => {
@@ -92,8 +92,18 @@ test('dark and light carry different values for the same key', () => {
 
 test('a dark-only theme emits no light block', () => {
   const css = themeBlocks('dracula', DARK_ONLY);
-  assert.match(css, /\[data-mode="dark"\]/);
-  assert.doesNotMatch(css, /\[data-mode="light"\]/);
+  assert.match(css, /\[data-hx-theme="[a-z-]+"\]\[data-theme="dark"\]/);
+  assert.doesNotMatch(css, /\[data-theme="light"\]/);
+});
+
+test('no theme slug is ever written into data-theme', () => {
+  const css = themeBlocks('gruvbox', DUAL) + '\n\n' + themeBlocks('dracula', DARK_ONLY);
+  // Starlight branches on [data-theme='light'] and treats every other value as
+  // dark. A slug in that attribute silently pins Starlight's chrome to dark.
+  const slugsInDataTheme = [...css.matchAll(/\[data-theme="([^"]+)"\]/g)]
+    .map((m) => m[1])
+    .filter((v) => v !== 'dark' && v !== 'light');
+  assert.deepEqual(slugsInDataTheme, []);
 });
 
 test('emits structural rules and never a shadow', () => {

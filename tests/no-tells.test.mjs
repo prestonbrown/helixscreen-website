@@ -274,7 +274,7 @@ test('the headline is present exactly once on the landing page', () => {
 // background pair this page actually renders small text with falls under
 // AA's 4.5:1 threshold.
 //
-// Scoped to `[data-theme="helixscreen"][data-mode="dark"]` only: that's the
+// Scoped to `[data-hx-theme="helixscreen"][data-theme="dark"]` only: that's the
 // theme+mode every first-time visitor sees, and the one this gate exists to
 // hold. The other 31 theme×mode combinations are the app's own palettes, a
 // design decision for the site owner, not this branch's to enforce.
@@ -301,7 +301,7 @@ const THEME_VARS = {
 
 function defaultThemeTokens() {
   const css = readFileSync(THEMES_CSS, 'utf8');
-  const block = css.match(/\[data-theme="helixscreen"\]\[data-mode="dark"\]\s*\{([\s\S]*?)\n\}/);
+  const block = css.match(/\[data-hx-theme="helixscreen"\]\[data-theme="dark"\]\s*\{([\s\S]*?)\n\}/);
   if (!block) throw new Error('could not find the helixscreen/dark block in themes.generated.css');
   const body = block[1];
   const tokens = {};
