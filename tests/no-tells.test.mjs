@@ -371,7 +371,10 @@ test('docs pages carry the no-flash theme script', () => {
 
 test('docs pages carry the theme switcher', () => {
   const html = readFileSync(DOCS_PAGE, 'utf8');
-  assert.match(html, /hx-theme-select/);
+  // Match the rendered control, not the bare substring: the component's inlined
+  // script mentions `.hx-theme-select` as a selector, so a substring match still
+  // passes when the class has been stripped off the <select> and nothing works.
+  assert.match(html, /<select class="hx-theme-select[\s"]/);
 });
 
 // Starlight renders ThemeSelect in both the header and the mobile drawer. An id
