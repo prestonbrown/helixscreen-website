@@ -1,0 +1,748 @@
+{
+  "count": 91,
+  "manufacturers": [
+    {
+      "name": "Creality",
+      "count": 17
+    },
+    {
+      "name": "Anycubic",
+      "count": 12
+    },
+    {
+      "name": "Sovol",
+      "count": 8
+    },
+    {
+      "name": "Qidi",
+      "count": 7
+    },
+    {
+      "name": "Zero G",
+      "count": 6
+    },
+    {
+      "name": "Elegoo",
+      "count": 5
+    },
+    {
+      "name": "FlashForge",
+      "count": 5
+    },
+    {
+      "name": "RatRig",
+      "count": 5
+    },
+    {
+      "name": "Voron",
+      "count": 4
+    },
+    {
+      "name": "Artillery",
+      "count": 3
+    },
+    {
+      "name": "FLSUN",
+      "count": 3
+    },
+    {
+      "name": "Geralkom",
+      "count": 2
+    },
+    {
+      "name": "Irbis3D",
+      "count": 2
+    },
+    {
+      "name": "PrintersForAnts",
+      "count": 2
+    },
+    {
+      "name": "Anet",
+      "count": 1
+    },
+    {
+      "name": "Doron",
+      "count": 1
+    },
+    {
+      "name": "Infimech",
+      "count": 1
+    },
+    {
+      "name": "Kingroon",
+      "count": 1
+    },
+    {
+      "name": "Lemontron",
+      "count": 1
+    },
+    {
+      "name": "Positron3D",
+      "count": 1
+    },
+    {
+      "name": "Prusa Research",
+      "count": 1
+    },
+    {
+      "name": "RH3D",
+      "count": 1
+    },
+    {
+      "name": "Snapmaker",
+      "count": 1
+    },
+    {
+      "name": "Venture",
+      "count": 1
+    }
+  ],
+  "printers": [
+    {
+      "id": "anet_et5_pro",
+      "name": "Anet ET5 Pro",
+      "manufacturer": "Anet",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_chiron",
+      "name": "Anycubic Chiron",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_i3_mega",
+      "name": "Anycubic i3 Mega",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra",
+      "name": "Anycubic Kobra",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_2",
+      "name": "Anycubic Kobra 2",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_2_max",
+      "name": "Anycubic Kobra 2 Max",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_2_pro",
+      "name": "Anycubic Kobra 2 Pro",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_3",
+      "name": "Anycubic Kobra 3",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_3_max",
+      "name": "Anycubic Kobra 3 Max",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_3_v2",
+      "name": "Anycubic Kobra 3 V2",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_s1",
+      "name": "Anycubic Kobra S1",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_s1_max",
+      "name": "Anycubic Kobra S1 Max",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_vyper",
+      "name": "Anycubic Vyper",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "artillery_genius_pro",
+      "name": "Artillery Genius Pro",
+      "manufacturer": "Artillery",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "artillery_m1_pro",
+      "name": "Artillery M1 Pro",
+      "manufacturer": "Artillery",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "artillery_sidewinder_x2",
+      "name": "Artillery Sidewinder X2",
+      "manufacturer": "Artillery",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_cr10",
+      "name": "Creality CR-10",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_ender_3",
+      "name": "Creality Ender 3",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_ender_5",
+      "name": "Creality Ender 5",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_ender_5_max",
+      "name": "Creality Ender 5 Max",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_ender_3_s1",
+      "name": "Creality Ender-3 S1",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_ender_3_v3",
+      "name": "Creality Ender-3 V3",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_ender_3_v3_ke",
+      "name": "Creality Ender-3 V3 KE",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_hi",
+      "name": "Creality Hi",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1",
+      "name": "Creality K1",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1_cfs",
+      "name": "Creality K1 (with CFS)",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1_max",
+      "name": "Creality K1 Max",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1_max_cfs",
+      "name": "Creality K1 Max (with CFS)",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1_se",
+      "name": "Creality K1 SE",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1c",
+      "name": "Creality K1C",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k1c_cfs",
+      "name": "Creality K1C (with CFS)",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k2_plus",
+      "name": "Creality K2 Plus",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k2_pro",
+      "name": "Creality K2 Pro",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "doron_velta",
+      "name": "Doron Velta",
+      "manufacturer": "Doron",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "elegoo_centauri_carbon",
+      "name": "Elegoo Centauri Carbon",
+      "manufacturer": "Elegoo",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "elegoo_neptune_4",
+      "name": "Elegoo Neptune 4",
+      "manufacturer": "Elegoo",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "elegoo_neptune_4_max",
+      "name": "Elegoo Neptune 4 Max",
+      "manufacturer": "Elegoo",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "elegoo_neptune_4_plus",
+      "name": "Elegoo Neptune 4 Plus",
+      "manufacturer": "Elegoo",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "elegoo_neptune_4_pro",
+      "name": "Elegoo Neptune 4 Pro",
+      "manufacturer": "Elegoo",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flashforge_adventurer_5m",
+      "name": "FlashForge Adventurer 5M",
+      "manufacturer": "FlashForge",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flashforge_adventurer_5m_forgex",
+      "name": "FlashForge Adventurer 5M (ForgeX)",
+      "manufacturer": "FlashForge",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flashforge_ad5m_pro",
+      "name": "FlashForge Adventurer 5M Pro",
+      "manufacturer": "FlashForge",
+      "aliases": [
+        "FlashForge AD5M Pro"
+      ],
+      "notes": null
+    },
+    {
+      "id": "flashforge_ad5m_pro_forgex",
+      "name": "FlashForge Adventurer 5M Pro (ForgeX)",
+      "manufacturer": "FlashForge",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flashforge_ad5x",
+      "name": "FlashForge Adventurer 5X",
+      "manufacturer": "FlashForge",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flsun_delta",
+      "name": "FLSUN Delta",
+      "manufacturer": "FLSUN",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flsun_sr",
+      "name": "FLSUN Super Racer",
+      "manufacturer": "FLSUN",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flsun_v400",
+      "name": "FLSUN V400",
+      "manufacturer": "FLSUN",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "geralkom_x400_ht",
+      "name": "Geralkom X400 HT",
+      "manufacturer": "Geralkom",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "geralkom_x500_ht",
+      "name": "Geralkom X500 HT",
+      "manufacturer": "Geralkom",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "infimech_tx",
+      "name": "Infimech TX",
+      "manufacturer": "Infimech",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "duender",
+      "name": "Duender",
+      "manufacturer": "Irbis3D",
+      "aliases": [],
+      "notes": "Ender-3 to CoreXY conversion (Irbis3D/Duender). The project ships no Klipper config, so a bare Duender has nothing in printer.objects.list that distinguishes it from any other CoreXY. Deliberately carries no object/kinematics heuristics: a 'corexy' match here would compete with the Voron and RatRig entries on every one of their machines. Hostname only, plus the wizard's manual pick."
+    },
+    {
+      "id": "duender_medusahc",
+      "name": "Duender (MedusaHC)",
+      "manufacturer": "Irbis3D",
+      "aliases": [],
+      "notes": "Duender CoreXY (Irbis3D) fitted with the MedusaHC hotend changer. MedusaHC is klipper-toolchanger plus its own pin_watch extra, so the AMS resolves to Tool Changer and AmsBackendToolChanger drives it. Scored on pin_watch and hostname ONLY: toolchanger/tool_count/corexy describe any multi-tool CoreXY and would claim machines that are not this one. The bare-Duender hostname deliberately does NOT appear here, or the 'duender' entry could never outscore this one."
+    },
+    {
+      "id": "kingroon_klp1",
+      "name": "Kingroon KLP1",
+      "manufacturer": "Kingroon",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "lemontron",
+      "name": "Lemontron",
+      "manufacturer": "Lemontron",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "prusawire",
+      "name": "PrusaWire",
+      "manufacturer": "Positron3D",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "pfa_micron",
+      "name": "PFA Micron",
+      "manufacturer": "PrintersForAnts",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "pfa_stealthfork",
+      "name": "PFA Stealthfork",
+      "manufacturer": "PrintersForAnts",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "prusa_mk4",
+      "name": "Prusa MK4",
+      "manufacturer": "Prusa Research",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "qidi_max_4",
+      "name": "Qidi Max 4",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Linux framebuffer display. Detection + preset are community-tested on-device; the QIDI Box is detected/read via the qidi_box backend, but Max 4 box CONTROL diverges from the Q2/Plus 4 -- eject/unload uses the multi_color_controller dialect (MULTI_COLOR_BOX_UNLOAD SLOT=slotN), not the shared box_stepper FORCE_MOVE primitive (rejected as 'Invalid pin value'). Per-model box dispatch tracked in prestonbrown/helixscreen#1083."
+    },
+    {
+      "id": "qidi_plus_4",
+      "name": "Qidi Plus 4",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Stock display is a TJC HMI on serial bus. Not supported without screen replacement (HDMI/DSI touchscreen required). Compatible with the QIDI Box filament changer (4-slot hub-style, chainable to 16)."
+    },
+    {
+      "id": "qidi_q1_pro",
+      "name": "Qidi Q1 Pro",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Stock display is a TJC HMI (TJC4827X243_011) on serial bus at 480x272. Not supported without screen replacement."
+    },
+    {
+      "id": "qidi_q2",
+      "name": "Qidi Q2",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Compatible with the QIDI Box filament changer (4-slot hub-style, chainable to 16)."
+    },
+    {
+      "id": "qidi_x_max_3",
+      "name": "Qidi X-Max 3",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Stock display is a TJC HMI on serial bus. Not supported without screen replacement (HDMI/DSI touchscreen required)."
+    },
+    {
+      "id": "qidi_x_plus_3",
+      "name": "Qidi X-Plus 3",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Stock display is a TJC HMI on serial bus. Not supported without screen replacement (HDMI/DSI touchscreen required)."
+    },
+    {
+      "id": "qidi_x_smart_3",
+      "name": "Qidi X-Smart 3",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "Smallest of the Qidi 3-series (175x180x170 build volume, passive enclosure, no active chamber heater). Stock display is a TJC HMI on serial bus at 480x272 -- on-device install requires screen replacement. Works without modification as a remote target when HelixScreen runs on a separate touchscreen."
+    },
+    {
+      "id": "ratrig_vcore3",
+      "name": "RatRig V-Core 3",
+      "manufacturer": "RatRig",
+      "aliases": [],
+      "notes": "RatOS CoreXY with 3 independent Z (z_tilt). V-Core 4 / IDEX / V-Core Pro hosts are excluded so they resolve to their own entries; a renamed-host V-Core 4 still falls back here."
+    },
+    {
+      "id": "ratrig_vcore4",
+      "name": "RatRig V-Core 4",
+      "manufacturer": "RatRig",
+      "aliases": [],
+      "notes": "RatOS CoreXY successor to V-Core 3. Distinguished from V-Core 3 by hostname; V-Core 4 Hybrid (non-IDEX) also resolves here. Runtime Z-stepper count is board-dependent so it is not used as a signal."
+    },
+    {
+      "id": "ratrig_vcore_idex",
+      "name": "RatRig V-Core 4 IDEX",
+      "manufacturer": "RatRig",
+      "aliases": [],
+      "notes": "RatOS IDEX (dual carriage) on the RatOS-exclusive 'ratos_hybrid_corexy' kinematics. V-Core 3 IDEX shares this signature; refined by hostname when present. Reuses the V-Core 4 image (IDEX is a V-Core 4 dual-toolhead variant)."
+    },
+    {
+      "id": "ratrig_vcore_pro",
+      "name": "RatRig V-Core Pro",
+      "manufacturer": "RatRig",
+      "aliases": [],
+      "notes": "Older RatOS CoreXY (V-Core Pro 1.x, discontinued). Shares the 3-Z + z_tilt fingerprint with V-Core 3; identified by hostname. Reuses the V-Core 3 image (visual predecessor; no Pro-specific photo available)."
+    },
+    {
+      "id": "ratrig_vminion",
+      "name": "RatRig V-Minion",
+      "manufacturer": "RatRig",
+      "aliases": [],
+      "notes": "RatOS Cartesian printer (the only Cartesian RatOS model), ~180mm. Cartesian kinematics plus the RatOS marker identify it even with a renamed host."
+    },
+    {
+      "id": "rh3d_e3ng",
+      "name": "RH3D E3NG",
+      "manufacturer": "RH3D",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "snapmaker_u1",
+      "name": "Snapmaker U1",
+      "manufacturer": "Snapmaker",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv06",
+      "name": "Sovol SV06",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv06_ace",
+      "name": "Sovol SV06 ACE",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv06_plus",
+      "name": "Sovol SV06 Plus",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv06_plus_ace",
+      "name": "Sovol SV06 Plus ACE",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv07",
+      "name": "Sovol SV07",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv08",
+      "name": "Sovol SV08",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_sv08_max",
+      "name": "Sovol SV08 Max",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "sovol_zero",
+      "name": "Sovol Zero",
+      "manufacturer": "Sovol",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "venture_delta",
+      "name": "Venture Delta",
+      "manufacturer": "Venture",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "voron_0_1",
+      "name": "Voron 0.2",
+      "manufacturer": "Voron",
+      "aliases": [
+        "Voron 0.1"
+      ],
+      "notes": null
+    },
+    {
+      "id": "voron_2_4",
+      "name": "Voron 2.4",
+      "manufacturer": "Voron",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "voron_switchwire",
+      "name": "Voron Switchwire",
+      "manufacturer": "Voron",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "voron_trident",
+      "name": "Voron Trident",
+      "manufacturer": "Voron",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "zerog_mercury_one",
+      "name": "Zero G Mercury One.1",
+      "manufacturer": "Zero G",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "zerog_mercury_one_hydra",
+      "name": "Zero G Mercury One.1 Hydra",
+      "manufacturer": "Zero G",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "zerog_nebula_255",
+      "name": "Zero G Mercury One.1 Nebula",
+      "manufacturer": "Zero G",
+      "aliases": [
+        "Zero G Nebula 255"
+      ],
+      "notes": null
+    },
+    {
+      "id": "zerog_mercury_one_plus",
+      "name": "Zero G Mercury One.1 Plus",
+      "manufacturer": "Zero G",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "zerog_mercury_one_plus_hydra",
+      "name": "Zero G Mercury One.1 Plus Hydra",
+      "manufacturer": "Zero G",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "zerog_nebula_370",
+      "name": "Zero G Mercury One.1 Plus Nebula",
+      "manufacturer": "Zero G",
+      "aliases": [
+        "Zero G Nebula 370"
+      ],
+      "notes": null
+    }
+  ]
+}
