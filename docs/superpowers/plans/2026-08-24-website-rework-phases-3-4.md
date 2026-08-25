@@ -638,7 +638,7 @@ git commit -m "feat(docs): carry the reader's theme choice into the documentatio
   Tasks 5 and 8 import `src/data/printers.generated.json` and read `count` and `printers`.
 - Consumes: `../helixscreen/assets/config/printer_database.json`.
 
-**Ground truth:** the database holds 96 entries. Five carry `show_in_list: false` — they are heuristic-only mod detectors (`kamp_user`, `klippain_shaketune`, `ercf_mmu`, `klicky_probe`, `ellis_print_tuning`), not printers. **91 are real models across 25 manufacturers.** `id`, `name`, `manufacturer` and `image` are present on all entries; everything else is optional.
+**Ground truth:** the database holds 96 entries. Five carry `show_in_list: false` — they are heuristic-only mod detectors (`kamp_user`, `klippain_shaketune`, `ercf_mmu`, `klicky_probe`, `ellis_print_tuning`), not printers. **91 are real models across 24 manufacturers.** (All five hidden entries carry manufacturer `Generic`, so filtering them drops that manufacturer entirely: 25 names across all 96 entries, 24 across the 91 listed.) `id`, `name`, `manufacturer` and `image` are present on all entries; everything else is optional.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -796,7 +796,7 @@ Expected: PASS, 6 tests.
 - [ ] **Step 5: Generate against the real database**
 
 Run: `node scripts/gen-printers.mjs`
-Expected: `[gen-printers] wrote 91 printers across 25 manufacturers`
+Expected: `[gen-printers] wrote 91 printers across 24 manufacturers`
 
 If the count is not 91, stop and report — the database changed and Ruling 2's framing needs re-checking.
 
