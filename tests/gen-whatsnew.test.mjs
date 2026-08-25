@@ -77,6 +77,16 @@ test('history is capped and keeps withdrawn releases visible', () => {
   assert.equal(out.history[1].withdrawn, true);
 });
 
+test('featured entries are capped so the page cannot grow without bound', () => {
+  const many = ['# Changelog', ''];
+  for (let i = 20; i >= 1; i--) {
+    many.push(`## [0.${i}.0] - 2026-01-0${(i % 9) + 1}`, '', '<!-- whatsnew', `Release ${i}:`, '', `- did thing ${i}`, '-->', '');
+  }
+  const out = buildWhatsNew(many.join('\n'), '0.20.0');
+  assert.equal(out.featured.length, 5);
+  assert.equal(out.featured[0].version, '0.20.0');
+});
+
 test('a changelog with no whatsnew block yields no featured entries, not a crash', () => {
   const out = buildWhatsNew('# Changelog\n\n## [1.0.0] - 2026-09-01\n\n### Added\n\n- Everything.\n', '1.0.0');
   assert.deepEqual(out.featured, []);

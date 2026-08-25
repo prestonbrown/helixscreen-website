@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import SiteSearch from './SiteSearch.astro';
 import ThemeSwitcher from '../ThemeSwitcher.astro';
 import logo from '../../assets/images/logo/helix-icon-64.png';
+import whatsnew from '../../data/whatsnew.generated.json';
 ---
 <header id="site-nav" class="sticky top-0 z-50 bg-canvas">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-3 sm:gap-6 h-14">
@@ -23,7 +24,7 @@ import logo from '../../assets/images/logo/helix-icon-64.png';
     <div class="ml-auto flex items-center gap-2 sm:gap-3">
       <SiteSearch />
       <ThemeSwitcher />
-      <span class="hidden sm:inline-flex ui text-xs text-ink border border-alert rounded-[var(--hx-radius)] px-2 py-1 tabular">1.0</span>
+      <span class="hidden sm:inline-flex ui text-xs text-ink border border-alert rounded-[var(--hx-radius)] px-2 py-1 tabular">{whatsnew.version}</span>
 
       <!-- Mobile hamburger -->
       <button

@@ -16,9 +16,19 @@ const CHANGELOG = 'https://github.com/prestonbrown/helixscreen/blob/main/CHANGEL
     <p class="ui text-sm text-ink-muted mb-12 max-w-[62ch]">
       The current build is
       <span class="font-mono tabular text-ink">{data.version}</span>.
-      What follows is the short version of the recent ones. The
-      <a href={CHANGELOG} target="_blank" rel="noopener noreferrer" class="text-secondary underline underline-offset-2">full changelog</a>
-      has every fix in every release.
+      {data.featured.length > 0 ? (
+        <>
+          What follows is the short version of the recent ones. The{' '}
+          <a href={CHANGELOG} target="_blank" rel="noopener noreferrer" class="text-secondary underline underline-offset-2">full changelog</a>{' '}
+          has every fix in every release.
+        </>
+      ) : (
+        <>
+          The{' '}
+          <a href={CHANGELOG} target="_blank" rel="noopener noreferrer" class="text-secondary underline underline-offset-2">full changelog</a>{' '}
+          has every fix in every release.
+        </>
+      )}
     </p>
 
     {data.featured.map((r) => (
@@ -37,7 +47,7 @@ const CHANGELOG = 'https://github.com/prestonbrown/helixscreen/blob/main/CHANGEL
     ))}
 
     <section class="border-t border-hairline pt-8 mt-8">
-      <h2 class="text-xl mb-4">Recent releases</h2>
+      <h2 class="text-xl mb-4">These are the {data.history.length} most recent releases.</h2>
       <table class="w-full max-w-lg">
         <caption class="sr-only">The most recent HelixScreen releases</caption>
         <thead>

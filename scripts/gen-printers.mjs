@@ -54,6 +54,16 @@ if (isMain) {
     console.warn(`[gen-printers] ${dbPath} unavailable (${err.code ?? err.message}); keeping committed output.`);
     process.exit(0);
   }
+  // There is no legitimate build in which the app recognises zero printers, so a
+  // zero count means the database schema moved out from under this generator.
+  // CI regenerates from the sibling repo on every push, which makes the committed
+  // file no backstop at all — writing this would ship a page announcing that
+  // HelixScreen recognises 0 printers, past every gate, straight to production.
+  if (built.count === 0) {
+    console.warn('[gen-printers] parsed 0 listed printers; keeping committed output.');
+    process.exit(0);
+  }
+
   mkdirSync(join(root, 'src', 'data'), { recursive: true });
   writeFileSync(
     join(root, 'src', 'data', 'printers.generated.json'),

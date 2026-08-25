@@ -313,6 +313,17 @@ test('the headline is present exactly once on the landing page', () => {
   assert.equal(matches.length, 1);
 });
 
+// The design-system and copy checks above all pass happily on an empty page.
+// This is the one assertion that notices the printers index lost its contents —
+// row count is derived from the manifest, so it cannot rot as the database grows.
+test('the printers page renders one row per model in the manifest', () => {
+  const manifest = JSON.parse(readFileSync(join('src', 'data', 'printers.generated.json'), 'utf8'));
+  assert.ok(manifest.count > 0, 'the printers manifest is empty');
+  const html = readFileSync(join('dist', 'printers', 'index.html'), 'utf8');
+  const rows = (html.match(/data-haystack=/g) ?? []).length;
+  assert.equal(rows, manifest.count, `manifest has ${manifest.count} printers, page rendered ${rows} rows`);
+});
+
 // --- WCAG contrast gate, default theme only --------------------------------
 //
 // The `ink-subtle` test above is a contrast ruling too, just a blunt one
