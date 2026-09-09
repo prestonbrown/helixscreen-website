@@ -494,3 +494,14 @@ test('every authored page links to the source repository from the header', () =>
     assert.ok(links.some((a) => /sm:hidden/.test(a)), `${path}: mobile-menu link not hidden from sm up`);
   }
 });
+
+// One search trigger per page. The nav pill collapses to its icon where the row
+// is tight rather than being duplicated into the mobile menu, so a second copy
+// means both are displayed at the same width.
+test('each authored page renders exactly one search trigger', () => {
+  for (const [path, html] of readAuthoredPages()) {
+    const triggers = html.match(/<button[^>]*\sdata-site-search-open[^>]*>/g) ?? [];
+    assert.equal(triggers.length, 1, `${path}: found ${triggers.length} search triggers`);
+    assert.match(triggers[0], /aria-label="Search docs"/, `${path}: icon-only trigger needs its name`);
+  }
+});
