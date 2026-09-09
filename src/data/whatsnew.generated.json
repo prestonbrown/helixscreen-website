@@ -5,12 +5,18 @@
       "version": "1.0.0",
       "date": "2026-09-09",
       "lead": "The first stable release.",
+      "body": [
+        "Everything your printer can do, on the screen already attached to it: a dashboard you arrange yourself, bed mesh and input shaper you can actually see, multi-material handling, and print history. It runs on the hardware you own.",
+        "80+ printers auto-detected. 9 languages. Nine platforms, from a printer's own MIPS panel to a Raspberry Pi.",
+        "Coming from 0.99, this is an ordinary update."
+      ],
       "bullets": []
     },
     {
       "version": "0.99.118",
       "date": "2026-08-30",
       "lead": "The fifth 1.0 release candidate. Highlights:",
+      "body": [],
       "bullets": [
         "Tapping an object in the preview outlines it in white instead of recolouring it",
         "A filament remap chosen before printing now sticks",
@@ -25,6 +31,7 @@
       "version": "0.99.117",
       "date": "2026-08-26",
       "lead": "The fourth 1.0 release candidate. Highlights:",
+      "body": [],
       "bullets": [
         "A bed mesh that runs long no longer throws away the print behind it",
         "Saving a Z offset stops warning you it failed when it actually worked",
@@ -38,6 +45,7 @@
       "version": "0.99.116",
       "date": "2026-08-24",
       "lead": "The third 1.0 release candidate. Highlights:",
+      "body": [],
       "bullets": [
         "The FlashForge AD5X is its own printer now, not one borrowed from the AD5M",
         "Touch works on first boot on AD5X and AD5M",
@@ -51,6 +59,7 @@
       "version": "0.99.115",
       "date": "2026-08-20",
       "lead": "The second 1.0 release candidate. Highlights:",
+      "body": [],
       "bullets": [
         "Printers are no longer guessed at from thin evidence, and you can correct the model yourself",
         "The window between pressing Print and the first layer is now tracked properly",

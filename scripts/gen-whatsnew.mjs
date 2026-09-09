@@ -10,6 +10,31 @@ import { fileURLToPath } from 'node:url';
  * `[WITHDRAWN]`. Headings without a date (`## [Unreleased]`) are not releases
  * and are dropped.
  */
+/**
+ * Split a whatsnew block into prose paragraphs and bullets.
+ *
+ * Changelog prose is hard-wrapped, so the lines of one paragraph are rejoined;
+ * a blank line or a bullet ends it. `lead` is the first paragraph and `body`
+ * the rest, so a block written as prose keeps all of it rather than only its
+ * opening line. A lead followed by bullets yields an empty `body`.
+ */
+export function parseSummary(raw) {
+  const bullets = [];
+  const prose = [];
+  let para = [];
+  const flush = () => {
+    if (para.length) { prose.push(para.join(' ')); para = []; }
+  };
+  for (const line of raw.split('\n')) {
+    const l = line.trim();
+    if (!l) { flush(); continue; }
+    if (l.startsWith('- ')) { flush(); bullets.push(l.slice(2).trim()); continue; }
+    para.push(l);
+  }
+  flush();
+  return { lead: prose[0] ?? null, body: prose.slice(1), bullets };
+}
+
 export function parseChangelog(md) {
   // Normalise line endings before anything else: a lone \r left on a heading line
   // defeats the heading regex silently, and every release drops out with no error.
@@ -30,14 +55,7 @@ export function parseChangelog(md) {
       // `-->` truncates the block at any bullet that happens to contain one,
       // dropping the rest of the summary with no error.
       const block = body.match(/<!--\s*whatsnew\s*\n([\s\S]*?)\n\s*-->/);
-      let summary = null;
-      if (block) {
-        const lines = block[1].split('\n').map((l) => l.trim()).filter(Boolean);
-        summary = {
-          lead: lines.find((l) => !l.startsWith('- ')) ?? null,
-          bullets: lines.filter((l) => l.startsWith('- ')).map((l) => l.slice(2).trim()),
-        };
-      }
+      const summary = block ? parseSummary(block[1]) : null;
 
       return {
         version,
@@ -67,6 +85,7 @@ export function buildWhatsNew(md, version, historyLimit = 12, featuredLimit = 5)
         version: r.version,
         date: r.date,
         lead: r.summary.lead,
+        body: r.summary.body,
         bullets: r.summary.bullets,
       }))
       .slice(0, featuredLimit),

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseChangelog, buildWhatsNew } from '../scripts/gen-whatsnew.mjs';
+import { parseChangelog, buildWhatsNew, parseSummary } from '../scripts/gen-whatsnew.mjs';
 
 const MD = `# Changelog
 
@@ -177,4 +177,59 @@ test('never features a prerelease, even when it carries a summary', () => {
 test('history keeps prereleases visible, so the record stays complete', () => {
   const out = buildWhatsNew(PRERELEASE_MD, '1.0.0');
   assert.deepEqual(out.history.map((r) => r.version), ['1.0.0', '1.0.0-rc.1', '0.99.118']);
+});
+
+// The shape most releases use: one lead line, then bullets.
+test('a lead followed by bullets yields no body paragraphs', () => {
+  const s = parseSummary('The fifth release candidate. Highlights:\n\n- One thing\n- Another thing\n');
+  assert.equal(s.lead, 'The fifth release candidate. Highlights:');
+  assert.deepEqual(s.body, []);
+  assert.deepEqual(s.bullets, ['One thing', 'Another thing']);
+});
+
+// A block written as prose keeps all of it. Splitting on lines rather than
+// paragraphs would keep only the opening sentence and drop the rest silently.
+test('prose paragraphs are all kept, not just the opening line', () => {
+  const s = parseSummary([
+    'The first stable release.',
+    '',
+    'Everything your printer can do, on the screen',
+    'already attached to it.',
+    '',
+    'Coming from 0.99, this is an ordinary update.',
+  ].join('\n'));
+  assert.equal(s.lead, 'The first stable release.');
+  assert.deepEqual(s.body, [
+    'Everything your printer can do, on the screen already attached to it.',
+    'Coming from 0.99, this is an ordinary update.',
+  ]);
+  assert.deepEqual(s.bullets, []);
+});
+
+test('hard-wrapped prose is rejoined rather than split into paragraphs', () => {
+  const s = parseSummary('One sentence broken\nacross two lines.\n');
+  assert.equal(s.lead, 'One sentence broken across two lines.');
+  assert.deepEqual(s.body, []);
+});
+
+// Without a blank line between them, a naive paragraph split would swallow the
+// bullets into the lead.
+test('a bullet ends the paragraph above it even with no blank line', () => {
+  const s = parseSummary('Highlights:\n- One thing\n- Another\n');
+  assert.equal(s.lead, 'Highlights:');
+  assert.deepEqual(s.body, []);
+  assert.deepEqual(s.bullets, ['One thing', 'Another']);
+});
+
+test('an empty block yields no lead, body or bullets', () => {
+  const s = parseSummary('\n  \n');
+  assert.equal(s.lead, null);
+  assert.deepEqual(s.body, []);
+  assert.deepEqual(s.bullets, []);
+});
+
+test('featured entries carry the body through to the page', () => {
+  const md = `# Changelog\n\n## [1.0.0] - 2026-09-09\n\n<!-- whatsnew\nThe first stable release.\n\nA second paragraph that must survive.\n-->\n`;
+  const out = buildWhatsNew(md, '1.0.0');
+  assert.deepEqual(out.featured[0].body, ['A second paragraph that must survive.']);
 });

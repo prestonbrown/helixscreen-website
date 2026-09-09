@@ -41,11 +41,16 @@ const current = data.history.find((h) => h.version === data.version);
           <p class="ui text-xs text-ink-muted tabular">{r.date}</p>
         </div>
         {r.lead && <p class="text-base text-ink mb-4 max-w-[62ch]">{r.lead}</p>}
-        <ul class="max-w-[62ch]">
-          {r.bullets.map((b) => (
-            <li class="ui text-sm text-ink-muted py-1.5 border-b border-hairline last:border-b-0">{b}</li>
-          ))}
-        </ul>
+        {r.body?.map((para) => (
+          <p class="text-base leading-relaxed text-ink-muted mb-4 max-w-[62ch]">{para}</p>
+        ))}
+        {r.bullets.length > 0 && (
+          <ul class="max-w-[62ch]">
+            {r.bullets.map((b) => (
+              <li class="ui text-sm text-ink-muted py-1.5 border-b border-hairline last:border-b-0">{b}</li>
+            ))}
+          </ul>
+        )}
       </article>
     ))}
 
