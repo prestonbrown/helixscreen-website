@@ -13,27 +13,27 @@ const tone = (t: string | undefined, fallback: string) =>
   t === 'ok' ? 'text-ok' : t === 'no' ? 'text-ink-muted' : fallback;
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-  <h2 class="text-2xl mb-2">It does a few things KlipperScreen and GuppyScreen don't.</h2>
+  <h2 class="text-2xl mb-2">What HelixScreen does that KlipperScreen and GuppyScreen don't</h2>
   <p class="ui text-sm text-ink-muted mb-6">
     Figures are resident set size measured on a FlashForge Adventurer 5M Pro, not install size.
   </p>
   <div class="overflow-x-auto">
-    <table class="w-full border-collapse font-mono text-xs min-w-[560px]">
+    <table class="w-full border-collapse font-mono text-sm min-w-[560px]">
       <thead>
         <tr>
-          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline w-[38%]"><span class="sr-only">Feature</span></th>
-          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink font-normal pb-2 border-b border-hairline">HelixScreen</th>
-          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline">KlipperScreen</th>
-          <th scope="col" class="text-left ui text-[10px] uppercase tracking-[0.13em] text-ink-muted font-normal pb-2 border-b border-hairline">GuppyScreen</th>
+          <th scope="col" class="text-left ui text-xs uppercase tracking-[0.13em] text-ink-muted font-normal pb-3 pr-4 border-b border-hairline w-[38%]"><span class="sr-only">Feature</span></th>
+          <th scope="col" class="text-left ui text-xs uppercase tracking-[0.13em] text-ink font-normal pb-3 px-4 border-b border-hairline">HelixScreen</th>
+          <th scope="col" class="text-left ui text-xs uppercase tracking-[0.13em] text-ink-muted font-normal pb-3 px-4 border-b border-hairline">KlipperScreen</th>
+          <th scope="col" class="text-left ui text-xs uppercase tracking-[0.13em] text-ink-muted font-normal pb-3 px-4 border-b border-hairline">GuppyScreen</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => (
           <tr>
-            <th scope="row" class="text-left ui text-[13px] font-normal text-ink py-2.5 pr-4 border-b border-hairline/40">{r.k}</th>
-            <td class:list={['py-2.5 pr-4 border-b border-hairline/40 tabular', tone(r.meTone, 'text-ink')]}>{r.me}</td>
-            <td class:list={['py-2.5 pr-4 border-b border-hairline/40 tabular', tone(r.ksTone, 'text-ink-muted')]}>{r.ks}</td>
-            <td class:list={['py-2.5 pr-4 border-b border-hairline/40 tabular', tone(r.gsTone, 'text-ink-muted')]}>{r.gs}</td>
+            <th scope="row" class="text-left ui text-sm font-normal text-ink py-3 pr-4 border-b border-hairline/40">{r.k}</th>
+            <td class:list={['py-3 px-4 border-b border-hairline/40 tabular', tone(r.meTone, 'text-ink')]}>{r.me}</td>
+            <td class:list={['py-3 px-4 border-b border-hairline/40 tabular', tone(r.ksTone, 'text-ink-muted')]}>{r.ks}</td>
+            <td class:list={['py-3 px-4 border-b border-hairline/40 tabular', tone(r.gsTone, 'text-ink-muted')]}>{r.gs}</td>
           </tr>
         ))}
       </tbody>

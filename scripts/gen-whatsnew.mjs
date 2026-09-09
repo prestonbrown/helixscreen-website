@@ -39,7 +39,14 @@ export function parseChangelog(md) {
         };
       }
 
-      return { version, date, withdrawn: /WITHDRAWN/i.test(rest), summary };
+      return {
+        version,
+        date,
+        withdrawn: /WITHDRAWN/i.test(rest),
+        // Semver: anything after the first `-` is a prerelease identifier.
+        prerelease: version.includes('-'),
+        summary,
+      };
     })
     .filter(Boolean);
 }
@@ -48,13 +55,14 @@ export function buildWhatsNew(md, version, historyLimit = 12, featuredLimit = 5)
   const releases = parseChangelog(md);
   return {
     version,
-    // A withdrawn release is one we asked people not to run. It keeps its row in
-    // the history so the record stays honest, but it is never featured.
+    // A withdrawn release is one we asked people not to run, and a prerelease is
+    // superseded by the release it led to. Both keep their row in the history so
+    // the record stays honest, but neither is ever featured.
     // Capped: every summary block ever written stays in the changelog forever,
     // so without a limit this list only grows and the page becomes an
     // unbounded stack of articles as the convention gets used more.
     featured: releases
-      .filter((r) => r.summary && !r.withdrawn)
+      .filter((r) => r.summary && !r.withdrawn && !r.prerelease)
       .map((r) => ({
         version: r.version,
         date: r.date,

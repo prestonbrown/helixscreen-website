@@ -4,7 +4,8 @@ name: Deploy Docs
 #   1. repository_dispatch from helixscreen when a release is published
 #      (event type: helixscreen-release, payload: { ref: "vX.Y.Z" })
 #   2. workflow_dispatch — manual run, optionally specify a helixscreen ref
-#   3. push to main — website-only changes (landing pages, theme, sync script)
+#   3. push to main — website-only changes (landing pages, theme, sync script),
+#      built against the newest stable helixscreen release
 #
 # Required repo secrets:
 #   CLOUDFLARE_API_TOKEN  — Pages:Edit permission
@@ -16,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "helixscreen git ref to sync docs from"
+        description: "helixscreen git ref to sync docs from (use 'main' to preview unreleased docs)"
         required: false
         default: main
   push:
@@ -38,13 +39,27 @@ jobs:
 
       - name: Resolve helixscreen ref
         id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # A website-only push documents the version people can actually
+          # install, so it builds from the newest stable release rather than
+          # main, which carries unreleased notes and a trailing VERSION.txt.
+          # `releases/latest` skips drafts and prereleases, so an rc tag never
+          # becomes the site's version.
           case "${{ github.event_name }}" in
             repository_dispatch) REF="${{ github.event.client_payload.ref }}" ;;
             workflow_dispatch)   REF="${{ inputs.ref }}" ;;
-            *)                   REF="main" ;;
+            *)
+              REF="$(gh api repos/prestonbrown/helixscreen/releases/latest \
+                       --jq .tag_name 2>/dev/null || true)"
+              # gh reports API errors on stdout, so a failed lookup arrives here
+              # as a JSON blob rather than an empty string. Only a tag-shaped
+              # value is usable; anything else falls back to main.
+              case "$REF" in v[0-9]*) ;; *) REF="main" ;; esac
+              ;;
           esac
-          [ -z "$REF" ] && REF="main"
+          if [ -z "$REF" ]; then REF="main"; fi
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "Using helixscreen ref: $REF"
 

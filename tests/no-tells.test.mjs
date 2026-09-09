@@ -309,8 +309,34 @@ test('alert is not used for text anywhere in src', () => {
 });
 
 test('the headline is present exactly once on the landing page', () => {
-  const matches = landing().match(/Everything your printer knows, on the screen it already has\./g) ?? [];
+  const matches = landing().match(/Print, tune, calibrate and track — all on the printer's own screen\./g) ?? [];
   assert.equal(matches.length, 1);
+});
+
+// The 1.0 marker is derived from the built version, never written by hand. A
+// website-only deploy syncs whatever helixscreen main is at, which trails the
+// release tag, so a hardcoded banner would announce 1.0 beside a 0.99 badge.
+test('the 1.0 marker appears only when the built version is 1.0', () => {
+  const { version } = JSON.parse(
+    readFileSync(join('src', 'data', 'whatsnew.generated.json'), 'utf8')
+  );
+  const [major, minor] = version.split('.').map(Number);
+  const shouldShow = major === 1 && minor === 0;
+  assert.equal(
+    landing().includes('1.0 is here'),
+    shouldShow,
+    `built version ${version} ${shouldShow ? 'should' : 'must not'} show the 1.0 marker`
+  );
+});
+
+// The eyebrow states the series the build actually came from, so it cannot drift
+// from the badge the nav renders out of the same file.
+test('the hero eyebrow names the built series', () => {
+  const { version } = JSON.parse(
+    readFileSync(join('src', 'data', 'whatsnew.generated.json'), 'utf8')
+  );
+  const [major, minor] = version.split('.');
+  assert.match(landing(), new RegExp(`Klipper touch interface\\s*·\\s*${major}\\.${minor}`));
 });
 
 // The design-system and copy checks above all pass happily on an empty page.

@@ -5,7 +5,7 @@ Astro + Starlight documentation site for [helixscreen.org](https://helixscreen.o
 ## Architecture
 
 - **Framework:** Astro 5.17 + Starlight 0.37 (static docs site generator)
-- **Styling:** Tailwind CSS v4, custom fonts (Source Serif 4 for prose and display, IBM Plex Sans for UI chrome and labels, IBM Plex Mono for anything measurable)
+- **Styling:** Tailwind CSS v4, two typefaces (IBM Plex Sans for all prose, headings and UI chrome; IBM Plex Mono for anything measurable). Headings differ from body by weight and tracking, not by face.
 - **Theme:** 18 themes generated from the app's own theme files, each with dark mode and, where the theme defines it, light mode. Chosen at runtime via the switcher, persisted to `localStorage`, and applied to both the marketing site and the docs pages.
 - **Search:** Pagefind (built-in with Starlight, indexes all pages at build time)
 - **Hosting:** Cloudflare Pages, deployed by `.github/workflows/deploy.yml` (auto-deploys on push to main, on `repository_dispatch` from helixscreen releases, or via `workflow_dispatch`)
@@ -89,7 +89,7 @@ Deploys are automated via `.github/workflows/deploy.yml`. Triggers:
 
 | Trigger | When |
 |---|---|
-| `push` to `main` | Every commit to this repo |
+| `push` to `main` | Every commit to this repo. Docs and version come from the newest **stable** helixscreen release, not `main` — so the site always documents the version people can install. |
 | `repository_dispatch` (event `helixscreen-release`) | Stable release tag pushed to helixscreen (`notify-website` job in helixscreen's `release.yml`) |
 | `workflow_dispatch` | Manual run from the Actions tab — optionally pin a specific helixscreen ref |
 
@@ -112,8 +112,11 @@ Requires a local `wrangler login`.
 # 2. Commit and push helixscreen repo — these changes appear on helixscreen.org
 #    on the next stable release tag (via repository_dispatch).
 
-# To preview without waiting for a release, push this repo or trigger manually:
-gh workflow run deploy.yml -R prestonbrown/helixscreen-website
+# A push to this repo rebuilds the site from the newest stable release, so it
+# picks up website changes without pulling in unreleased docs.
+#
+# To preview unreleased docs from helixscreen main, pin the ref explicitly:
+gh workflow run deploy.yml -R prestonbrown/helixscreen-website -f ref=main
 ```
 
 ## Other Cloudflare Projects

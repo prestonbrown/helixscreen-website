@@ -5,20 +5,23 @@ import Colophon from '../components/marketing/Colophon.astro';
 import data from '../data/whatsnew.generated.json';
 
 const CHANGELOG = 'https://github.com/prestonbrown/helixscreen/blob/main/CHANGELOG.md';
+
+// VERSION.txt is the authority for what shipped; the changelog supplies its date.
+// A version with no changelog entry simply goes undated rather than guessing.
+const current = data.history.find((h) => h.version === data.version);
 ---
 <MarketingLayout
   title="What's new — HelixScreen"
-  description="Release notes for HelixScreen, written before each release ships."
+  description="Release notes for HelixScreen — what changed in each release, newest first."
 >
   <SiteNav />
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <h1 class="text-3xl leading-tight mb-3">Every release is written down before it ships.</h1>
+    <h1 class="text-3xl leading-tight mb-3">HelixScreen <span class="tabular">{data.version}</span></h1>
     <p class="ui text-sm text-ink-muted mb-12 max-w-[62ch]">
-      The current build is
-      <span class="font-mono tabular text-ink">{data.version}</span>.
+      {current && <>Released <span class="tabular text-ink">{current.date}</span>. </>}
       {data.featured.length > 0 ? (
         <>
-          What follows is the short version of the recent ones. The{' '}
+          The short version of this release and the ones before it. The{' '}
           <a href={CHANGELOG} target="_blank" rel="noopener noreferrer" class="text-secondary underline underline-offset-2">full changelog</a>{' '}
           has every fix in every release.
         </>
@@ -47,25 +50,25 @@ const CHANGELOG = 'https://github.com/prestonbrown/helixscreen/blob/main/CHANGEL
     ))}
 
     <section class="border-t border-hairline pt-8 mt-8">
-      <h2 class="text-xl mb-4">These are the {data.history.length} most recent releases.</h2>
+      <h2 class="text-xl mb-4">Recent releases</h2>
       <table class="w-full max-w-lg">
         <caption class="sr-only">The most recent HelixScreen releases</caption>
         <thead>
           <tr class="ui text-xs text-ink-muted text-left">
-            <th scope="col" class="font-normal py-2">Version</th>
-            <th scope="col" class="font-normal py-2">Date</th>
+            <th scope="col" class="font-normal py-3 pr-6">Version</th>
+            <th scope="col" class="font-normal py-3 pr-6">Date</th>
             <!-- Named because the cell is empty for most releases. Without a header,
                  a screen reader navigating the table reads a blank with no clue that
                  blank is the normal case and means "not withdrawn". -->
-            <th scope="col" class="font-normal py-2 text-right">Status</th>
+            <th scope="col" class="font-normal py-3 text-right">Status</th>
           </tr>
         </thead>
         <tbody>
           {data.history.map((h) => (
             <tr class="border-b border-hairline">
-              <td class="font-mono tabular text-sm text-ink py-2">{h.version}</td>
-              <td class="ui text-xs text-ink-muted tabular py-2">{h.date}</td>
-              <td class="ui text-xs py-2 text-right">
+              <td class="font-mono tabular text-sm text-ink py-2.5 pr-6">{h.version}</td>
+              <td class="ui text-sm text-ink-muted tabular py-2.5 pr-6">{h.date}</td>
+              <td class="ui text-sm py-2.5 text-right">
                 {/* warn, not alert: `danger` on the canvas is 4.15:1, under the 4.5:1
                     AA floor for text this size. `warning` clears it at 8.43:1, and a
                     pulled release is a caution rather than an error anyway. */}

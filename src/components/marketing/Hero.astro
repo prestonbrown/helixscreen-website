@@ -1,11 +1,21 @@
 ---
-import MarginRail from './MarginRail.astro';
+import StatRow from './StatRow.astro';
 import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
 import printers from '../../data/printers.generated.json';
+import repo from '../../data/repo.generated.json';
+import whatsnew from '../../data/whatsnew.generated.json';
 
-const rail = [
-  { value: '11,778', label: 'commits since October 2025', note: "About 98% mine. The rest are why it runs on printers I don't own." },
+const [major, minor] = whatsnew.version.split('.').map(Number);
+
+// A website-only deploy syncs whatever helixscreen main is at, which trails the
+// release tag. Gating the milestone on the built version keeps the page from
+// announcing 1.0 while the badge beside it still reads 0.99.
+const isLaunch = major === 1 && minor === 0;
+const series = Number.isFinite(major) && Number.isFinite(minor) ? `${major}.${minor}` : null;
+
+const stats = [
+  { value: repo.commitsDisplay, label: 'commits since October 2025', note: "About 98% mine. The rest are why it runs on printers I don't own." },
   { value: '~15 MB', label: 'resident on an armv7 printer board', note: 'No X11, no browser.' },
   { value: String(printers.count), label: 'printers it recognizes without being told' },
 ];
@@ -23,15 +33,13 @@ const spec = [
 
 const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh';
 ---
-<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-[190px_1fr] gap-10 pt-16 pb-14">
-  <div class="order-2 md:order-1">
-    <MarginRail items={rail} />
-  </div>
-
-  <div class="order-1 md:order-2">
-    <p class="ui text-[11px] uppercase tracking-[0.16em] text-warn mb-5">Klipper touch interface</p>
-    <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[19ch] mb-5">
-      Everything your printer knows, on the screen it already has.
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
+  <div class="max-w-3xl">
+    <p class="ui text-xs uppercase tracking-[0.16em] text-warn mb-5">
+      Klipper touch interface{series && ` · ${series}`}
+    </p>
+    <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[28ch] mb-5">
+      Print, tune, calibrate and track — all on the printer's own screen.
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
       Your printer already works out the bed mesh and the shaper response. Today you can
@@ -39,17 +47,34 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
       already bolted to the printer.
     </p>
 
-    <SpecGrid rows={spec} />
+    {isLaunch && (
+      <p class="text-base leading-relaxed text-ink-muted max-w-[56ch] mb-8 border-l-2 border-l-warn pl-4">
+        <strong class="font-semibold text-ink">1.0 is here</strong> — the first stable release.
+        Upgrading from 0.99 changes nothing but the version number: settings, layout and
+        printer list all carry over.
+      </p>
+    )}
+  </div>
 
-    <div class="mt-8 flex items-center gap-2 border border-hairline border-l-2 border-l-alert rounded-[var(--hx-radius)] bg-overlay px-4 py-3">
+  <SpecGrid rows={spec} />
+
+  <div class="max-w-3xl">
+    {/* The command wraps rather than scrolling: a scroll container hides most of
+        the URL behind a scrollbar, and the whole point is to read it before
+        piping it to a shell. */}
+    <div class="mt-8 flex items-start gap-3 border border-hairline border-l-2 border-l-alert rounded-[var(--hx-radius)] bg-overlay px-4 py-3">
       <span class="font-mono text-sm text-ink-muted select-none">$</span>
-      <code id="hero-install-command" tabindex="0" class="font-mono text-sm text-ink overflow-x-auto whitespace-nowrap">{install}</code>
-      <button id="hero-copy-btn" type="button" aria-live="polite" class="ml-auto ui text-[10px] uppercase tracking-[0.1em] text-ink-muted hover:text-ink">Copy</button>
+      <code id="hero-install-command" tabindex="0" class="font-mono text-sm text-ink flex-1 leading-relaxed [overflow-wrap:anywhere]">{install}</code>
+      <button id="hero-copy-btn" type="button" aria-live="polite" class="ui text-xs uppercase tracking-[0.1em] text-ink-muted hover:text-ink shrink-0">Copy</button>
     </div>
     <p class="ui text-sm text-ink-muted mt-4">
       Rather read first? <a href="/installation/" class="text-secondary underline underline-offset-2">The install guide</a>
       covers every supported board, and remote-screen setup if the printer lives on the floor.
     </p>
+  </div>
+
+  <div class="mt-12">
+    <StatRow items={stats} />
   </div>
 </section>
 

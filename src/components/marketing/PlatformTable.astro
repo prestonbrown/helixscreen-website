@@ -11,7 +11,7 @@ const platforms = [
 ];
 ---
 <section id="printers" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-hairline">
-  <h2 class="text-2xl mb-2">It probably already knows your printer.</h2>
+  <h2 class="text-2xl mb-2">{printers.count} printers detected automatically, on nine platforms</h2>
   <p class="ui text-sm text-ink-muted mb-3 max-w-[62ch]">
     {printers.count} models in the auto-detection database, spanning Voron, Creality, QIDI,
     Anycubic, FlashForge, Sovol, RatRig, FLSUN, Elegoo, Prusa and Snapmaker. Anything running
@@ -26,7 +26,7 @@ const platforms = [
     {platforms.map((p) => (
       <dl class="border border-hairline rounded-[var(--hx-radius)] bg-card px-4 py-3">
         <dt class="ui text-sm text-ink">{p.name}</dt>
-        <dd class="font-mono text-[11px] text-ink-muted tabular mt-1">{p.arch}</dd>
+        <dd class="font-mono text-xs text-ink-muted tabular mt-1">{p.arch}</dd>
       </dl>
     ))}
   </div>

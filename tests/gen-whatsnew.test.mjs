@@ -140,3 +140,41 @@ Highlights:
 `;
   assert.equal(parseChangelog(md)[0].summary, null);
 });
+
+const PRERELEASE_MD = `# Changelog
+
+## [1.0.0] - 2026-09-09
+
+<!-- whatsnew
+The first stable release.
+-->
+
+## [1.0.0-rc.1] - 2026-09-02
+
+<!-- whatsnew
+The first 1.0 release candidate.
+-->
+
+## [0.99.118] - 2026-08-30
+
+<!-- whatsnew
+An ordinary release.
+-->
+`;
+
+test('flags prereleases by their semver identifier', () => {
+  const releases = parseChangelog(PRERELEASE_MD);
+  assert.equal(releases.find((r) => r.version === '1.0.0-rc.1').prerelease, true);
+  assert.equal(releases.find((r) => r.version === '1.0.0').prerelease, false);
+  assert.equal(releases.find((r) => r.version === '0.99.118').prerelease, false);
+});
+
+test('never features a prerelease, even when it carries a summary', () => {
+  const out = buildWhatsNew(PRERELEASE_MD, '1.0.0');
+  assert.deepEqual(out.featured.map((r) => r.version), ['1.0.0', '0.99.118']);
+});
+
+test('history keeps prereleases visible, so the record stays complete', () => {
+  const out = buildWhatsNew(PRERELEASE_MD, '1.0.0');
+  assert.deepEqual(out.history.map((r) => r.version), ['1.0.0', '1.0.0-rc.1', '0.99.118']);
+});
