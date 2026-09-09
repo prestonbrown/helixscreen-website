@@ -1,5 +1,5 @@
 {
-  "count": 91,
+  "count": 93,
   "manufacturers": [
     {
       "name": "Creality",
@@ -34,6 +34,10 @@
       "count": 5
     },
     {
+      "name": "Irbis3D",
+      "count": 4
+    },
+    {
       "name": "Voron",
       "count": 4
     },
@@ -47,10 +51,6 @@
     },
     {
       "name": "Geralkom",
-      "count": 2
-    },
-    {
-      "name": "Irbis3D",
       "count": 2
     },
     {
@@ -452,6 +452,20 @@
       "notes": null
     },
     {
+      "id": "ducr10",
+      "name": "DuCR10",
+      "manufacturer": "Irbis3D",
+      "aliases": [],
+      "notes": "CR-10 to CoreXY conversion (Andizzle's 'Duender Remix - DUO CR10', Printables 1263532, built from two CR-10s the way the Duender is built from two Ender-3s). Hostname only, for the same reason as the 'duender' entry: the remix ships no Klipper config, and the one published build (topi314/klipper, branch ducr10) is a plain CoreXY with 3 Z steppers and a 210x210 bed mesh copied from the Duender - nothing there separates it from any other CoreXY, and a 'corexy' heuristic would compete with Voron and RatRig on every one of their machines."
+    },
+    {
+      "id": "ducr10_medusahc",
+      "name": "DuCR10 (MedusaHC)",
+      "manufacturer": "Irbis3D",
+      "aliases": [],
+      "notes": "DuCR10 CoreXY (Andizzle's 'DUO CR10' remix of the Irbis3D Duender, Printables 1263532) fitted with the MedusaHC hotend changer. Same MedusaHC signals as the Duender - only the hostname separates the two frames, so each entry excludes the other's hostname rather than competing on evidence that cannot tell them apart. The 'ducr10' hostname sits at 40 here deliberately: on a DuCR10 with no changer it must lose to the bare 'ducr10' entry (80), and it only ever adds the +3 extra-match bonus on top of a MedusaHC object match."
+    },
+    {
       "id": "duender",
       "name": "Duender",
       "manufacturer": "Irbis3D",
@@ -463,7 +477,7 @@
       "name": "Duender (MedusaHC)",
       "manufacturer": "Irbis3D",
       "aliases": [],
-      "notes": "Duender CoreXY (Irbis3D) fitted with the MedusaHC hotend changer. MedusaHC is klipper-toolchanger plus its own pin_watch extra, so the AMS resolves to Tool Changer and AmsBackendToolChanger drives it. Scored on pin_watch and hostname ONLY: toolchanger/tool_count/corexy describe any multi-tool CoreXY and would claim machines that are not this one. The bare-Duender hostname deliberately does NOT appear here, or the 'duender' entry could never outscore this one."
+      "notes": "Duender CoreXY (Irbis3D) fitted with the MedusaHC hotend changer. Two config shapes exist. The reference one is klipper-toolchanger plus MedusaHC's own pin_watch extra, both alongside [medusahc]; a single fork folds the dock sensing into [medusahc] + [medusahc_tool N] and ships neither pin_watch nor toolchanger. Both are scored here, the fork as compatibility rather than as a second mainline. Everything else (toolchanger/tool_count/corexy) describes any multi-tool CoreXY and would claim machines that are not this one. The bare-Duender hostname deliberately does NOT appear here, or the 'duender' entry could never outscore this one; a DuCR10 hostname is excluded instead, since the MedusaHC signals alone cannot tell the two frames apart."
     },
     {
       "id": "kingroon_klp1",

@@ -1,6 +1,52 @@
 {
-  "version": "0.99.115",
+  "version": "1.0.0",
   "featured": [
+    {
+      "version": "1.0.0",
+      "date": "2026-09-09",
+      "lead": "The first stable release.",
+      "bullets": []
+    },
+    {
+      "version": "0.99.118",
+      "date": "2026-08-30",
+      "lead": "The fifth 1.0 release candidate. Highlights:",
+      "bullets": [
+        "Tapping an object in the preview outlines it in white instead of recolouring it",
+        "A filament remap chosen before printing now sticks",
+        "Dismissing a confirmation no longer strands the screen behind it",
+        "One filament runout no longer stacks six notifications",
+        "Dark filaments show real form instead of reading as a flat cut-out",
+        "Installing an update no longer locks up the touchscreen",
+        "AD5M printers on the Forge-X 1.4.2 mod keep working"
+      ]
+    },
+    {
+      "version": "0.99.117",
+      "date": "2026-08-26",
+      "lead": "The fourth 1.0 release candidate. Highlights:",
+      "bullets": [
+        "A bed mesh that runs long no longer throws away the print behind it",
+        "Saving a Z offset stops warning you it failed when it actually worked",
+        "Chambers and beds get their own heat limit, not one 400C catch-all",
+        "Touch lands where you press on screens that report their size wrong",
+        "AD5X bed screw hints said tighten when they meant loosen",
+        "Large G-code files open faster, and every layer of the preview is drawn"
+      ]
+    },
+    {
+      "version": "0.99.116",
+      "date": "2026-08-24",
+      "lead": "The third 1.0 release candidate. Highlights:",
+      "bullets": [
+        "The FlashForge AD5X is its own printer now, not one borrowed from the AD5M",
+        "Touch works on first boot on AD5X and AD5M",
+        "K2 camera traffic no longer fills the printer's disk and kills your uploads",
+        "Opening a large G-code file no longer restarts the app on low-memory printers",
+        "A real unload for K1 printers, and honest pre-print countdowns on K1C and K2",
+        "MedusaHC hotend changers, and tool changers that remember their spools"
+      ]
+    },
     {
       "version": "0.99.115",
       "date": "2026-08-20",
@@ -13,24 +59,29 @@
         "K2 Auto Bed Mesh actually meshes, at the job's own temperatures",
         "Fixes for crashes in the power panel and panel navigation"
       ]
-    },
-    {
-      "version": "0.99.114",
-      "date": "2026-08-16",
-      "lead": "The 1.0 release candidate. Highlights:",
-      "bullets": [
-        "Fixes a lit-but-frozen screen on Centauri Carbon and AD5M",
-        "Idle printers no longer refuse jogs as \"busy\"",
-        "A Klipper shutdown is no longer displayed as Ready",
-        "CFS: checks filament really moved, plus fan and recovery fixes on K1",
-        "AFC: correct buffer health, tool numbers and spool names",
-        "Single-hotend printers stop reporting tools they do not have",
-        "Dialogs fit on small screens",
-        "New Hazard theme, and lower memory use throughout"
-      ]
     }
   ],
   "history": [
+    {
+      "version": "1.0.0",
+      "date": "2026-09-09",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.118",
+      "date": "2026-08-30",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.117",
+      "date": "2026-08-26",
+      "withdrawn": false
+    },
+    {
+      "version": "0.99.116",
+      "date": "2026-08-24",
+      "withdrawn": false
+    },
     {
       "version": "0.99.115",
       "date": "2026-08-20",
@@ -69,26 +120,6 @@
     {
       "version": "0.99.108",
       "date": "2026-08-09",
-      "withdrawn": false
-    },
-    {
-      "version": "0.99.107",
-      "date": "2026-08-07",
-      "withdrawn": false
-    },
-    {
-      "version": "0.99.106",
-      "date": "2026-07-31",
-      "withdrawn": false
-    },
-    {
-      "version": "0.99.105",
-      "date": "2026-07-29",
-      "withdrawn": false
-    },
-    {
-      "version": "0.99.103",
-      "date": "2026-07-26",
       "withdrawn": false
     }
   ]

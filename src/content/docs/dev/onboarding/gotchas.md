@@ -72,7 +72,7 @@ Reference: lesson **L046**.
 **Fix:** Register in one of two places:
 
 - **Global / reusable callbacks:** `register_xml_components()` in `src/xml_registration.cpp`.
-- **Panel / modal-specific callbacks:** In the class's `register_callbacks()` method or constructor. Example: `src/ui/ui_panel_macros.cpp:85`.
+- **Panel / modal-specific callbacks:** In the class's `register_callbacks()` method or constructor. Example: `src/ui/ui_panel_macros.cpp#register_callbacks`.
 
 ```cpp
 lv_xml_register_event_cb(nullptr, "on_my_button_clicked", on_my_button_clicked);
@@ -106,11 +106,35 @@ Reference: lesson **L009**.
 
 ---
 
+### My long label or description is cut off instead of wrapping onto a second line.
+
+**Cause:** The label has no width. A `text_body`/`text_small` left at its default is `LV_SIZE_CONTENT` wide, so it lays out on one line at whatever length the string needs, and the parent clips the rest. `long_mode="wrap"` does not fix this on its own — `wrap` is already LVGL's default long mode, and a content-width label has nothing to wrap against.
+
+**Fix:** Give the label `width="100%"` *and* `long_mode="wrap"`. If its parent is a `flex_grow` column, that column also needs `width="0"`, because a percentage-width child is excluded from a parent's content-width calculation (`w_ignore_size`, `lv_obj_pos.c`) and the column would otherwise collapse to its widest non-percentage child.
+
+```xml
+<!-- ✗ one clipped line -->
+<lv_obj height="content" flex_flow="column" flex_grow="1">
+  <text_small name="description" text="$description"/>
+</lv_obj>
+
+<!-- ✓ wraps -->
+<lv_obj height="content" width="0" flex_flow="column" flex_grow="1">
+  <text_small name="description" width="100%" text="$description" long_mode="wrap"/>
+</lv_obj>
+```
+
+**Why silent?** LVGL is behaving correctly at every step — the label is exactly as wide as its text, and the parent clips its children as it should. Nothing warns. It reads fine in English on an 800x480 panel and truncates at the Small breakpoint or in de/fr/es, which run 15-29% longer on average and up to +84% on individual strings.
+
+Full mechanism and the one-line `dots` alternative: `LVGL9_XML_GUIDE.md`, "Text never wraps inside a `flex_grow` column".
+
+---
+
 ### Chevron scroll buttons are drawn on top of my widget's content.
 
 **Cause:** A container in your XML is scrollable when you did not intend it to be, so `PageScrollAutoInject` treated it as a scroll region and attached the page-scroll gutter over it. In XML an `<lv_obj>` keeps LVGL's `LV_OBJ_FLAG_SCROLLABLE` default, which is **on**, unless you write `scrollable="false"`. Our theme overrides width, height, border, background, and padding on `lv_obj` - it does **not** override scrollable, so "our theme makes `lv_obj` a pure layout container" is only true of appearance.
 
-**Fix:** Add `scrollable="false"` to every container that is not a real scroll region. Confirm with `helix-screen ctl geom <name>`, which prints the `scrollable` flag and the scroll extents (`HELIXCTL.md:566-567`).
+**Fix:** Add `scrollable="false"` to every container that is not a real scroll region. Confirm with `helix-screen ctl geom <name>`, which prints the `scrollable` flag and the scroll extents (`docs/devel/HELIXCTL.md#geom--why-a-widget-is-the-size-it-is`).
 
 ```xml
 <!-- ✗ Scrollable, and therefore gutter-eligible -->
@@ -122,7 +146,7 @@ Reference: lesson **L009**.
 
 That is exactly what happened in `ui_xml/components/panel_widget_print_status.xml` - `print_card_idle` and `print_card_idle_compact` were the only two containers in the file missing the attribute (the other nine had it), and the chevrons landed on top of the thumbnail on an 800x480 panel.
 
-Page scroll is a *page-level* affordance, so home panel widget tiles are now excluded outright: the auto-inject walk stops at any tile (`src/ui/page_scroll_auto_inject.cpp:67`, flag set in `src/ui/panel_widget_manager.cpp:825`). A tile is sized by the home grid and scrolled by dragging it, and the gutter is 172px tall at the medium tier - most of a tile at 800x480. If you are seeing chevrons *inside* a home widget, that is a bug in the walk, not something to work around in XML. Full picture: `PAGE_SCROLL_BUTTONS.md`.
+Page scroll is a *page-level* affordance, so home panel widget tiles are now excluded outright: the auto-inject walk stops at any tile (`src/ui/page_scroll_auto_inject.cpp#walk_and_attach`, flag set in `src/ui/panel_widget_manager.cpp#populate_widgets`). A tile is sized by the home grid and scrolled by dragging it, and the gutter is 172px tall at the medium tier - most of a tile at 800x480. If you are seeing chevrons *inside* a home widget, that is a bug in the walk, not something to work around in XML. Full picture: `PAGE_SCROLL_BUTTONS.md`.
 
 **Why silent?** Nothing is wrong from LVGL's point of view. The container is scrollable, the gutter is doing its job, and neither logs anything. You only find out by looking at the screen.
 
@@ -316,7 +340,7 @@ api->fetch([this, tok]() {
 });
 ```
 
-Reference: CLAUDE.md § "Async callback safety", issue #707.
+Reference: `THREADING.md` § "2. Async callback safety", issue #707.
 
 ---
 
@@ -328,7 +352,7 @@ Reference: CLAUDE.md § "Async callback safety", issue #707.
 
 **Fix:** Use a managed pool. For HTTP work, use `helix::http::HttpExecutor::fast()` or `::slow()`. For sd-bus/BlueZ, use `helix::bluetooth::BusThread::run_sync()`. For the narrow cases where you genuinely need a one-shot thread (device discovery, QR decode, USB print), wrap in `try { std::thread([...]{}).detach(); } catch (const std::system_error&) { /* toast + error callback */ }`.
 
-Reference: CLAUDE.md § "Threading & Lifecycle", lesson **L083**.
+Reference: `THREADING.md` § "No `std::thread(...).detach()` for fire-and-forget work", lesson **L083**.
 
 ---
 
@@ -344,7 +368,7 @@ Reference: CLAUDE.md § "Threading & Lifecycle", lesson **L083**.
 | `lv_obj_delete(obj)` | `lv_obj_delete_async(obj)` |
 | `lv_obj_clean(container)` | `helix::ui::safe_clean_children(container)` |
 
-Reference: CLAUDE.md § "No sync widget deletion in queued callbacks", **L081**.
+Reference: `THREADING.md` § "3. No synchronous widget deletion inside queued callbacks", **L081**.
 
 ---
 

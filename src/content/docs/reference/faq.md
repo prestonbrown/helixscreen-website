@@ -19,7 +19,7 @@ HelixScreen is a touchscreen interface for Klipper 3D printers. It connects to y
 - 30+ panels, 20+ overlays, and a customizable multi-page widget dashboard
 - 3D G-code preview, bed mesh visualization, frequency response charts
 - 7 multi-material backends (AFC, Happy Hare, ACE, AD5X IFS, CFS, Snapmaker U1, tool changers) with Spoolman integration
-- First-run wizard with auto-detection of 80+ printer models
+- First-run wizard with auto-detection of 90+ printer models
 - Theme editor with 18 presets (dark and light), 9 languages
 - Sound system, timelapse integration, label printing, exclude objects
 - Auto-detecting layout system for displays from 480x320 to 1024x600, including ultrawide and portrait
@@ -93,7 +93,7 @@ HelixScreen reads standard G-code, so most slicers work. But support is tiered:
 | Slicer | Status | Notes |
 |--------|--------|-------|
 | **OrcaSlicer 2.3.2+** | **Primary** | The slicer we develop and test against. Best experience — including one-way (HelixScreen → OrcaSlicer) filament preset sync with HelixScreen's filament slots. Recommended for everyone. |
-| Manufacturer slicers (Creality Print, FlashForge Orca, Bambu Studio, etc.) | **Supported** | Most are OrcaSlicer/PrusaSlicer forks and work well. We aim to support them. |
+| Manufacturer slicers (Creality Print, FlashForge Orca, Bambu Studio, etc.) | **Supported** | Most are OrcaSlicer/PrusaSlicer forks and work well. We aim to support them. This is about G-code and profiles, not the vendor's own network path: on the Creality K1 series, installing HelixScreen stops the stock backend, so Creality Print can still slice but can no longer upload to the printer. Upload through Moonraker instead — see [Troubleshooting](TROUBLESHOOTING.md#creality-k1-series-issues). |
 | PrusaSlicer / SuperSlicer | **Supported** | Fully usable, including exclude-objects and pre-print options. |
 | Cura | **Not targeted** | We don't test against Cura and don't build features for it, but we don't go out of our way to break it. Output generally works; some features (exclude objects, filament sync) need extra setup or aren't available. |
 
@@ -121,7 +121,7 @@ For an exact layer count and a reliable time-remaining estimate, HelixScreen nee
 - Declarative XML layouts (change UI without recompiling)
 - Modern reactive architecture with 7 multi-material backends
 - 3D visualizations (G-code preview, bed mesh)
-- 80+ printer auto-detection database
+- 90+ printer auto-detection database
 - 9 languages (English, German, Spanish, French, Italian, Japanese, Portuguese, Russian, Chinese)
 
 ---

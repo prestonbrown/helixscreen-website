@@ -22,6 +22,7 @@ Solutions to common problems with HelixScreen.
 - [Calibration Issues](#calibration-issues)
 - [Performance Issues](#performance-issues)
 - [Configuration Issues](#configuration-issues)
+- [Creality K1 Series Issues](#creality-k1-series-issues)
 - [Flashforge Adventurer 5M Issues](#flashforge-adventurer-5m-issues)
 - [Gathering Diagnostic Information](#gathering-diagnostic-information)
   - [Enabling Debug Logging](#enabling-debug-logging)
@@ -996,17 +997,17 @@ Three separate settings control the feel of taps vs. scrolls. Match the symptom 
 
 | Symptom | What's happening | Setting to change | Direction |
 |---|---|---|---|
-| Stationary taps register as swipes/scrolls | Touch controller drifts a few pixels while finger is still, crossing the scroll threshold | `jitter_threshold` | **Raise** (e.g., 15–25) |
+| Stationary taps register as swipes/scrolls | Touch controller drifts a few pixels while finger is still, crossing the scroll threshold | `scroll_limit` | **Raise** (e.g., 15–20) |
 | You scroll a list and a button in it fires mid-gesture | Finger released before moving far enough to commit to scroll, so the press becomes a click | `scroll_limit` | **Lower** (e.g., 5) |
 | You scroll, lift your finger, and a button fires right as you lift | Touch controller reports release→re-press on lift-off | `scroll_guard` | **Set to `true`** |
 | Lists feel sluggish — long coast after a flick | Scroll momentum decays too slowly | `scroll_throw` | **Raise** (e.g., 35) |
 | Short flicks never travel far enough — list barely moves | Momentum decays too fast | `scroll_throw` | **Lower** (e.g., 15) |
 
-All four live under `input` in `settings.json` (path varies by platform — see [Config File Locations](guide/touch-calibration.md#config-file-locations)). See [CONFIGURATION.md § Input Configuration](CONFIGURATION.md#input-settings) for the full reference.
+All three live under `input` in `settings.json` (path varies by platform — see [Config File Locations](guide/touch-calibration.md#config-file-locations)). See [CONFIGURATION.md § Input Configuration](CONFIGURATION.md#input-settings) for the full reference.
 
 > **Stop the service before editing `settings.json`** — the daemon rewrites the file periodically and your edits can be clobbered. Stop, edit, start.
 >
-> **Want to test a value before committing it?** Each setting has a matching `HELIX_*` env var (see each subsection below). For a one-shot test from SSH, prepend it to a manual launch (e.g. `HELIX_TOUCH_JITTER=25 helix-screen`). To make it persistent across reboots without editing `settings.json`, add it to `helixscreen.env` and restart the service — env vars override `settings.json`.
+> **Want to try a value before committing it?** All three are sliders under **Settings → System → Touch & Input** on the printer itself, so you can feel the change immediately and keep it only if it helps. `scroll_guard` and `scroll_limit` apply straight away; the panel prompts for a restart where one is needed.
 
 FlashForge AD5M and AD5X presets ship with `scroll_guard: true` out of the box. Other platforms default to `false`.
 
@@ -1021,22 +1022,19 @@ FlashForge AD5M and AD5X presets ship with `scroll_guard: true` out of the box. 
 
 **Cause:** Noisy touch controller (common with Goodix GT9xx and similar capacitive controllers) reports jittery coordinates even when the finger is stationary. The small coordinate changes exceed LVGL's scroll detection threshold.
 
-**Solution:** HelixScreen includes a jitter filter (enabled by default, 5 px dead zone) that suppresses this noise. If taps still register as swipes on your panel, raise the threshold:
+**Solution:** Raise `scroll_limit`, the distance a finger has to travel before a press is treated as a scroll. Putting it above the controller's drift means a stationary tap stays a tap:
 
 ```json
 {
   "input": {
-    "jitter_threshold": 25
+    "scroll_limit": 18
   }
 }
 ```
 
-Or test temporarily with an environment variable:
-```bash
-HELIX_TOUCH_JITTER=25 helix-screen
-```
+Or set it from the printer itself: **Settings → System → Touch & Input → Scroll Engage Distance**.
 
-Set to `0` to disable the filter if it interferes with intentional short-travel gestures.
+Raising it too far makes real scrolls feel unresponsive, so move in steps of a few pixels.
 
 ### Unintended Clicks While Scrolling
 
@@ -1668,7 +1666,7 @@ max_job_count: 100
 3. Pick your model from the list (Voron 2.4, Voron 0.2, Voron Trident, and Voron Switchwire are all in the database)
 4. The new type applies immediately — name, image, and all the type-driven features follow it
 
-**Let HelixScreen catch it for you.** If you'd rather not hunt through the list, just connect the printer and wait: when detection is confident the saved type is wrong, a **Printer type mismatch** dialog names both models and offers **Re-identify** (re-runs just the identification step of the setup wizard) or **Keep current** — the right answer for a heavily modified printer that legitimately differs from its stock sibling. Picking **Keep current** is remembered for that type; the prompt won't nag on every boot.
+**Let HelixScreen catch it for you.** If you'd rather not hunt through the list, just connect the printer and wait: when detection is confident the saved type is wrong, a **Printer type mismatch** dialog names both models and offers **Choose Model** (opens the model picker from the setup wizard's identity step) or **Keep current** — the right answer for a heavily modified printer that legitimately differs from its stock sibling. Picking **Keep current** is remembered for that type; the prompt won't nag on every boot.
 
 Re-adding the printer through **Printer Manager > Manage Printers > + Add Printer** (then deleting the old entry) and **Settings > System > Factory Reset** remain as last resorts — the factory reset re-runs the full wizard but wipes all HelixScreen settings, so use it only if you want a clean start anyway.
 
@@ -1766,9 +1764,43 @@ Auto-detection only commits to a model when it is confident enough. Below that b
 
 **In the wizard:** pick your model by hand at the **Printer Setup: Identity** step. The full database is there.
 
-**After setup:** if the wrong model got saved, correct it from Printer Manager — tap the printer image on the Home Panel, then the **printer model** row underneath the printer name, and pick the right model. It applies immediately, with nothing wiped. On the next connect, HelixScreen may also flag the mismatch itself and offer **Re-identify** — see [Wrong printer model identified](#wrong-printer-model-identified) above for that flow.
+**After setup:** if the wrong model got saved, correct it from Printer Manager — tap the printer image on the Home Panel, then the **printer model** row underneath the printer name, and pick the right model. It applies immediately, with nothing wiped. On the next connect, HelixScreen may also flag the mismatch itself and offer **Choose Model** — see [Wrong printer model identified](#wrong-printer-model-identified) above for that flow.
 
 ---
+
+## Creality K1 Series Issues
+
+Covers the K1, K1C and K1 Max on stock or Guilouz Helper Script firmware.
+
+### Creality Print can no longer find or connect to the printer
+
+**Symptoms:**
+- Creality Print stops discovering the printer on the LAN, and typing its IP directly does not work either
+- The Creality Cloud app stops reaching the printer
+- Port 80 on the printer is closed
+- HelixScreen, Fluidd, Mainsail and Moonraker all work normally
+
+**Cause:**
+This is a deliberate trade-off, not a fault. HelixScreen and the stock Creality UI cannot share the framebuffer, so the installer stops the stock UI stack. On the K1 that stack is started by `/etc/init.d/S99start_app`, which also launches `master-server`, `app-server` and `web-server` — the backend Creality Print and the Creality Cloud app talk to. Stopping the stock UI takes those with it.
+
+**What still works for sending prints:**
+- Fluidd or Mainsail in a browser
+- HelixScreen's own file browser, including USB
+- Any slicer that can upload to Moonraker — OrcaSlicer, and PrusaSlicer with the Moonraker plugin
+- Creality Print can still *slice*; it just cannot upload to the printer over the network. Export the G-code and send it by one of the routes above.
+
+**Solution:**
+If you need the stock Creality network stack back, uninstall HelixScreen:
+
+```bash
+/usr/data/helixscreen/install.sh --uninstall
+```
+
+Uninstalling re-enables the services the installer disabled and restores the stock UI.
+
+> **Do not just run `chmod +x /etc/init.d/S99start_app`.** It appears to work until the next reboot. HelixScreen's own init script runs `platform_stop_competing_uis` on every start, which re-applies `chmod a-x` to that file — and `S99helixscreen` sorts before `S99start_app`, so it runs first. To restore the stock stack without uninstalling, stop and disable the HelixScreen service first, then re-enable `S99start_app`.
+
+Tracked as [#1447](https://github.com/prestonbrown/helixscreen/issues/1447); keeping the Creality backend alive alongside HelixScreen is [#1468](https://github.com/prestonbrown/helixscreen/issues/1468).
 
 ## Flashforge Adventurer 5M Issues
 
