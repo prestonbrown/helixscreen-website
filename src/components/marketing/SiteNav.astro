@@ -26,6 +26,15 @@ import whatsnew from '../../data/whatsnew.generated.json';
       <ThemeSwitcher />
       <span class="hidden sm:inline-flex ui text-xs text-ink border border-alert rounded-[var(--hx-radius)] px-2 py-1 tabular">{whatsnew.version}</span>
 
+      <!-- Hidden below sm, where the bar is already full; the mobile menu carries
+           it at those widths instead, so it is never rendered twice. -->
+      <a
+        href="https://github.com/prestonbrown/helixscreen"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden sm:inline ui text-sm text-ink-muted hover:text-ink transition-colors"
+      >Source</a>
+
       <!-- Mobile hamburger -->
       <button
         id="nav-toggle"
@@ -67,6 +76,12 @@ import whatsnew from '../../data/whatsnew.generated.json';
       <a href="/printers/" class="text-ink-muted hover:text-ink transition-colors py-2">Printers</a>
       <a href="/whats-new/" class="text-ink-muted hover:text-ink transition-colors py-2">What's new</a>
       <a href="/contact/" class="text-ink-muted hover:text-ink transition-colors py-2">Contact</a>
+      <a
+        href="https://github.com/prestonbrown/helixscreen"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="sm:hidden text-ink-muted hover:text-ink transition-colors py-2"
+      >Source</a>
     </nav>
   </div>
 

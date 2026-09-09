@@ -480,3 +480,17 @@ test('the forced-dark override is gone from docs pages', () => {
   const html = readFileSync(DOCS_PAGE, 'utf8');
   assert.doesNotMatch(html, /dataset\.theme = 'dark'/);
 });
+
+// The header's repo link is reachable at every width: the nav-bar copy is hidden
+// below sm and the mobile menu carries it there, so exactly one is displayed.
+test('every authored page links to the source repository from the header', () => {
+  for (const [path, html] of readAuthoredPages()) {
+    const header = html.slice(0, html.indexOf('</header>'));
+    const links = header.match(
+      /<a[^>]+href="https:\/\/github\.com\/prestonbrown\/helixscreen"[^>]*>/g
+    ) ?? [];
+    assert.equal(links.length, 2, `${path}: expected a nav-bar and a mobile-menu source link`);
+    assert.ok(links.some((a) => /hidden sm:inline/.test(a)), `${path}: nav-bar link not hidden below sm`);
+    assert.ok(links.some((a) => /sm:hidden/.test(a)), `${path}: mobile-menu link not hidden from sm up`);
+  }
+});
