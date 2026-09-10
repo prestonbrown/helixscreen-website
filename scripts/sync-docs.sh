@@ -17,6 +17,7 @@ SOURCE_DEVEL="$PROJECT_ROOT/../helixscreen/docs/devel"
 SOURCE_IMAGES="$PROJECT_ROOT/../helixscreen/docs/images/user"
 DEST_DOCS="$PROJECT_ROOT/src/content/docs"
 DEST_IMAGES="$PROJECT_ROOT/src/assets/images/docs"
+ASTRO_STORE="$PROJECT_ROOT/.astro/data-store.json"
 
 # ---------- 1. Validation ----------
 
@@ -32,6 +33,11 @@ if [[ -d "$DEST_DOCS" ]]; then
   # Remove everything except .gitkeep
   find "$DEST_DOCS" -mindepth 1 ! -name '.gitkeep' -delete 2>/dev/null || true
 fi
+
+# Astro keys its content cache on file mtime, which a fresh copy of an
+# unchanged-looking file does not reliably bump, so a stale entry here renders
+# the previous body of a page that was just re-synced.
+rm -f "$ASTRO_STORE"
 
 mkdir -p "$DEST_DOCS"
 mkdir -p "$DEST_DOCS/guide"
