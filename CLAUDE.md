@@ -4,7 +4,7 @@ Astro + Starlight documentation site for [helixscreen.org](https://helixscreen.o
 
 ## Architecture
 
-- **Framework:** Astro 5.17 + Starlight 0.37 (static docs site generator)
+- **Framework:** Astro 7.3 + Starlight 0.42 (static docs site generator)
 - **Styling:** Tailwind CSS v4, two typefaces (IBM Plex Sans for all prose, headings and UI chrome; IBM Plex Mono for anything measurable). Headings differ from body by weight and tracking, not by face.
 - **Theme:** 18 themes generated from the app's own theme files, each with dark mode and, where the theme defines it, light mode. Chosen at runtime via the switcher, persisted to `localStorage`, and applied to both the marketing site and the docs pages.
 - **Search:** Pagefind (built-in with Starlight, indexes all pages at build time)
