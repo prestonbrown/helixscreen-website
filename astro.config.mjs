@@ -1,6 +1,14 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwindcss from '@tailwindcss/vite';
+import { existsSync } from 'node:fs';
+
+// Synced pages depend on which helixscreen ref was synced (the 1.0 and 1.1
+// settings layouts differ), and Starlight fails the build on a sidebar slug
+// with no page. List only the pages that exist.
+const docExists = (slug) =>
+  ['.md', '/index.md'].some((ext) => existsSync(`./src/content/docs/${slug}${ext}`));
+const present = (items) => items.filter((item) => !item.slug || docExists(item.slug));
 
 export default defineConfig({
   site: 'https://helixscreen.org',
@@ -53,27 +61,41 @@ export default defineConfig({
         },
         {
           label: 'Settings',
-          items: [
+          items: present([
             { label: 'Overview', slug: 'guide/settings' },
             { label: 'Display & Sound', slug: 'guide/settings/display-sound' },
-            { label: 'Printing', slug: 'guide/settings/printing' },
             { label: 'Hardware & Devices', slug: 'guide/settings/hardware' },
-            { label: 'Safety & Notifications', slug: 'guide/settings/safety' },
-            { label: 'System', slug: 'guide/settings/system' },
+            { label: 'Display', slug: 'guide/settings/display' },
+            { label: 'Appearance', slug: 'guide/settings/appearance' },
             { label: 'Touch & Input', slug: 'guide/settings/touch-input' },
+            { label: 'Sound', slug: 'guide/settings/sound' },
+            { label: 'Printing', slug: 'guide/settings/printing' },
+            { label: 'Devices', slug: 'guide/settings/devices' },
+            { label: 'Safety & Alerts', slug: 'guide/settings/safety' },
+            { label: 'Connection', slug: 'guide/settings/connection' },
+            { label: 'Language & Time', slug: 'guide/settings/language-time' },
+            { label: 'System', slug: 'guide/settings/system' },
+            { label: 'Updates', slug: 'guide/settings/updates' },
             { label: 'Help & About', slug: 'guide/settings/help-about' },
             { label: 'LED Settings', slug: 'guide/settings/led-settings' },
-          ],
+          ]),
         },
         {
           label: 'Platform Guides',
-          items: [
+          items: present([
             { label: 'Creality K1C Setup', slug: 'guide/creality-k1c-setup' },
+            { label: 'Creality K2 Series', slug: 'guide/install-k2' },
+            { label: 'Adventurer 5M', slug: 'guide/install-ad5m' },
+            { label: 'Adventurer 5X', slug: 'guide/install-ad5x' },
+            { label: 'Centauri Carbon', slug: 'guide/install-cc1' },
+            { label: 'Sonic Pad', slug: 'guide/install-sonicpad' },
+            { label: 'Snapmaker U1', slug: 'guide/install-u1' },
+            { label: 'Chamber Heater', slug: 'guide/chamber-heater' },
             { label: 'Bluetooth Setup', slug: 'guide/bluetooth-setup' },
             { label: 'Barcode Scanner', slug: 'guide/barcode-scanner' },
             { label: 'Label Printing', slug: 'guide/label-printing' },
             { label: 'Touch Calibration', slug: 'guide/touch-calibration' },
-          ],
+          ]),
         },
         {
           label: 'Reference',
