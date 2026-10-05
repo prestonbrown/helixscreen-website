@@ -2,10 +2,14 @@ name: Deploy Docs
 
 # Triggered by:
 #   1. repository_dispatch from helixscreen when a release is published
-#      (event type: helixscreen-release, payload: { ref: "vX.Y.Z" })
-#   2. workflow_dispatch — manual run, optionally specify a helixscreen ref
-#   3. push to main — website-only changes (landing pages, theme, sync script),
-#      built against the newest stable helixscreen release
+#      (event type: helixscreen-release); any release may change any version,
+#      so every version's ref is resolved again
+#   2. workflow_dispatch: manual run, optionally pinning refs per version
+#   3. push to main: website-only changes (landing pages, theme, sync script)
+#
+# Each documentation version in src/data/doc-versions.mjs is built from the
+# newest published helixscreen release with its tag prefix, or its fallback
+# ref when none exists (scripts/resolve-doc-refs.mjs).
 #
 # Required repo secrets:
 #   CLOUDFLARE_API_TOKEN  — Pages:Edit permission
@@ -16,10 +20,10 @@ on:
     types: [helixscreen-release]
   workflow_dispatch:
     inputs:
-      ref:
-        description: "helixscreen git ref to sync docs from (use 'main' to preview unreleased docs)"
+      refs:
+        description: "Pin helixscreen refs per docs version, e.g. '1.0=main 1.1=main' (blank resolves every version from releases)"
         required: false
-        default: main
+        default: ""
   push:
     branches: [main]
 
@@ -37,49 +41,45 @@ jobs:
       - name: Checkout website repo
         uses: actions/checkout@v5
 
-      - name: Resolve helixscreen ref
-        id: ref
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # A website-only push documents the version people can actually
-          # install, so it builds from the newest stable release rather than
-          # main, which carries unreleased notes and a trailing VERSION.txt.
-          # `releases/latest` skips drafts and prereleases, so an rc tag never
-          # becomes the site's version.
-          case "${{ github.event_name }}" in
-            repository_dispatch) REF="${{ github.event.client_payload.ref }}" ;;
-            workflow_dispatch)   REF="${{ inputs.ref }}" ;;
-            *)
-              REF="$(gh api repos/prestonbrown/helixscreen/releases/latest \
-                       --jq .tag_name 2>/dev/null || true)"
-              # gh reports API errors on stdout, so a failed lookup arrives here
-              # as a JSON blob rather than an empty string. Only a tag-shaped
-              # value is usable; anything else falls back to main.
-              case "$REF" in v[0-9]*) ;; *) REF="main" ;; esac
-              ;;
-          esac
-          if [ -z "$REF" ]; then REF="main"; fi
-          echo "ref=$REF" >> "$GITHUB_OUTPUT"
-          echo "Using helixscreen ref: $REF"
-
-      - name: Checkout helixscreen (docs source)
-        uses: actions/checkout@v5
-        with:
-          repository: prestonbrown/helixscreen
-          ref: ${{ steps.ref.outputs.ref }}
-          path: helixscreen-src
-
-      - name: Expose helixscreen at ../helixscreen
-        # sync-docs.sh reads from $PROJECT_ROOT/../helixscreen/docs/user.
-        # actions/checkout refuses paths outside the workspace, so we symlink.
-        run: ln -s "$GITHUB_WORKSPACE/helixscreen-src" "$GITHUB_WORKSPACE/../helixscreen"
-
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
+
+      - name: Resolve helixscreen refs
+        id: refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OVERRIDES: ${{ inputs.refs }}
+        run: |
+          # One NAME=ref line per docs version; sync-docs.sh reads these names.
+          node scripts/resolve-doc-refs.mjs --override "$OVERRIDES" > "$RUNNER_TEMP/doc-refs.env"
+          cat "$RUNNER_TEMP/doc-refs.env"
+          cat "$RUNNER_TEMP/doc-refs.env" >> "$GITHUB_ENV"
+          echo "current=$(sed -n 's/^HELIX_DOCS_REF=//p' "$RUNNER_TEMP/doc-refs.env")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout helixscreen (docs source)
+        # The working tree is the current version: the gen-* scripts read it.
+        uses: actions/checkout@v5
+        with:
+          repository: prestonbrown/helixscreen
+          ref: ${{ steps.refs.outputs.current }}
+          path: helixscreen-src
+
+      - name: Fetch the other docs versions' refs
+        # sync-docs.sh reads each other version with `git archive`, resolving
+        # a name locally or as origin/<name>.
+        run: |
+          while IFS='=' read -r name ref; do
+            [ "$name" = HELIX_DOCS_REF ] && continue
+            git -C helixscreen-src fetch --no-tags --depth 1 origin "+$ref:refs/remotes/origin/$ref"
+          done < "$RUNNER_TEMP/doc-refs.env"
+
+      - name: Expose helixscreen at ../helixscreen
+        # sync-docs.sh reads from $PROJECT_ROOT/../helixscreen.
+        # actions/checkout refuses paths outside the workspace, so we symlink.
+        run: ln -s "$GITHUB_WORKSPACE/helixscreen-src" "$GITHUB_WORKSPACE/../helixscreen"
 
       - name: Install dependencies
         run: npm ci

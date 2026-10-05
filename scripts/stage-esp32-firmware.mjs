@@ -4,6 +4,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from 'node:os';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { REPO, publishedNewestFirst } from './releases.mjs';
 
 // Stages the K-Touch firmware for the /flash/ page: the part images flash_args
 // names, plus an ESP Web Tools manifest. The browser fetches them from this
@@ -13,7 +14,6 @@ import { fileURLToPath } from 'node:url';
 // Usage: node scripts/stage-esp32-firmware.mjs [--zip path/to/helixscreen-esp32-ktouch-<tag>.zip]
 // Without --zip it asks `gh` for the newest release carrying the zip.
 
-export const REPO = 'prestonbrown/helixscreen';
 export const ASSET_RE = /^helixscreen-esp32-ktouch-(.+)\.zip$/;
 // Cloudflare Pages refuses any single file above 25 MiB.
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
@@ -54,10 +54,7 @@ export function buildManifest(version, parts) {
  * ships no ESP32 build. Returns { tag, asset } or null.
  */
 export function pickRelease(releases) {
-  const sorted = [...releases]
-    .filter((r) => !r.draft)
-    .sort((a, b) => Date.parse(b.published_at ?? b.created_at) - Date.parse(a.published_at ?? a.created_at));
-  for (const r of sorted) {
+  for (const r of publishedNewestFirst(releases)) {
     const asset = (r.assets ?? []).find((a) => ASSET_RE.test(a.name));
     if (asset) return { tag: r.tag_name, asset: asset.name };
   }

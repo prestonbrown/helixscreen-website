@@ -1,14 +1,9 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightVersions from 'starlight-versions';
 import tailwindcss from '@tailwindcss/vite';
-import { existsSync } from 'node:fs';
-
-// Synced pages depend on which helixscreen ref was synced (the 1.0 and 1.1
-// settings layouts differ), and Starlight fails the build on a sidebar slug
-// with no page. List only the pages that exist.
-const docExists = (slug) =>
-  ['.md', '/index.md'].some((ext) => existsSync(`./src/content/docs/${slug}${ext}`));
-const present = (items) => items.filter((item) => !item.slug || docExists(item.slug));
+import { DOC_VERSIONS } from './src/data/doc-versions.mjs';
+import { SIDEBAR, UNVERSIONED_PREFIX, docExists, presentSidebar } from './src/data/docs-sidebar.mjs';
 
 export default defineConfig({
   site: 'https://helixscreen.org',
@@ -23,149 +18,16 @@ export default defineConfig({
       ],
       components: {
         ThemeProvider: './src/components/DocsThemeProvider.astro',
-        ThemeSelect: './src/components/ThemeSwitcher.astro',
+        ThemeSelect: './src/components/DocsThemeSelect.astro',
       },
       customCss: ['./src/styles/starlight-custom.css'],
-      sidebar: [
-        {
-          label: 'Installation',
-          items: [
-            { label: 'Supported Printers', slug: 'guide/supported-printers' },
-            { label: 'Install', slug: 'installation' },
-            { label: 'Upgrading', slug: 'upgrading' },
-          ],
-        },
-        {
-          // Page order mirrors the sequence in docs/user/USER_GUIDE.md.
-          label: 'User Guide',
-          items: [
-            { label: 'Overview', slug: 'guide' },
-            { label: 'Getting Started', slug: 'guide/getting-started' },
-            { label: 'Home Panel', slug: 'guide/home-panel' },
-            { label: 'Printing', slug: 'guide/printing' },
-            { label: 'Print Monitoring', slug: 'guide/print-monitoring' },
-            { label: 'Temperature', slug: 'guide/temperature' },
-            { label: 'Motion', slug: 'guide/motion' },
-            { label: 'Filament', slug: 'guide/filament' },
-            { label: 'Filament Tracking', slug: 'guide/filament-tracking' },
-            { label: 'Calibration', slug: 'guide/calibration' },
-            { label: 'Fans', slug: 'guide/fans' },
-            { label: 'Sensors', slug: 'guide/sensors' },
-            { label: 'Security & Screen Lock', slug: 'guide/security' },
-            { label: 'Camera', slug: 'guide/camera' },
-            { label: 'Print History', slug: 'guide/print-history' },
-            { label: 'Advanced Features', slug: 'guide/advanced' },
-            { label: 'Beta Features', slug: 'guide/beta-features' },
-            { label: 'Tips & Tricks', slug: 'guide/tips' },
-          ],
-        },
-        {
-          label: 'Settings',
-          items: present([
-            { label: 'Overview', slug: 'guide/settings' },
-            { label: 'Display & Sound', slug: 'guide/settings/display-sound' },
-            { label: 'Hardware & Devices', slug: 'guide/settings/hardware' },
-            { label: 'Display', slug: 'guide/settings/display' },
-            { label: 'Appearance', slug: 'guide/settings/appearance' },
-            { label: 'Touch & Input', slug: 'guide/settings/touch-input' },
-            { label: 'Sound', slug: 'guide/settings/sound' },
-            { label: 'Printing', slug: 'guide/settings/printing' },
-            { label: 'Devices', slug: 'guide/settings/devices' },
-            { label: 'Safety & Alerts', slug: 'guide/settings/safety' },
-            { label: 'Connection', slug: 'guide/settings/connection' },
-            { label: 'Language & Time', slug: 'guide/settings/language-time' },
-            { label: 'System', slug: 'guide/settings/system' },
-            { label: 'Updates', slug: 'guide/settings/updates' },
-            { label: 'Help & About', slug: 'guide/settings/help-about' },
-            { label: 'LED Settings', slug: 'guide/settings/led-settings' },
-          ]),
-        },
-        {
-          label: 'Platform Guides',
-          items: present([
-            { label: 'Creality K1C Setup', slug: 'guide/creality-k1c-setup' },
-            { label: 'Creality K2 Series', slug: 'guide/install-k2' },
-            { label: 'Adventurer 5M', slug: 'guide/install-ad5m' },
-            { label: 'Adventurer 5X', slug: 'guide/install-ad5x' },
-            { label: 'Centauri Carbon', slug: 'guide/install-cc1' },
-            { label: 'Sonic Pad', slug: 'guide/install-sonicpad' },
-            { label: 'Snapmaker U1', slug: 'guide/install-u1' },
-            { label: 'Chamber Heater', slug: 'guide/chamber-heater' },
-            { label: 'Bluetooth Setup', slug: 'guide/bluetooth-setup' },
-            { label: 'Barcode Scanner', slug: 'guide/barcode-scanner' },
-            { label: 'Label Printing', slug: 'guide/label-printing' },
-            { label: 'Touch Calibration', slug: 'guide/touch-calibration' },
-          ]),
-        },
-        {
-          label: 'Reference',
-          items: [
-            { label: 'Configuration', slug: 'reference/configuration' },
-            { label: 'Troubleshooting', slug: 'reference/troubleshooting' },
-            { label: 'FAQ', slug: 'reference/faq' },
-          ],
-        },
-        {
-          label: 'Legal',
-          items: [
-            { label: 'Privacy Policy', slug: 'legal/privacy' },
-            { label: 'Telemetry', slug: 'legal/telemetry' },
-          ],
-        },
-        {
-          label: 'Developer Docs',
-          collapsed: true,
-          items: [
-            { label: 'Overview', slug: 'dev' },
-            {
-              label: 'Onboarding',
-              items: [
-                { label: 'Development Setup', slug: 'dev/onboarding/development' },
-                { label: 'Build System', slug: 'dev/onboarding/build-system' },
-                { label: 'Quick Reference', slug: 'dev/onboarding/quick-reference' },
-                { label: 'Your First Contribution', slug: 'dev/onboarding/first-contribution' },
-                { label: 'Contributor Gotchas', slug: 'dev/onboarding/gotchas' },
-              ],
-            },
-            {
-              label: 'Contributing',
-              items: [
-                { label: 'UI Contributor Guide', slug: 'dev/contributing/ui' },
-                { label: 'Theme Contributor Guide', slug: 'dev/contributing/themes' },
-                { label: 'Translation Contributor Guide', slug: 'dev/contributing/translations' },
-                { label: 'Plugin Development', slug: 'dev/contributing/plugins' },
-                { label: 'Copyright Headers', slug: 'dev/contributing/copyright' },
-              ],
-            },
-            {
-              label: 'Reference',
-              items: [
-                { label: 'LVGL9 XML Guide', slug: 'dev/reference/xml-guide' },
-                { label: 'Modal System', slug: 'dev/reference/modals' },
-                { label: 'Logging', slug: 'dev/reference/logging' },
-                { label: 'Testing', slug: 'dev/reference/testing' },
-              ],
-            },
-            {
-              label: 'Printer Platforms',
-              items: [
-                { label: 'Creality K1 Series', slug: 'dev/printers/creality-k1' },
-                { label: 'Creality K2 Series', slug: 'dev/printers/creality-k2' },
-                { label: 'FlashForge Adventurer 5X', slug: 'dev/printers/flashforge-ad5x' },
-                { label: 'QIDI Printers', slug: 'dev/printers/qidi' },
-                { label: 'Snapmaker U1', slug: 'dev/printers/snapmaker-u1' },
-                { label: 'AD5M Klipper Mod Variant', slug: 'dev/printers/ad5m-kmod' },
-              ],
-            },
-            {
-              label: 'Process',
-              items: [
-                { label: 'Release Process', slug: 'dev/process/release' },
-                { label: 'Installer', slug: 'dev/process/installer' },
-              ],
-            },
-          ],
-        },
+      sidebar: presentSidebar(SIDEBAR, (slug) => docExists('./src/content/docs', slug)),
+      plugins: [
+        starlightVersions({
+          current: { label: DOC_VERSIONS.current.label },
+          versions: DOC_VERSIONS.others.map(({ slug, label }) => ({ slug, label })),
+          exclude: [`${UNVERSIONED_PREFIX}/**`],
+        }),
       ],
     }),
   ],

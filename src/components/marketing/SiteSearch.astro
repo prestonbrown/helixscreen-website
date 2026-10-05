@@ -82,7 +82,9 @@
         });
 
         const PagefindUI = (window as any).PagefindUI;
-        new PagefindUI({ element: '#pagefind-search', showSubResults: true, showImages: false });
+        const search = new PagefindUI({ element: '#pagefind-search', showSubResults: true, showImages: false });
+        // Site search covers the stable docs; the other versions search from their own pages.
+        search.triggerFilters({ version: ['current'] });
       } catch {
         panelBody!.classList.add('hidden');
         fallback!.classList.remove('hidden');

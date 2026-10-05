@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import MarketingLayout from '../layouts/MarketingLayout.astro';
 import SiteNav from '../components/marketing/SiteNav.astro';
 import Colophon from '../components/marketing/Colophon.astro';
+import { docsPrefix } from '../data/doc-versions.mjs';
 
 // scripts/stage-esp32-firmware.mjs writes this at deploy time when a release
 // carries the K-Touch build. Its absence means none does yet.
@@ -11,7 +12,8 @@ const MANIFEST_URL = '/flash/esp32/ktouch/manifest.json';
 const manifestFile = join(process.cwd(), 'public', MANIFEST_URL);
 const firmware = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null;
 
-const GUIDE = '/installation/#esp32-touchscreen-btt-k-touch---alpha';
+// The ESP32 install guide first ships in the 1.1 docs, wherever 1.1 is served.
+const GUIDE = `${docsPrefix('1.1')}/installation/#esp32-touchscreen-btt-k-touch---alpha`;
 const link = 'text-secondary underline underline-offset-2';
 ---
 <MarketingLayout

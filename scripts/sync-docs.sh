@@ -1,61 +1,55 @@
 #!/usr/bin/env bash
 #
-# sync-docs.sh — Copy user + developer documentation from the helixscreen
+# sync-docs.sh - Copy user + developer documentation from the helixscreen
 # repo into this Astro+Starlight site with proper frontmatter and path
-# rewrites.
+# rewrites, once per documentation version in src/data/doc-versions.mjs.
 #
 # Usage:  ./scripts/sync-docs.sh
-# Idempotent: safe to run repeatedly; cleans output dirs each time.
+#
+# Each version's helixscreen ref comes from its environment variable
+# (HELIX_DOCS_REF for the current version, HELIX_DOCS_REF_<slug> for the
+# others, as scripts/resolve-doc-refs.mjs prints them) and is read with
+# `git archive` from $HELIX_REPO (default ../helixscreen). Without one, the
+# current version reads the ../helixscreen working tree, and another version
+# reads the newest local tag with its prefix, else its fallback ref; when
+# neither exists locally that version keeps its committed content.
+#
+# Idempotent: safe to run repeatedly; cleans each synced version's output first.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-SOURCE_DOCS="$PROJECT_ROOT/../helixscreen/docs/user"
-SOURCE_DEVEL="$PROJECT_ROOT/../helixscreen/docs/devel"
-SOURCE_IMAGES="$PROJECT_ROOT/../helixscreen/docs/images/user"
-DEST_DOCS="$PROJECT_ROOT/src/content/docs"
-DEST_IMAGES="$PROJECT_ROOT/src/assets/images/docs"
+HELIX_REPO="${HELIX_REPO:-$PROJECT_ROOT/../helixscreen}"
+DOCS_ROOT="$PROJECT_ROOT/src/content/docs"
+IMAGES_ROOT="$PROJECT_ROOT/src/assets/images/docs"
+VERSIONS_DIR="$PROJECT_ROOT/src/content/versions"
 ASTRO_STORE="$PROJECT_ROOT/.astro/data-store.json"
 
-# ---------- 1. Validation ----------
-
-if [[ ! -d "$SOURCE_DOCS" ]]; then
-  echo "ERROR: Source docs directory not found: $SOURCE_DOCS" >&2
+# One row per version, current first: slug|env var|tag prefix|prerelease|fallback ref
+mapfile -t VERSION_ROWS < <(node --input-type=module -e "
+  import { DOC_VERSIONS as v, refEnvVar } from '$PROJECT_ROOT/src/data/doc-versions.mjs';
+  for (const x of [v.current, ...v.others])
+    console.log([x.slug, refEnvVar(x.slug), x.tagPrefix, x.prerelease, x.fallbackRef].join('|'));
+")
+if [[ ${#VERSION_ROWS[@]} -eq 0 ]]; then
+  echo "ERROR: could not read src/data/doc-versions.mjs" >&2
   exit 1
 fi
+OTHER_SLUGS=()
+for row in "${VERSION_ROWS[@]:1}"; do OTHER_SLUGS+=("${row%%|*}"); done
 
-# ---------- 2. Clean and create output dirs ----------
-
-echo "Cleaning $DEST_DOCS ..."
-if [[ -d "$DEST_DOCS" ]]; then
-  # Remove everything except .gitkeep
-  find "$DEST_DOCS" -mindepth 1 ! -name '.gitkeep' -delete 2>/dev/null || true
-fi
-
-# Astro keys its content cache on file mtime, which a fresh copy of an
-# unchanged-looking file does not reliably bump, so a stale entry here renders
-# the previous body of a page that was just re-synced.
-rm -f "$ASTRO_STORE"
-
-mkdir -p "$DEST_DOCS"
-mkdir -p "$DEST_DOCS/guide"
-mkdir -p "$DEST_DOCS/guide/settings"
-mkdir -p "$DEST_DOCS/reference"
-mkdir -p "$DEST_DOCS/legal"
-mkdir -p "$DEST_DOCS/dev"
-mkdir -p "$DEST_DOCS/dev/onboarding"
-mkdir -p "$DEST_DOCS/dev/contributing"
-mkdir -p "$DEST_DOCS/dev/reference"
-mkdir -p "$DEST_DOCS/dev/printers"
-mkdir -p "$DEST_DOCS/dev/process"
-mkdir -p "$DEST_IMAGES"
+# Per-version state read by the functions below.
+SOURCE_DOCS=""; SOURCE_DEVEL=""; SOURCE_IMAGES=""; SOURCE_GALLERY=""
+DEST_DOCS=""; DEST_IMAGES=""; VERSION_SLUG=""; IMG_SUBDIR=""; EXTRA_DEPTH=0
 
 # ---------- 3. File mapping ----------
 #
 # Each entry: "source_rel|dest_rel|title|order|depth"
-# depth = nesting level of dest file under src/content/docs/ for image-path rewriting
+# dest_rel is relative to the version's root: src/content/docs/ for the current
+# version, src/content/docs/<slug>/ for another.
+# depth = nesting level of dest file under that root, for image-path rewriting
 #   0 = root (e.g. installation.md)
 #   1 = guide/ or reference/ or legal/
 #   2 = guide/settings/
@@ -136,16 +130,18 @@ process_file() {
     return
   fi
 
-  # Build relative path prefix from dest file to src/assets/images/docs/
+  # Build relative path prefix from dest file to the version's image dir
   # From src/content/docs/         -> ../../assets/images/docs/        (depth 0: 2 ups)
   # From src/content/docs/guide/   -> ../../../assets/images/docs/     (depth 1: 3 ups)
   # From src/content/docs/guide/settings/ -> ../../../../assets/images/docs/ (depth 2: 4 ups)
+  # A non-current version sits one directory deeper and reads its own images
+  # from src/assets/images/docs/<slug>/, since one filename differs per version.
   local ups=""
   local i
-  for (( i = 0; i < depth + 2; i++ )); do
+  for (( i = 0; i < depth + 2 + EXTRA_DEPTH; i++ )); do
     ups="../$ups"
   done
-  local img_prefix="${ups}assets/images/docs"
+  local img_prefix="${ups}assets/images/docs${IMG_SUBDIR:+/$IMG_SUBDIR}"
 
   # Read file, strip the first # heading line
   local body
@@ -200,10 +196,24 @@ process_file() {
   # Drop links to files outside our scope (e.g. ../DEVELOPMENT.md)
   # Leave them as-is — they just won't resolve, which is acceptable
 
+  # A non-current version's pages link within that version. Developer docs
+  # (/dev/) and marketing pages are unversioned and keep their root links.
+  if [[ -n "$VERSION_SLUG" ]]; then
+    body=$(echo "$body" | sed -E "s@\\(/(installation|upgrading|guide|reference|legal)([/#)])@(/${VERSION_SLUG}/\\1\\2@g")
+  fi
+
   # --- Write output ---
+  mkdir -p "$(dirname "$dst_path")"
   {
     echo "---"
     echo "title: \"$title\""
+    # The content layer slugifies "1.1" to "11"; an explicit slug keeps the
+    # version segment intact, as starlight-versions expects.
+    if [[ -n "$VERSION_SLUG" ]]; then
+      local route="${dst%.md}"
+      route="${route%/index}"
+      echo "slug: \"$VERSION_SLUG/$route\""
+    fi
     echo "sidebar:"
     echo "  order: $order"
     echo "---"
@@ -214,18 +224,7 @@ process_file() {
   echo "  OK: $src -> $dst"
 }
 
-# ---------- 5. Process all files ----------
-
-echo ""
-echo "Syncing docs from $SOURCE_DOCS ..."
-echo ""
-
-for entry in "${FILES[@]}"; do
-  IFS='|' read -r src dst title order depth <<< "$entry"
-  process_file "$src" "$dst" "$title" "$order" "$depth"
-done
-
-# ---------- 5b. Developer docs ----------
+# ---------- 5. Developer docs (current version only) ----------
 #
 # Curated subset of docs/devel/ — onboarding, contributor guides, reference
 # for contributors, printer platforms, process. Internal architecture, plans,
@@ -384,6 +383,7 @@ process_devel_file() {
   body=$(echo "$body" | sed -E "s|\((\\.\\./)+(patches/[^)]+)\)|(${GITHUB_BLOB_BASE}/\2)|g")
 
   # --- Write output ---
+  mkdir -p "$(dirname "$dst_path")"
   {
     echo "---"
     echo "title: \"$title\""
@@ -397,18 +397,22 @@ process_devel_file() {
   echo "  OK: devel/$src -> $dst"
 }
 
-echo ""
-echo "Syncing developer docs from $SOURCE_DEVEL ..."
-echo ""
 
-for entry in "${DEVEL_FILES[@]}"; do
-  IFS='|' read -r src dst title order depth <<< "$entry"
-  process_devel_file "$src" "$dst" "$title" "$order" "$depth"
-done
+sync_devel() {
+  echo ""
+  echo "Syncing developer docs from $SOURCE_DEVEL ..."
+  echo ""
 
-# --- Write the dev/ landing page inline ---
-# Not synced from source — written fresh so contributors can land on a
-# curated overview that points at GitHub for the full developer-docs set.
+  local entry src dst title order depth
+  for entry in "${DEVEL_FILES[@]}"; do
+    IFS='|' read -r src dst title order depth <<< "$entry"
+    process_devel_file "$src" "$dst" "$title" "$order" "$depth"
+  done
+
+  # --- Write the dev/ landing page inline ---
+  # Not synced from source: written fresh so contributors can land on a
+  # curated overview that points at GitHub for the full developer-docs set.
+  mkdir -p "$DEST_DOCS/dev"
 cat > "$DEST_DOCS/dev/index.md" <<'DEVINDEX'
 ---
 title: "Developer Documentation"
@@ -448,26 +452,171 @@ For real-time questions, join the
 [Discord](https://discord.gg/helixscreen).
 DEVINDEX
 
-echo "  OK: (inline) dev/index.md"
+  echo "  OK: (inline) dev/index.md"
+}
 
 # ---------- 6. Copy images ----------
 
-echo ""
-echo "Copying images from $SOURCE_IMAGES ..."
+copy_images() {
+  echo ""
+  echo "Copying images from $SOURCE_IMAGES ..."
+  mkdir -p "$DEST_IMAGES"
 
-if [[ -d "$SOURCE_IMAGES" ]]; then
-  cp -R "$SOURCE_IMAGES/"* "$DEST_IMAGES/" 2>/dev/null || true
-fi
+  if [[ -d "$SOURCE_IMAGES" ]]; then
+    cp -R "$SOURCE_IMAGES/"* "$DEST_IMAGES/" 2>/dev/null || true
+  fi
 
-# Also copy gallery-level screenshots (referenced from some docs as ../../images/foo.png)
-SOURCE_GALLERY="$PROJECT_ROOT/../helixscreen/docs/images"
-if [[ -d "$SOURCE_GALLERY" ]]; then
-  # Copy only image files from gallery root (not subdirectories)
-  find "$SOURCE_GALLERY" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.svg' \) -exec cp {} "$DEST_IMAGES/" \;
-fi
+  # Also copy gallery-level screenshots (referenced from some docs as ../../images/foo.png)
+  if [[ -d "$SOURCE_GALLERY" ]]; then
+    # Copy only image files from gallery root (not subdirectories)
+    find "$SOURCE_GALLERY" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.svg' \) -exec cp {} "$DEST_IMAGES/" \;
+  fi
 
-img_count=$(ls -1 "$DEST_IMAGES" 2>/dev/null | wc -l | tr -d ' ')
-echo "  Copied $img_count image(s) to $DEST_IMAGES"
+  local img_count
+  img_count=$(find "$DEST_IMAGES" -maxdepth 1 -type f | wc -l | tr -d ' ')
+  echo "  Copied $img_count image(s) to $DEST_IMAGES"
+}
+
+# ---------- 7. Sources and versions ----------
+
+# Resolves a ref name in the helixscreen clone, accepting a remote-only branch
+# (a CI checkout of a tag has origin/main but no local main).
+resolve_commit() {
+  git -C "$HELIX_REPO" rev-parse -q --verify "$1^{commit}" 2>/dev/null \
+    || git -C "$HELIX_REPO" rev-parse -q --verify "origin/$1^{commit}" 2>/dev/null
+}
+
+# Newest local tag with the prefix (prerelease tags carry a "-" suffix), else
+# the fallback ref when it resolves, else nothing.
+local_ref() {
+  local prefix="$1" prerelease="$2" fallback="$3" tag
+  tag=$(git -C "$HELIX_REPO" -c versionsort.suffix=- tag -l "${prefix}*" --sort=-v:refname 2>/dev/null \
+          | { if [[ "$prerelease" == true ]]; then cat; else grep -v -- - || true; fi; } | head -n 1 || true)
+  if [[ -n "$tag" ]]; then echo "$tag"; return; fi
+  if resolve_commit "$fallback" >/dev/null; then echo "$fallback"; fi
+}
+
+TEMP_DIRS=()
+cleanup() {
+  local d
+  for d in "${TEMP_DIRS[@]}"; do rm -rf "${d:?}"; done
+}
+trap cleanup EXIT
+
+# Extracts docs/ at a ref into a fresh temp dir and sets SRC_ROOT to it.
+archive_ref() {
+  local ref="$1" commit
+  if ! commit=$(resolve_commit "$ref"); then
+    echo "ERROR: ref '$ref' not found in $HELIX_REPO" >&2
+    exit 1
+  fi
+  SRC_ROOT=$(mktemp -d)
+  TEMP_DIRS+=("$SRC_ROOT")
+  git -C "$HELIX_REPO" archive "$commit" docs | tar -x -C "$SRC_ROOT"
+}
+
+use_source() {
+  SOURCE_DOCS="$1/docs/user"
+  SOURCE_DEVEL="$1/docs/devel"
+  SOURCE_IMAGES="$1/docs/images/user"
+  SOURCE_GALLERY="$1/docs/images"
+  if [[ ! -d "$SOURCE_DOCS" ]]; then
+    echo "ERROR: Source docs directory not found: $SOURCE_DOCS" >&2
+    exit 1
+  fi
+}
+
+is_other_slug() {
+  local s
+  for s in "${OTHER_SLUGS[@]}"; do [[ "$1" == "$s" ]] && return 0; done
+  return 1
+}
+
+# Empties a directory except .gitkeep and the other versions' directories.
+clean_current() {
+  local dir="$1" entry name
+  [[ -d "$dir" ]] || return 0
+  for entry in "$dir"/* "$dir"/.[!.]*; do
+    [[ -e "$entry" ]] || continue
+    name=$(basename "$entry")
+    [[ "$name" == .gitkeep ]] && continue
+    is_other_slug "$name" && continue
+    rm -rf "${entry:?}"
+  done
+}
+
+sync_files() {
+  echo ""
+  echo "Syncing docs from $SOURCE_DOCS ..."
+  echo ""
+  local entry src dst title order depth
+  for entry in "${FILES[@]}"; do
+    IFS='|' read -r src dst title order depth <<< "$entry"
+    process_file "$src" "$dst" "$title" "$order" "$depth"
+  done
+}
+
+# Astro keys its content cache on file mtime, which a fresh copy of an
+# unchanged-looking file does not reliably bump, so a stale entry here renders
+# the previous body of a page that was just re-synced.
+rm -f "$ASTRO_STORE"
+
+current=true
+for row in "${VERSION_ROWS[@]}"; do
+  IFS='|' read -r slug env_var tag_prefix prerelease fallback <<< "$row"
+  ref="${!env_var:-}"
+
+  if [[ -z "$ref" ]] && ! $current; then
+    ref=$(local_ref "$tag_prefix" "$prerelease" "$fallback")
+    if [[ -z "$ref" ]]; then
+      echo "" >&2
+      echo "WARNING: version $slug: no ${tag_prefix}* tag and no '$fallback' in $HELIX_REPO." >&2
+      echo "WARNING: keeping its committed content in src/content/docs/$slug/. Set $env_var to sync it." >&2
+      continue
+    fi
+  fi
+
+  if [[ -n "$ref" ]]; then
+    archive_ref "$ref"
+  else
+    SRC_ROOT="$HELIX_REPO"
+    ref="working tree"
+  fi
+  use_source "$SRC_ROOT"
+
+  if $current; then
+    echo ""
+    echo "=== Version $slug (current, at the root) from $ref ==="
+    DEST_DOCS="$DOCS_ROOT"; DEST_IMAGES="$IMAGES_ROOT"
+    VERSION_SLUG=""; IMG_SUBDIR=""; EXTRA_DEPTH=0
+    echo "Cleaning $DEST_DOCS ..."
+    clean_current "$DOCS_ROOT"
+    clean_current "$IMAGES_ROOT"
+    # Only configured versions keep a sidebar file.
+    for f in "$VERSIONS_DIR"/*.json; do
+      [[ -e "$f" ]] || continue
+      is_other_slug "$(basename "$f" .json)" || rm -f "${f:?}"
+    done
+    sync_files
+    sync_devel
+    copy_images
+  else
+    echo ""
+    echo "=== Version $slug (at /$slug/) from $ref ==="
+    DEST_DOCS="$DOCS_ROOT/$slug"; DEST_IMAGES="$IMAGES_ROOT/$slug"
+    VERSION_SLUG="$slug"; IMG_SUBDIR="$slug"; EXTRA_DEPTH=1
+    echo "Cleaning $DEST_DOCS ..."
+    rm -rf "${DOCS_ROOT:?}/${slug:?}" "${IMAGES_ROOT:?}/${slug:?}" "${VERSIONS_DIR:?}/${slug:?}.json"
+    sync_files
+    copy_images
+    node --input-type=module -e "
+      import { writeVersionConfig } from '$PROJECT_ROOT/src/data/docs-sidebar.mjs';
+      writeVersionConfig('$PROJECT_ROOT/src', '$slug');
+    "
+    echo "  OK: src/content/versions/$slug.json"
+  fi
+  current=false
+done
 
 echo ""
 echo "Done."
