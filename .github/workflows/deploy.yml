@@ -123,6 +123,7 @@ jobs:
             rel=${md#src/content/docs/}
             case "$rel" in
               index.md)   route=index.html ;;
+              404.md)     route=404.html ;;
               */index.md) route="${rel%/index.md}/index.html" ;;
               *)          route="${rel%.md}/index.html" ;;
             esac
