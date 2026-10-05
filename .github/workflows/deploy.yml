@@ -84,6 +84,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Stage the ESP32 K-Touch firmware for /flash/
+        # The browser flasher fetches the part images from this site: GitHub
+        # release downloads and releases.helixscreen.org send no CORS headers.
+        # With no release carrying the zip, this stages nothing and the page
+        # says so.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/stage-esp32-firmware.mjs
+
       - name: Build site (prebuild runs sync-docs.sh)
         # Astro's content layer intermittently fails to see an entry that
         # sync-docs.sh just wrote and aborts with "The slug ... does not exist".

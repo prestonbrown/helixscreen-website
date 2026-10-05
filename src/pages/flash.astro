@@ -1,0 +1,97 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Colophon from '../components/marketing/Colophon.astro';
+
+// scripts/stage-esp32-firmware.mjs writes this at deploy time when a release
+// carries the K-Touch build. Its absence means none does yet.
+const MANIFEST_URL = '/flash/esp32/ktouch/manifest.json';
+const manifestFile = join(process.cwd(), 'public', MANIFEST_URL);
+const firmware = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null;
+
+const GUIDE = '/installation/#esp32-touchscreen-btt-k-touch---alpha';
+const link = 'text-secondary underline underline-offset-2';
+---
+<MarketingLayout
+  title="Flash a K-Touch - HelixScreen"
+  description="Install the HelixScreen firmware on a BigTreeTech K-Touch from your browser over USB."
+>
+  <SiteNav />
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h1 class="text-3xl leading-tight mb-3">Flash a K-Touch from your browser</h1>
+    <p class="ui text-sm text-ink-muted mb-3 max-w-[62ch]">
+      This writes the HelixScreen firmware onto a BigTreeTech K-Touch over USB, with no Python or
+      esptool to install. The panel then joins your WiFi and talks to your printer's Moonraker.
+      Nothing is installed on the printer.
+    </p>
+    <p class="ui text-sm text-ink-muted mb-10 max-w-[62ch]">
+      The ESP32 build is an alpha: expect rough edges and missing features. It replaces the
+      K-Touch's stock firmware.
+    </p>
+
+    <h2 class="text-xl mb-3">You need</h2>
+    <ul class="ui text-sm text-ink-muted mb-10 max-w-[62ch] list-disc pl-5 space-y-1">
+      <li>A BigTreeTech K-Touch</li>
+      <li>A USB-C cable that carries data (some charge-only cables don't)</li>
+      <li>Chrome or Edge on a desktop computer. Other browsers and phones can't open a serial port.</li>
+      <li>
+        On Windows, the CH340 USB driver from WCH if no new COM port appears when you plug the panel in.
+        Linux and recent macOS have it built in.
+      </li>
+    </ul>
+
+    <h2 class="text-xl mb-3">Install</h2>
+    {firmware ? (
+      <div class="mb-10">
+        <script is:inline type="module" src="https://cdn.jsdelivr.net/npm/esp-web-tools@10.4.0/dist/web/install-button.js"></script>
+        <p class="ui text-sm text-ink-muted mb-4 max-w-[62ch]">
+          Plug the K-Touch in, switch it on, then press the button and pick its port
+          (usually named USB Serial or CH340).
+        </p>
+        <esp-web-install-button manifest={MANIFEST_URL}>
+          <button slot="activate" type="button" class="btn btn-strong">
+            Install HelixScreen <span class="tabular">{firmware.version}</span>
+          </button>
+          <p slot="unsupported" class="ui text-sm text-ink max-w-[62ch]">
+            This browser can't talk to USB serial devices. Open this page in Chrome or Edge on a
+            desktop computer, or follow the <a href={GUIDE} class={link}>command-line install</a>.
+          </p>
+          <p slot="not-allowed" class="ui text-sm text-ink max-w-[62ch]">
+            Flashing needs a secure (https) page. Open
+            <a href="https://helixscreen.org/flash/" class={link}>helixscreen.org/flash</a>.
+          </p>
+        </esp-web-install-button>
+        <p class="ui text-sm text-ink-muted mt-4 max-w-[62ch]">
+          The installer offers to erase the device first. A first install over the stock
+          firmware should erase. To update a panel already running HelixScreen, leave
+          "Erase device" unchecked: that keeps its WiFi network and settings.
+        </p>
+      </div>
+    ) : (
+      <p class="ui text-sm text-ink mb-10 max-w-[62ch]">
+        No ESP32 build is published yet. It arrives with the 1.1 releases; until then, see the
+        <a href={GUIDE} class={link}>install guide</a>.
+      </p>
+    )}
+
+    <h2 class="text-xl mb-3">After it restarts</h2>
+    <ol class="ui text-sm text-ink-muted mb-10 max-w-[62ch] list-decimal pl-5 space-y-1">
+      <li>
+        The panel broadcasts its own WiFi hotspot named <span class="font-mono">HelixScreen-XXXX</span>.
+        Join it from your phone or computer; it has no password.
+      </li>
+      <li>
+        Open the address shown on the panel (normally <span class="font-mono">http://192.168.4.1</span>)
+        and enter your WiFi network, its password and your printer's Moonraker host.
+      </li>
+      <li>Tap Connect. The panel joins your network and connects to the printer.</li>
+    </ol>
+    <p class="ui text-sm text-ink-muted max-w-[62ch]">
+      There is no on-screen setup wizard on the K-Touch. Recovery, backing up the stock firmware
+      and what doesn't work yet are in the <a href={GUIDE} class={link}>full install guide</a>.
+    </p>
+  </main>
+  <Colophon />
+</MarketingLayout>

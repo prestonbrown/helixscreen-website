@@ -22,6 +22,7 @@ const AUTHORED_PAGES = [
   join('dist', 'printers', 'index.html'),
   join('dist', 'whats-new', 'index.html'),
   join('dist', 'contact', 'index.html'),
+  join('dist', 'flash', 'index.html'),
 ];
 const LANDING = AUTHORED_PAGES[0];
 

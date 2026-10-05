@@ -4,3 +4,5 @@ dist/
 .DS_Store
 .superpowers/
 .worktrees/
+# Staged by scripts/stage-esp32-firmware.mjs at deploy time
+public/flash/esp32/
