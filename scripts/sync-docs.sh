@@ -532,14 +532,15 @@ is_other_slug() {
   return 1
 }
 
-# Empties a directory except .gitkeep and the other versions' directories.
+# Empties a directory except .gitkeep, the site's own 404 page and the other
+# versions' directories.
 clean_current() {
   local dir="$1" entry name
   [[ -d "$dir" ]] || return 0
   for entry in "$dir"/* "$dir"/.[!.]*; do
     [[ -e "$entry" ]] || continue
     name=$(basename "$entry")
-    [[ "$name" == .gitkeep ]] && continue
+    [[ "$name" == .gitkeep || "$name" == 404.md ]] && continue
     is_other_slug "$name" && continue
     rm -rf "${entry:?}"
   done
