@@ -5,7 +5,7 @@ const rows = [
   { k: 'Bed mesh in 3D, rotatable',  me: 'yes', meTone: 'ok',         ks: 'flat heatmap', ksTone: 'no', gs: 'flat heatmap', gsTone: 'no' },
   { k: 'Input shaper graphs on-device', me: 'yes', meTone: 'ok',      ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
   { k: 'Multi-material backends',    me: '7',                         ks: '1',            gs: '1' },
-  { k: 'Ultrawide and portrait screens', me: 'works, less polished than landscape', ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
+  { k: 'Ultrawide and portrait screens', me: 'supported', ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
 ];
 // 'ok' -> green; 'no' -> muted (a value that isn't a clean win); otherwise the
 // column's own default (bright ink for HelixScreen, muted for the others).
@@ -13,9 +13,9 @@ const tone = (t: string | undefined, fallback: string) =>
   t === 'ok' ? 'text-ok' : t === 'no' ? 'text-ink-muted' : fallback;
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-  <h2 class="text-2xl mb-2">What HelixScreen does that KlipperScreen and GuppyScreen don't</h2>
+  <h2 class="text-2xl mb-2">HelixScreen, KlipperScreen and GuppyScreen compared</h2>
   <p class="ui text-sm text-ink-muted mb-6">
-    Figures are resident set size measured on a FlashForge Adventurer 5M Pro, not install size.
+    RAM figures are resident set size, measured on a FlashForge Adventurer 5M Pro, not install size.
   </p>
   <div class="overflow-x-auto">
     <table class="w-full border-collapse font-mono text-sm min-w-[560px]">

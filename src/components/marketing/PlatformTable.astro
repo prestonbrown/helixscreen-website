@@ -8,19 +8,21 @@ const platforms = [
   { name: 'QIDI',                         arch: 'aarch64' },
   { name: 'Elegoo Centauri Carbon',       arch: 'armv7-a' },
   { name: 'Snapmaker U1',                 arch: 'aarch64' },
+  { name: 'BTT CB1 / CB2 / Manta',        arch: 'aarch64' },
+  { name: 'Creality Sonic Pad',           arch: 'armhf' },
+  { name: 'x86 Linux PCs',                arch: 'x86_64' },
 ];
 ---
 <section id="printers" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-hairline">
   <h2 class="text-2xl mb-2">{printers.count} printers detected automatically, on nine platforms</h2>
   <p class="ui text-sm text-ink-muted mb-3 max-w-[62ch]">
     {printers.count} models in the auto-detection database, spanning Voron, Creality, QIDI,
-    Anycubic, FlashForge, Sovol, RatRig, FLSUN, Elegoo, Prusa and Snapmaker. Anything running
-    Klipper and Moonraker works even if it is not in the list — the wizard discovers
-    what your machine can do.
+    Anycubic, FlashForge, Sovol, RatRig, FLSUN, Elegoo, Prusa and Snapmaker. Printers outside the list work too if
+    they run Klipper and Moonraker; the setup wizard detects their hardware.
   </p>
   <p class="ui text-xs text-ink-muted mb-6 max-w-[62ch]">
-    800×480 and 1024×600 are the best-tested landscape sizes; 480×320 runs but is tight.
-    <a href="/printers/" class="text-secondary underline underline-offset-2">See the whole list</a>.
+    800×480 and 1024×600 are the best-tested landscape sizes. 480×320 works with a tighter layout.
+    <a href="/printers/" class="text-secondary underline underline-offset-2">See the full list</a>.
   </p>
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {platforms.map((p) => (

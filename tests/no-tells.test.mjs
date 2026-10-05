@@ -310,7 +310,7 @@ test('alert is not used for text anywhere in src', () => {
 });
 
 test('the headline is present exactly once on the landing page', () => {
-  const matches = landing().match(/Print, tune, calibrate and track — all on the printer's own screen\./g) ?? [];
+  const matches = landing().match(/A touch interface for Klipper that runs on the printer's own screen\./g) ?? [];
   assert.equal(matches.length, 1);
 });
 
@@ -324,7 +324,7 @@ test('the 1.0 marker appears only when the built version is 1.0', () => {
   const [major, minor] = version.split('.').map(Number);
   const shouldShow = major === 1 && minor === 0;
   assert.equal(
-    landing().includes('1.0 is here'),
+    landing().includes('is the first stable release'),
     shouldShow,
     `built version ${version} ${shouldShow ? 'should' : 'must not'} show the 1.0 marker`
   );

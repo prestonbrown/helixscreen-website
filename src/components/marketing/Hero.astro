@@ -15,9 +15,9 @@ const isLaunch = major === 1 && minor === 0;
 const series = Number.isFinite(major) && Number.isFinite(minor) ? `${major}.${minor}` : null;
 
 const stats = [
-  { value: repo.commitsDisplay, label: 'commits since October 2025', note: "About 98% mine. The rest are why it runs on printers I don't own." },
-  { value: '~15 MB', label: 'resident on an armv7 printer board', note: 'No X11, no browser.' },
-  { value: String(printers.count), label: 'printers it recognizes without being told' },
+  { value: repo.commitsDisplay, label: 'commits since October 2025' },
+  { value: '~15 MB', label: 'resident on an armv7 printer board' },
+  { value: String(printers.count), label: 'printers detected automatically' },
 ];
 
 const spec = [
@@ -39,19 +39,17 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
       Klipper touch interface{series && ` · ${series}`}
     </p>
     <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[28ch] mb-5">
-      Print, tune, calibrate and track — all on the printer's own screen.
+      A touch interface for Klipper that runs on the printer's own screen.
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
-      Your printer already works out the bed mesh and the shaper response. Today you can
-      only look at them in a browser tab on another machine. This puts them on the screen
-      already bolted to the printer.
+      Bed mesh in 3D, input shaper graphs, seven multi-material backends, Spoolman and
+      print history, in about 15 MB of RAM. No X11, no browser, no second machine.
     </p>
 
     {isLaunch && (
       <p class="text-base leading-relaxed text-ink-muted max-w-[56ch] mb-8 border-l-2 border-l-warn pl-4">
-        <strong class="font-semibold text-ink">1.0 is here</strong> — the first stable release.
-        Upgrading from 0.99 changes nothing but the version number: settings, layout and
-        printer list all carry over.
+        <strong class="font-semibold text-ink">1.0</strong> is the first stable release.
+        Upgrading from 0.99 keeps your settings, layout and printer list.
       </p>
     )}
   </div>
@@ -68,8 +66,8 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
       <button id="hero-copy-btn" type="button" aria-live="polite" class="ui text-xs uppercase tracking-[0.1em] text-ink-muted hover:text-ink shrink-0">Copy</button>
     </div>
     <p class="ui text-sm text-ink-muted mt-4">
-      Rather read first? <a href="/installation/" class="text-secondary underline underline-offset-2">The install guide</a>
-      covers every supported board, and remote-screen setup if the printer lives on the floor.
+      Prefer to read first? <a href="/installation/" class="text-secondary underline underline-offset-2">The install guide</a>
+      covers every supported board, plus running the screen on a separate device.
     </p>
   </div>
 
