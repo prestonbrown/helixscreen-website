@@ -91,6 +91,7 @@ FILES=(
   "guide/install-cc1.md|guide/install-cc1.md|Centauri Carbon Install|29|1"
   "guide/install-sonicpad.md|guide/install-sonicpad.md|Sonic Pad Install|30|1"
   "guide/install-u1.md|guide/install-u1.md|Snapmaker U1 Install|31|1"
+  "guide/install-esp32.md|guide/install-esp32.md|K-Touch (ESP32) Install|32|1"
   "guide/settings.md|guide/settings/index.md|Settings|1|2"
   # Two settings layouts: the 1.0 line ships display-sound + hardware, 1.1 and
   # later split them into the pages below. Missing sources are skipped, so

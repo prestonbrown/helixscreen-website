@@ -13,7 +13,7 @@ const manifestFile = join(process.cwd(), 'public', MANIFEST_URL);
 const firmware = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null;
 
 // The ESP32 install guide first ships in the 1.1 docs, wherever 1.1 is served.
-const GUIDE = `${docsPrefix('1.1')}/installation/#esp32-touchscreen-btt-k-touch---alpha`;
+const GUIDE = `${docsPrefix('1.1')}/guide/install-esp32/`;
 const link = 'text-secondary underline underline-offset-2';
 ---
 <MarketingLayout

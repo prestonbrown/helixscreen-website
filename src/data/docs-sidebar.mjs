@@ -15,6 +15,7 @@ export const SIDEBAR = [
     items: [
       { label: 'Supported Printers', slug: 'guide/supported-printers' },
       { label: 'Install', slug: 'installation' },
+      { label: 'K-Touch (ESP32)', slug: 'guide/install-esp32' },
       { label: 'Upgrading', slug: 'upgrading' },
     ],
   },
