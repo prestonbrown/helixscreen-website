@@ -1,7 +1,7 @@
 ---
 title: "LED Settings"
 sidebar:
-  order: 8
+  order: 14
 ---
 
 

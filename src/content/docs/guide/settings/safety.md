@@ -1,7 +1,7 @@
 ---
-title: "Safety & Notifications"
+title: "Safety & Alerts"
 sidebar:
-  order: 5
+  order: 8
 ---
 
 

@@ -38,7 +38,7 @@ Solutions to common problems with HelixScreen.
 1. **Settings → System → Log Level → Debug** (or Trace for the deepest detail)
 2. Reproduce the problem
 3. **Settings → Help & About → Upload Debug Bundle** — collects the verbose log + system info and gives you a short share code to paste into a bug report
-4. Set Log Level back to **Warn** when done — Debug and Trace add CPU and log volume
+4. Set Log Level back to **Info** when done. Debug and Trace add CPU and log volume
 
 That's the path for almost everyone. Use the alternatives below only if you can't reach Settings.
 
@@ -62,13 +62,15 @@ sudo systemctl restart helixscreen        # Raspberry Pi
 Then tail the log:
 
 ```bash
-sudo journalctl -u helixscreen -f         # Raspberry Pi (systemd)
-tail -f /var/log/messages | grep helix    # AD5M / non-systemd
+sudo journalctl -u helixscreen -f          # Raspberry Pi (systemd)
+tail -f /data/helixscreen/logs/helix.log   # AD5M
 ```
 
+The app log's location varies by platform; see [Collecting Logs](#collecting-logs) for the path on yours.
+
 **Verbosity levels:**
-- `warn` — production default (errors and warnings only)
-- `info` — connection events, panel changes
+- `warn` - errors and warnings only
+- `info` - production default: connection events, panel changes
 - `debug` — detailed state changes, API calls
 - `trace` — everything including LVGL internals
 
@@ -99,7 +101,7 @@ tail -f /var/log/messages | grep helix    # AD5M / non-systemd
    ```
 4. To instead go back to the stock screen, run the uninstaller: `curl -sSL https://raw.githubusercontent.com/prestonbrown/helixscreen/main/scripts/install.sh | sh -s -- --uninstall && reboot`.
 
-See [INSTALL.md → Recovery](INSTALL.md#recovery-screen-is-blank-or-the-printer-is-off-the-network) for the full procedure and the manual reset fallback.
+See [Snapmaker U1 install guide → Recovery](guide/install-u1.md#recovery-screen-is-blank-or-the-printer-is-off-the-network) for the full procedure and the manual reset fallback.
 
 ### Update failed in Mainsail — screen won't start after update (AD5X)
 
@@ -110,7 +112,7 @@ See [INSTALL.md → Recovery](INSTALL.md#recovery-screen-is-blank-or-the-printer
 
 **What happened:** Moonraker's in-place update wiped part of `/srv/helixscreen` (including the `bin/helix-screen` binary) before something interrupted it. The install directory now has leftover files but no working binary, so the launcher can't start anything, and a retry from Mainsail trips over those leftovers.
 
-**Fix:** Re-run the CLI installer from inside the ZMOD chroot — it cleans up the broken state and lays down a fresh install while preserving your settings. Full procedure: [UPGRADING.md → Adventurer 5X (ZMOD)](UPGRADING.md#quick-upgrade).
+**Fix:** Re-run the CLI installer from inside the ZMOD chroot - it cleans up the broken state and lays down a fresh install while preserving your settings. Full procedure: [Adventurer 5X install guide → Updating](guide/install-ad5x.md#updating).
 
 Quick form, from a Mainsail Shell or SSH:
 
@@ -808,6 +810,51 @@ After restart, flags on the language selection screen should show correct colors
 
 ---
 
+### Screen goes dark at sleep but the backlight stays on
+
+**Symptoms:**
+- When the screen sleeps (idle timeout), the picture goes black but the panel still glows: you can see the backlight shining through, especially in a dark room
+- Touching the screen wakes it normally
+
+**Cause:**
+By default, sleep turns the backlight off and leaves the panel powered, so waking is instant. Some panel controllers treat "backlight at zero" as "very dim" rather than "off", so the LEDs stay lit. Powering the whole panel down fixes these screens, but it breaks others (see the next section), so it is not the default.
+
+**Fix - power the panel down at sleep:**
+
+1. SSH into your printer
+2. Edit `settings.json` (typically `~/helixscreen/config/settings.json`; see [Configuration](/reference/configuration/) for other platforms)
+3. Find the `"display"` section and set:
+
+   ```json
+   "panel_power_off": 1
+   ```
+
+4. Save the file and restart HelixScreen:
+
+   ```bash
+   sudo systemctl restart helixscreen
+   ```
+
+   (Use your platform's restart command - see [Quick Debugging Guide](#quick-debugging-guide) for the SysV-init variants.)
+
+5. Let the screen sleep, then touch it to wake it.
+
+To confirm the setting was picked up, look for this line in the log after the restart:
+
+```
+[DisplayManager] Display power-off: true (config override)
+```
+
+If it says `false (config override)`, your display driver has no way to power the panel down, and this setting cannot help on your hardware.
+
+**If it makes things worse:**
+On some screens, a full power-down causes flashing colours, edges that glow white, a colour test pattern, or a screen that does not come back when touched. If you see any of these, SSH in, set `"panel_power_off": -1` (automatic) or remove the line, and restart HelixScreen. Screen sleep in **Settings → Display** can also be set to **Never** as a fallback.
+
+**Helping us fix it:**
+If `panel_power_off: 1` works for you, please tell us your printer and screen model (or send a debug bundle from **Settings → Help & About → Upload Debug Bundle**). We can then turn it on automatically for that hardware.
+
+---
+
 ### Random solid colors during screen sleep (AD5X)
 
 **Symptoms:**
@@ -1007,7 +1054,7 @@ All three live under `input` in `settings.json` (path varies by platform — see
 
 > **Stop the service before editing `settings.json`** — the daemon rewrites the file periodically and your edits can be clobbered. Stop, edit, start.
 >
-> **Want to try a value before committing it?** All three are sliders under **Settings → System → Touch & Input** on the printer itself, so you can feel the change immediately and keep it only if it helps. `scroll_guard` and `scroll_limit` apply straight away; the panel prompts for a restart where one is needed.
+> **Want to try a value before committing it?** `scroll_limit` and `scroll_guard` are under **Settings → System → Touch & Input**; both take effect after a restart, which the panel prompts for. `scroll_throw` is edited in `settings.json`.
 
 FlashForge AD5M and AD5X presets ship with `scroll_guard: true` out of the box. Other platforms default to `false`.
 
@@ -1504,6 +1551,23 @@ Navigate away from and back to the AMS panel to trigger refresh.
 sudo journalctl -u moonraker | grep -i spoolman
 ```
 
+### Color set on the printer's own screen reverts (AD5X with Spoolman)
+
+**Known limitation.** On an AD5X, once a lane has been assigned a Spoolman spool,
+changing that lane's color from the printer's own color menu does not stick: the panel
+goes back to showing the spool's color within a second.
+
+Assigning the spool is what causes it. HelixScreen records the assignment as a deliberate
+choice of color, so later color readings from the firmware are treated as something to be
+corrected rather than obeyed. There is no way to tell "the user picked this color" apart
+from "this color arrived with the spool" yet, which is why it is not simply switched off.
+
+**What works instead:** change the color in HelixScreen, on the lane's own editor
+(tap the lane, then edit it), or change it in Spoolman. Both take effect and persist.
+
+**Unaffected:** lanes with no Spoolman spool assigned, every non-AD5X printer, and
+material changes.
+
 ### Only some spools showing in Spoolman lists
 
 **Symptoms:**
@@ -1781,7 +1845,7 @@ Covers the K1, K1C and K1 Max on stock or Guilouz Helper Script firmware.
 - HelixScreen, Fluidd, Mainsail and Moonraker all work normally
 
 **Cause:**
-This is a deliberate trade-off, not a fault. HelixScreen and the stock Creality UI cannot share the framebuffer, so the installer stops the stock UI stack. On the K1 that stack is started by `/etc/init.d/S99start_app`, which also launches `master-server`, `app-server` and `web-server` — the backend Creality Print and the Creality Cloud app talk to. Stopping the stock UI takes those with it.
+This is a deliberate trade-off, not a fault. HelixScreen and the stock Creality UI cannot share the framebuffer, so the installer stops the stock UI stack. On the K1 that stack is started by `/etc/init.d/S99start_app`, which also launches `master-server`, `app-server` and `web-server` — the backend Creality Print and the Creality Cloud app talk to. Stopping the stock UI takes those with it. This is the stock-firmware and Guilouz case; on a Simple AF install the stock stack is already disabled and the installer stops only GuppyScreen, so a lost Creality Print connection there predates HelixScreen. Full setup path and background: [K1 / K1C / K1 Max setup guide](guide/creality-k1c-setup.md).
 
 **What still works for sending prints:**
 - Fluidd or Mainsail in a browser
@@ -1855,8 +1919,10 @@ ls -la /opt/config/mod/.root/S80guppyscreen
 
 **Check HelixScreen is running:**
 ```bash
-/etc/init.d/S90helixscreen status
-cat /opt/helixscreen/logs/launcher.log    # AD5M launcher capture
+/etc/init.d/S90helixscreen status                        # Forge-X (Klipper Mod: S80helixscreen)
+tail /data/helixscreen/logs/helix.log                    # structured app log
+cat /opt/helixscreen/logs/launcher.log                   # Forge-X launcher capture
+cat /root/printer_software/helixscreen/logs/launcher.log # Klipper Mod launcher capture
 ```
 
 ### Service commands (SysV init)
@@ -1867,15 +1933,15 @@ AD5M uses SysV init, not systemd. Commands are different:
 # Forge-X
 /etc/init.d/S90helixscreen start|stop|restart|status
 cat /opt/helixscreen/logs/launcher.log
-grep helix-screen /var/log/messages | tail -100    # structured app log
+tail -100 /data/helixscreen/logs/helix.log    # structured app log
 
 # Klipper Mod
 /etc/init.d/S80helixscreen start|stop|restart|status
-cat /opt/helixscreen/logs/launcher.log
-grep helix-screen /var/log/messages | tail -100
+cat /root/printer_software/helixscreen/logs/launcher.log
+tail -100 /data/helixscreen/logs/helix.log
 ```
 
-> The `launcher.log` file captures startup messages and crash output from the supervisor shell. The full structured app log (everything the app itself logs) goes to the system log (`/var/log/messages`). You usually want both when reporting an issue. On pre-v0.99.62 installs the launcher log lived at `/tmp/helixscreen.log` — check that path if `launcher.log` doesn't exist.
+> The `launcher.log` file captures startup messages and crash output from the supervisor shell. The full structured app log (everything the app itself logs) goes to `/data/helixscreen/logs/helix.log`, written directly to flash and rotated; `/var/log/messages` carries only the earliest startup output, before the app's own logging takes over. You usually want both when reporting an issue. On pre-v0.99.62 installs the launcher log lived at `/tmp/helixscreen.log` — check that path if `launcher.log` doesn't exist.
 
 ### SSH/SCP notes
 
@@ -1942,14 +2008,14 @@ When reporting issues, gather this information. **Most importantly, enable debug
 
 ### Enabling Debug Logging
 
-By default, HelixScreen only logs warnings and errors. To capture useful diagnostic information, you need to temporarily enable debug-level logging, reproduce the problem, then collect the logs.
+By default, HelixScreen logs warnings, errors and milestones (connections, panel changes, updates). To capture more diagnostic information, you need to temporarily enable debug-level logging, reproduce the problem, then collect the logs.
 
-**Quickest method:** Go to **Settings > System > Log Level** and select **Debug**. This takes effect immediately with no restart needed. Remember to set it back to **Warn** when done.
+**Quickest method:** Go to **Settings > System > Log Level** and select **Debug**. This takes effect immediately with no restart needed. Remember to set it back to **Info** when done.
 
 **Verbosity levels:**
 | Flag | Level | What it captures |
 |------|-------|-----------------|
-| *(none)* | WARN | Errors and warnings only (production default) |
+| *(none)* | INFO | Errors, warnings and milestones (production default) |
 | `-v` | INFO | Connection events, panel changes, milestones |
 | `-vv` | DEBUG | State changes, API calls, component init (**use this for bug reports**) |
 | `-vvv` | TRACE | Everything including LVGL internals (very verbose, rarely needed) |
@@ -2058,22 +2124,41 @@ Two streams to collect — both are needed when reporting an issue:
 
 ```bash
 # 1) Structured app log (everything from spdlog: connection events, errors, etc.)
-grep helix-screen /var/log/messages | tail -200
+tail -200 /data/helixscreen/logs/helix.log
 
 # 2) Launcher / supervisor capture (startup banner, crash output, glibc abort messages)
-tail -200 /opt/helixscreen/logs/launcher.log    # pre-v0.99.62 installs: /tmp/helixscreen.log
+#    Forge-X: /opt/helixscreen/logs/launcher.log
+#    Klipper Mod: /root/printer_software/helixscreen/logs/launcher.log
+#    pre-v0.99.62 installs: /tmp/helixscreen.log
+tail -200 /opt/helixscreen/logs/launcher.log
 
-# Follow the system log live while reproducing the issue
-tail -f /var/log/messages | grep helix-screen
+# Follow the app log live while reproducing the issue
+tail -f /data/helixscreen/logs/helix.log
 ```
 
-**Creality K1 / K1C / K2 (BusyBox in-memory syslog):**
+**Creality K1 / K1C (BusyBox):**
 ```bash
-# Structured app log — held in a RAM ring buffer, vanishes on reboot
-logread | grep helix-screen | tail -200
+# Structured app log (on flash, rotated)
+tail -200 /usr/data/helixscreen/logs/helix.log
 
 # Launcher / supervisor capture
 tail -200 /usr/data/helixscreen/logs/launcher.log
+
+# Anything that reached the in-memory syslog before the app log opened
+logread | grep helix-screen | tail -200
+```
+
+**Creality K2:**
+```bash
+# Structured app log (on the UDISK data partition, rotated)
+tail -200 /mnt/UDISK/helixscreen/logs/helix.log
+
+# Launcher / crash capture (lives beside the install; on builds whose
+# /var/log is persistent it lands at /var/log/helixscreen/launcher.log)
+tail -200 /opt/helixscreen/logs/launcher.log
+
+# Anything that reached the OpenWrt syslog
+logread | grep helix-screen | tail -200
 ```
 
 **Flashforge AD5X (ZMOD MIPS):**
@@ -2102,8 +2187,14 @@ tail -200 /var/log/helixscreen/launcher.log
 
 **Elegoo Centauri Carbon (COSMOS):**
 ```bash
-logread | grep helix-screen | tail -200
+# Structured app log (on flash, rotated)
+tail -200 /user-resource/helixscreen/logs/helix.log
+
+# Launcher / supervisor capture
 tail -200 /user-resource/helixscreen/logs/launcher.log
+
+# Anything that reached the in-memory syslog before the app log opened
+logread | grep helix-screen | tail -200
 ```
 
 ### Configuration

@@ -1,0 +1,183 @@
+---
+title: "LED Settings"
+slug: "1.1/guide/settings/led-settings"
+sidebar:
+  order: 14
+---
+
+
+Go to **Settings > Devices** and tap **LED Settings** to open the LED configuration overlay. This is where you turn lights on automatically at startup, set up Automatic LED Control, and configure macro-driven light devices.
+
+> **Tip:** Each **Light** button on the Home Panel controls one light of your choosing, or every light at once. Tap the gear icon on a Light button in Edit Mode to pick which one — see [Home Panel > LED Controls](../home-panel.md#led-controls). A Light button sized 2x1 or larger also has an arrow that opens full color, brightness, and effects for its light in the LEDs overlay; the separate **LED Controls** widget always opens straight to that overlay.
+
+---
+
+## Supported LED Types
+
+HelixScreen auto-detects your LED hardware from Klipper and Moonraker. Five types of lighting are supported:
+
+| Type | Examples | How It's Detected |
+|------|----------|-------------------|
+| **Klipper native strips** | Neopixel (WS2812, SK6812), Dotstar (APA102), PCA9632, GPIO LEDs | Automatically from your Klipper config |
+| **Output pin lights** | Single-channel PWM or on/off lights via `[output_pin]` | Auto-detected from pins with "light", "led", or "lamp" in the name |
+| **WLED strips** | Network-attached WLED controllers | From Moonraker's WLED configuration |
+| **LED effects** | Animated effects (breathing, rainbow, etc.) | Requires the [klipper-led_effect](https://github.com/julianschill/klipper-led_effect) plugin |
+| **Macro devices** | Any Klipper macro that controls lights | User-configured (see [Macro Devices](#macro-devices) below) |
+
+A newly detected light shows up as its own tab in the LEDs overlay as soon as it's found — there's nothing to enable here first. If you don't see a light:
+- Make sure it's defined in your Klipper config (`printer.cfg`)
+- For WLED, make sure it's configured in Moonraker (`moonraker.conf`)
+- Restart HelixScreen after adding new LED hardware
+
+---
+
+## LED On At Start
+
+Toggle this on to automatically turn on your lights when Klipper becomes ready — every light your Home Panel Light buttons control, or the chamber light if you haven't placed one. Useful for chamber lights that should always be on when the printer is powered up. If a button controls a WLED strip, HelixScreen waits up to 5 seconds for WLED to answer before it falls back to the chamber light.
+
+---
+
+## Auto-State Lighting
+
+When enabled, your lights automatically change based on what the printer is doing — no macros or manual control needed. This is great for visual status feedback: dim lights when idle, bright white while printing, green when a print finishes.
+
+### Applies To
+
+Automatic LED Control has its own list of lights, separate from whatever your Home Panel Light buttons control — a chamber light button and a toolhead-strip auto-state effect are two different jobs, and each has its own target. Tap a chip to add or remove that light from the list; at least one light stays selected.
+
+### Printer States
+
+| State | When It Triggers |
+|-------|-----------------|
+| **Idle** | Klipper is ready, not printing |
+| **Heating** | Extruder is heating up (target > 0, not yet printing) |
+| **Printing** | Print is in progress |
+| **Paused** | Print is paused |
+| **Error** | Klipper error or shutdown |
+| **Complete** | Print just finished |
+
+### Action Types
+
+Each state has an action type dropdown — what HelixScreen does with the "Applies to" lights when that state is entered:
+
+| Action | What It Does |
+|--------|--------------|
+| **Off** | Turn lights off |
+| **Brightness** | Set a brightness level (0–100%) without changing color; 0% turns the lights off |
+| **Color** | Set a specific color from the preset swatches, with a brightness slider |
+| **Effect** | Activate a Klipper LED effect (e.g., breathing, rainbow) |
+| **WLED Preset** | Activate a WLED preset by ID |
+| **Macro** | Run a configured LED macro device |
+
+> **Note:** Only actions your hardware supports are shown. **Effect** requires the `led_effect` Klipper plugin. **WLED Preset** requires WLED strips. **Color** requires color-capable strips (not single-channel PWM).
+
+### Example Setup
+
+| State | Action | Setting |
+|-------|--------|---------|
+| Idle | Brightness | 30% (dim standby light) |
+| Heating | Color | Red at 100% |
+| Printing | Color | White at 100% |
+| Paused | Effect | "breathing" |
+| Error | Color | Red at 100% |
+| Complete | Color | Green at 100% |
+
+---
+
+## Macro Devices
+
+Macro devices let you control lights that aren't directly supported by Klipper's LED system — like relay-switched cabinet lights, custom G-code lighting macros, or multi-mode LED setups.
+
+**Auto-discovery:** HelixScreen automatically finds Klipper macros with "led" or "light" in their name and makes them available in the macro dropdown lists.
+
+### Device Types
+
+| Type | Best For | Controls |
+|------|----------|----------|
+| **On/Off** | Lights with separate on and off macros | Two macros: one to turn on, one to turn off |
+| **Toggle** | Lights with a single toggle macro | One macro that flips the state |
+| **Preset** | Multi-mode lights (e.g., party mode, reading mode) | Multiple named presets, each mapped to a different macro |
+
+### Adding a Macro Device
+
+1. Tap the **+** button in the Macro Devices section
+2. Enter a display name (e.g., "Cabinet Light")
+3. Choose a device type
+4. Select the appropriate macros from the dropdown(s)
+5. Tap **Save**
+
+**To edit or delete:** Tap the **pencil icon** to modify, or the **trash icon** to remove.
+
+**Example:** If you have macros `LIGHTS_CABINET_ON` and `LIGHTS_CABINET_OFF` in your Klipper config, create an **On/Off** device named "Cabinet Light" and map each macro accordingly. It gets its own tab in the LEDs overlay, with On and Off buttons where a slider would normally sit.
+
+---
+
+## Setting Up Different LED Types
+
+### Klipper Native Strips (Neopixel, Dotstar, etc.)
+
+These work out of the box. Define them in your `printer.cfg`:
+
+```ini
+[neopixel chamber_light]
+pin: PA8
+chain_count: 24
+color_order: GRB
+```
+
+Restart Klipper, and the strip appears as its own tab in the LEDs overlay with full color and brightness control; there is nothing to turn on here first.
+
+### Output Pin Lights (Brightness-Only)
+
+If your chamber light or enclosure LED is connected to a `[output_pin]` in Klipper, HelixScreen can control it directly — no macro device needed.
+
+```ini
+[output_pin chamber_light]
+pin: PA9
+pwm: true
+value: 0
+```
+
+Pins with "light", "led", or "lamp" in their name are auto-detected. PWM pins get a brightness slider (0–100%); non-PWM pins get a simple on/off toggle. Color controls don't appear since output pins don't support color.
+
+> **Note:** If your output pin doesn't have one of those keywords in its name, you can still control it by adding it as a [Macro Device](#macro-devices) instead.
+
+### WLED Network Strips
+
+WLED strips are network-attached LED controllers managed outside of Klipper. Configure them in `moonraker.conf`:
+
+```ini
+[wled strip_name]
+address: 192.168.1.100
+```
+
+After restarting Moonraker, the WLED strip appears as its own tab in the LEDs overlay. You get on/off toggle, brightness, and access to all WLED presets you've configured in the WLED web interface.
+
+### LED Effects (Animated Patterns)
+
+Install the [klipper-led_effect](https://github.com/julianschill/klipper-led_effect) plugin and define effects in your `printer.cfg`:
+
+```ini
+[led_effect breathing]
+leds:
+    neopixel:chamber_light
+autostart: false
+frame_rate: 24
+layers:
+    breathing 10 1 top (1.0, 1.0, 1.0)
+```
+
+Effects show up on that strip's tab in the LEDs overlay and as Auto-State Lighting action options. Only effects targeting that particular strip are shown on its tab.
+
+### Macro-Controlled Lights
+
+For lights controlled via G-code macros (relay-switched enclosure lights, Klipper macros wrapping custom commands, etc.):
+
+1. Define your macros in Klipper (include "led" or "light" in the name for auto-discovery)
+2. Go to **Settings > Devices > LED Settings > Macro Devices**
+3. Create a device and map the appropriate macros
+4. The device gets its own tab in the LEDs overlay, alongside your other lights
+
+---
+
+[Back to Settings](/1.1/guide/settings/) | [Back to Devices](/1.1/guide/settings/devices/)

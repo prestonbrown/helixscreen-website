@@ -42,7 +42,7 @@ HelixScreen works with any Klipper-based printer running Moonraker. Tested and s
 | Anycubic Kobra 2 Pro / Kobra 3 / 3 V2 / 3 Max / S1 / S1 Max | **Community** | Auto-detected on [Rinkhals](https://github.com/jbatonnet/Rinkhals) firmware; native ACE (`filament_hub`) supported. Untested on our hardware. |
 | FlashForge AD5X | **Tested** | IFS filament system integrated |
 | SOVOL SV06 / SV08 | **Tested** | Community reports welcome |
-| Elegoo Centauri Carbon 1 | **Tested** | Requires [OpenCentauri COSMOS](https://docs.opencentauri.cc/klipper-conversion/cosmos/cosmos/) firmware; ships with factory white-balance calibration |
+| Elegoo Centauri Carbon 1 | **Tested** | Requires [OpenCentauri COSMOS](https://docs.opencentauri.cc/klipper-conversion/cosmos/cosmos/) firmware 26.07.0 or newer; ships with factory white-balance calibration |
 | Snapmaker U1 (SnapSwap toolchanger) | **Tested** | Native four-head support with RFID spool recognition. Needs SSH — stock firmware (1.2+) via its **Root access** option, or PAXX Extended Firmware (SSH on by default). Tested on PAXX 1.2.x–1.4.x; stock-firmware support is newly added. Reinstall after a firmware update. On PAXX firmware you can also view/control the screen remotely in Mainsail/Fluidd (the "gui" webcam) via the firmware's `web remote_screen` toggle; physical cameras work normally. |
 | Artillery M1 Pro | **Tested** | |
 | Zero G Mercury / Nebula / Hydra | **Tested** | Multiple variants supported |
@@ -542,7 +542,7 @@ Open a GitHub issue with the "enhancement" label, or suggest it in the [Discord]
 
 ### How do I enable debug logging?
 
-**Easiest method:** Go to **Settings > System > Log Level** and select **Debug** from the dropdown. The change takes effect immediately — no restart needed. Set it back to **Warn** when you're done.
+**Easiest method:** Go to **Settings > System > Log Level** and select **Debug** from the dropdown. The change takes effect immediately, with no restart needed. Set it back to **Info** when you're done.
 
 **Alternative (via config file):** Add `HELIX_LOG_LEVEL=debug` to your `helixscreen.env` file and restart. On Klipper-based printers the canonical path is in your `printer_data` config dir (the same place where you edit `printer.cfg` from Mainsail/Fluidd):
 
@@ -556,7 +556,7 @@ echo 'HELIX_LOG_LEVEL=debug' >> /opt/helixscreen/config/helixscreen.env
 /etc/init.d/S90helixscreen restart
 ```
 
-Available levels: `warn` (default), `info`, `debug`, `trace`. **Set back to Warn after debugging** — verbose logging impacts performance.
+Available levels: `warn`, `info` (default), `debug`, `trace`. **Set back to Info after debugging**: debug and trace logging cost CPU and log space.
 
 ### Where are the logs?
 

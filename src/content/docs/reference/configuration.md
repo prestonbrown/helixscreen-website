@@ -91,7 +91,7 @@ The configuration file is JSON format with several top-level sections:
   "telemetry_enabled": false,
   "log_dest": "auto",
   "log_path": "",
-  "log_level": "warn",
+  "log_level": "info",
 
   "panel_widgets": { ... },
   "theme": { ... },
@@ -315,11 +315,11 @@ Located in the `theme` section:
 
 ### `log_level`
 **Type:** string
-**Default:** `"warn"`
+**Default:** `"info"`
 **Values:** `"warn"`, `"info"`, `"debug"`, `"trace"`
 **Description:** Log verbosity level:
-- `warn` - Quiet, only warnings and errors (default)
-- `info` - General operational information
+- `warn` - Quiet, only warnings and errors
+- `info` - General operational information (default)
 - `debug` - Detailed debugging information
 - `trace` - Extremely verbose, all internal operations
 
@@ -421,6 +421,18 @@ Located in the `display` section:
 **Default:** `30`
 **Range:** `1` - `100`
 **Description:** Brightness percentage when screen is dimmed.
+
+### `backlight_floor_percent`
+**Type:** integer
+**Default:** `0` (`20` on K2 builds)
+**Range:** `0` - `100`
+**Description:** Lowest brightness level the panel can still show, as a percentage of its raw brightness range. Every screen brightness above "off" stays at or above this floor, so the dimmest slider setting dims instead of blacking out; turning the screen off is unaffected. Change it if your panel goes black before the brightness slider reaches its minimum: raise the value until the dimmest setting stays visible. `0` disables the floor. Takes effect after a restart.
+
+### `panel_power_off`
+**Type:** integer
+**Default:** `-1` (automatic)
+**Values:** `-1` = automatic, `0` = never, `1` = always
+**Description:** Whether display sleep powers the screen panel down or just turns its backlight off. Automatic powers the panel down only when the screen has no brightness control; on every other screen, sleep turns the backlight off. Set `1` if your screen goes black at sleep but the backlight stays lit. Set `0` if at sleep your screen flashes colours, glows at the edges, or does not come back on when you wake it. Takes effect after a restart. See [Troubleshooting](TROUBLESHOOTING.md#screen-goes-dark-at-sleep-but-the-backlight-stays-on).
 
 ### `drm_device`
 **Type:** string
@@ -595,7 +607,7 @@ Matches LVGL's native default of 10.
 ### `scroll_guard`
 **Type:** boolean
 **Default:** `false` (overridden to `true` by AD5M/AD5X presets)
-**Description:** Suppresses the phantom "clicked" event some capacitive touch controllers generate when the finger lifts at the end of a scroll gesture. Common on FlashForge AD5M and AD5X displays — you scroll a list, lift your finger, and whatever button is now under where your finger was fires. When enabled, HelixScreen ignores taps for the cooldown window (default 80 ms — see `scroll_guard_cooldown_ms`) after a scroll ends. Can also be overridden with the `HELIX_SCROLL_GUARD` environment variable (`1` to enable).
+**Description:** Suppresses the phantom "clicked" event some capacitive touch controllers generate when the finger lifts at the end of a scroll gesture. Common on FlashForge AD5M and AD5X displays — you scroll a list, lift your finger, and whatever button is now under where your finger was fires. When enabled, HelixScreen ignores taps for the cooldown window (default 80 ms — see `scroll_guard_cooldown_ms`) after a scroll ends. Can also be overridden with the `HELIX_SCROLL_GUARD` environment variable (`1` to enable). Requires a restart. Applies to the touchscreen on DRM and framebuffer builds; it has no effect in the desktop (SDL) build or on Android.
 
 ### `scroll_guard_cooldown_ms`
 **Type:** integer
@@ -1879,7 +1891,7 @@ Environment="HELIX_TOUCH_DEVICE=/dev/input/event0"
   "language": "en",
   "log_dest": "journal",
   "log_path": "",
-  "log_level": "warn",
+  "log_level": "info",
 
   "theme": {
     "preset": 0
