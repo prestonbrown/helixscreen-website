@@ -56,6 +56,13 @@ test('refuses a fractional count', () => {
   assert.equal(buildRepoStats('1e400'), null);
 });
 
+// A depth-1 CI checkout reports 1 commit, which the page would state as fact.
+test('refuses any count from a shallow clone', () => {
+  assert.equal(buildRepoStats('1', { shallow: true }), null);
+  assert.equal(buildRepoStats('12437', { shallow: true }), null);
+  assert.equal(buildRepoStats('12437', { shallow: false }).commits, 12437);
+});
+
 test('the committed output is a usable count and its display string matches', () => {
   const data = JSON.parse(readFileSync(join(root, 'src', 'data', 'repo.generated.json'), 'utf8'));
   assert.ok(Number.isInteger(data.commits) && data.commits > 0, 'committed commit count is unusable');

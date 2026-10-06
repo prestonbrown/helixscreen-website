@@ -61,19 +61,24 @@ jobs:
 
       - name: Checkout helixscreen (docs source)
         # The working tree is the current version: the gen-* scripts read it.
+        # gen-repo-stats counts commits, so it needs full history; blob:none
+        # keeps that to commits and trees, with file contents fetched on demand.
         uses: actions/checkout@v5
         with:
           repository: prestonbrown/helixscreen
           ref: ${{ steps.refs.outputs.current }}
           path: helixscreen-src
+          fetch-depth: 0
+          filter: blob:none
 
       - name: Fetch the other docs versions' refs
         # sync-docs.sh reads each other version with `git archive`, resolving
-        # a name locally or as origin/<name>.
+        # a name locally or as origin/<name>. No --depth: a shallow fetch would
+        # make the clone shallow again and gen-repo-stats would refuse its count.
         run: |
           while IFS='=' read -r name ref; do
             [ "$name" = HELIX_DOCS_REF ] && continue
-            git -C helixscreen-src fetch --no-tags --depth 1 origin "+$ref:refs/remotes/origin/$ref"
+            git -C helixscreen-src fetch --no-tags origin "+$ref:refs/remotes/origin/$ref"
           done < "$RUNNER_TEMP/doc-refs.env"
 
       - name: Expose helixscreen at ../helixscreen

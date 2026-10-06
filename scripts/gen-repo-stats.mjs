@@ -10,8 +10,12 @@ import { fileURLToPath } from 'node:url';
  * Returns null for anything that is not a whole positive count, so the caller
  * can decide what to do rather than publish a number the page would state as
  * fact. `commitsDisplay` is grouped here so no component has to format it.
+ *
+ * A shallow clone counts only the commits it fetched (1 at depth 1), so a count
+ * from one is refused too.
  */
-export function buildRepoStats(revListOutput) {
+export function buildRepoStats(revListOutput, { shallow = false } = {}) {
+  if (shallow) return null;
   const commits = Number(String(revListOutput).trim());
   if (!Number.isInteger(commits) || commits <= 0) return null;
   return { commits, commitsDisplay: commits.toLocaleString('en-US') };
@@ -27,11 +31,12 @@ if (isMain) {
   try {
     // stderr is captured rather than inherited so a failure reports as the one
     // warning below instead of git writing separately into the build log.
-    const count = execFileSync('git', ['-C', src, 'rev-list', '--count', 'HEAD'], {
+    const git = (...args) => execFileSync('git', ['-C', src, ...args], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    out = buildRepoStats(count);
+    const shallow = git('rev-parse', '--is-shallow-repository').trim() === 'true';
+    out = buildRepoStats(git('rev-list', '--count', 'HEAD'), { shallow });
   } catch (err) {
     // Committed output means a checkout without the sibling repo still builds.
     const detail = String(err.stderr ?? '').trim().split('\n').pop() || err.code || err.message;
@@ -44,7 +49,7 @@ if (isMain) {
   // Writing it would replace a real number with a claim that the project has
   // never been committed to, and still exit clean.
   if (!out) {
-    console.warn('[gen-repo-stats] no usable commit count from git; keeping committed output.');
+    console.warn('[gen-repo-stats] no usable commit count from git (shallow clone?); keeping committed output.');
     process.exit(0);
   }
 
