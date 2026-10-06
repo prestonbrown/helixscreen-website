@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import printStatus from '../../assets/images/screenshots/print-status.png';
+import homeEdit from '../../assets/images/screenshots/home-edit-mode.png';
 import zoffset from '../../assets/images/screenshots/advanced-zoffset.png';
 import shaper from '../../assets/images/screenshots/advanced-shaper.png';
 import printSelect from '../../assets/images/screenshots/print-select.png';
@@ -9,11 +9,11 @@ import spoolman from '../../assets/images/screenshots/advanced-spoolman.png';
 import ledControl from '../../assets/images/screenshots/led-control.png';
 
 const cells = [
+  { img: spoolman,    alt: 'Spoolman panel listing spools with material, color, and remaining weight', t: 'Spool tracking, with or without Spoolman', b: 'Material, color and remaining weight for every spool, kept up to date from what each print extrudes. Connect Spoolman to pull from your inventory, with the spool in each AMS slot and 66 material profiles with drying settings.' },
   { img: zoffset,     alt: 'Z-offset calibration panel showing the four-step paper test method', t: 'Guided Z-offset',  b: 'Four numbered steps take you through the paper test, starting from homing.' },
   { img: shaper,      alt: 'Input shaper panel showing a live frequency response graph after calibration', t: 'Input shaper on the printer', b: 'Run the resonance test, read the frequency response chart and save the result, all from the touchscreen.' },
   { img: printSelect, alt: 'File browser showing a grid of print files with 3D thumbnail previews', t: 'File browser with 3D thumbnails', b: 'Thumbnail previews and filenames in a grid that stays fast with hundreds of files.' },
   { img: history,     alt: 'Print history panel showing total prints, success rate, print time, and filament used', t: 'Print history',   b: 'Total prints, success rate, print time and filament used, plus Moonraker-Timelapse capture and playback.' },
-  { img: spoolman,    alt: 'Spoolman panel listing spools with material, color, and remaining weight', t: 'Spoolman',        b: 'Spool weight tracked as filament is used, the spool loaded in each AMS slot, and 66 material profiles with drying settings.' },
   { img: ledControl,  alt: 'LED control panel with light zone toggles, color presets, brightness slider, and effects', t: 'Lighting by printer state', b: 'Klipper LEDs, output pins, WLED, led_effects and macros, each able to change with the printer state.' },
 ];
 ---
@@ -21,15 +21,15 @@ const cells = [
   <article class="grid md:grid-cols-[280px_1fr] gap-6 items-center pb-10 mb-10 border-b border-hairline">
     <div class="plinth">
       <Image
-        src={printStatus}
-        alt="Print status panel showing live nozzle and bed temperature, layer progress, and tune, pause, and cancel controls"
+        src={homeEdit}
+        alt="Home screen in edit mode, with one widget selected showing its settings and delete handles"
         widths={[320, 480, 640]}
         sizes="(max-width: 768px) 92vw, 280px"
       />
     </div>
     <div>
-      <h3 class="text-xl mb-1.5">Print status</h3>
-      <p class="text-sm leading-relaxed text-ink-muted">Live nozzle and bed temperature, layer progress, and tune, pause and cancel controls, on one screen for the whole print.</p>
+      <h3 class="text-xl mb-1.5">A home screen you arrange</h3>
+      <p class="text-sm leading-relaxed text-ink-muted">Drag widgets around a grid sized to your display, resize them, and spread them across pages like a phone's home screen. First launch sets up a default layout for your screen size, and every change saves as you make it.</p>
     </div>
   </article>
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">

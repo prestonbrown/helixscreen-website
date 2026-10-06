@@ -39,11 +39,13 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
       Klipper touch interface{series && ` · ${series}`}
     </p>
     <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[28ch] mb-5">
-      A touch interface for Klipper that runs on the printer's own screen.
+      A modern Klipper touchscreen, built around filament and multi-material.
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
-      Bed mesh in 3D, input shaper graphs, seven multi-material backends, Spoolman and
-      print history, in about 15 MB of RAM. No X11, no browser, no second machine.
+      Seven AMS and MMU systems run natively, among them Happy Hare, AFC, ACE, CFS and
+      IFS, and every spool is tracked with or without Spoolman. It detects your printer
+      and lays out a home screen for your display, which you can then rearrange however
+      you like. It replaces KlipperScreen or the factory screen in about 15 MB of RAM.
     </p>
 
     {isLaunch && (
@@ -66,8 +68,7 @@ const install = 'curl -sSL https://raw.githubusercontent.com/prestonbrown/helixs
       <button id="hero-copy-btn" type="button" aria-live="polite" class="ui text-xs uppercase tracking-[0.1em] text-ink-muted hover:text-ink shrink-0">Copy</button>
     </div>
     <p class="ui text-sm text-ink-muted mt-4">
-      Prefer to read first? <a href="/installation/" class="text-secondary underline underline-offset-2">The install guide</a>
-      covers every supported board, plus running the screen on a separate device.
+      Prefer to read first? <a href="/installation/" class="text-secondary underline underline-offset-2">The install guide</a> covers every supported board, plus running the screen on a separate device.
     </p>
   </div>
 
