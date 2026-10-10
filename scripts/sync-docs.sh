@@ -316,10 +316,11 @@ process_devel_file() {
   fi
 
   # Build relative path prefix from dest file to src/assets/images/docs/,
-  # same formula as process_file(): depth + 2 levels up lands on src/.
+  # same formula as process_file(): depth + 2 levels up lands on src/, plus
+  # EXTRA_DEPTH when the file belongs to a versioned (non-current) tree.
   local ups=""
   local i
-  for (( i = 0; i < depth + 2; i++ )); do
+  for (( i = 0; i < depth + 2 + EXTRA_DEPTH; i++ )); do
     ups="../$ups"
   done
   local img_prefix="${ups}assets/images/docs"
