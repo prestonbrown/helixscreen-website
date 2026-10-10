@@ -323,7 +323,7 @@ process_devel_file() {
   for (( i = 0; i < depth + 2 + EXTRA_DEPTH; i++ )); do
     ups="../$ups"
   done
-  local img_prefix="${ups}assets/images/docs"
+  local img_prefix="${ups}assets/images/docs${IMG_SUBDIR:+/$IMG_SUBDIR}"
 
   # Read file, strip the first # heading line (Starlight uses frontmatter title)
   local body
