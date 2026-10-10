@@ -316,14 +316,13 @@ process_devel_file() {
   fi
 
   # Build relative path prefix from dest file to src/assets/images/docs/,
-  # same formula as process_file(): depth + 2 levels up lands on src/, plus
-  # EXTRA_DEPTH when the file belongs to a versioned (non-current) tree.
+  # same formula as process_file(): depth + 2 levels up lands on src/.
   local ups=""
   local i
-  for (( i = 0; i < depth + 2 + EXTRA_DEPTH; i++ )); do
+  for (( i = 0; i < depth + 2; i++ )); do
     ups="../$ups"
   done
-  local img_prefix="${ups}assets/images/docs${IMG_SUBDIR:+/$IMG_SUBDIR}"
+  local img_prefix="${ups}assets/images/docs"
 
   # Read file, strip the first # heading line (Starlight uses frontmatter title)
   local body
@@ -404,6 +403,16 @@ process_devel_file() {
 }
 
 
+copy_devel_images() {
+  # Devel-doc images live at the docs/images root (beside user/); synced dev
+  # pages reference them through the same assets/images/docs prefix.
+  if [[ -d "$SOURCE_DEVEL_IMAGES" ]]; then
+    find "$SOURCE_DEVEL_IMAGES" -maxdepth 1 -type f \
+      \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.svg' \) \
+      -exec cp {} "$DEST_IMAGES/" \;
+  fi
+}
+
 sync_devel() {
   echo ""
   echo "Syncing developer docs from $SOURCE_DEVEL ..."
@@ -470,14 +479,6 @@ copy_images() {
 
   if [[ -d "$SOURCE_IMAGES" ]]; then
     cp -R "$SOURCE_IMAGES/"* "$DEST_IMAGES/" 2>/dev/null || true
-  fi
-
-  # Devel-doc images live at the docs/images root (beside user/); synced dev
-  # pages reference them through the same assets/images/docs prefix.
-  if [[ -d "$SOURCE_DEVEL_IMAGES" ]]; then
-    find "$SOURCE_DEVEL_IMAGES" -maxdepth 1 -type f \
-      \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.svg' \) \
-      -exec cp {} "$DEST_IMAGES/" \;
   fi
 
   # Also copy gallery-level screenshots (referenced from some docs as ../../images/foo.png)
@@ -614,8 +615,15 @@ for row in "${VERSION_ROWS[@]}"; do
       is_other_slug "$(basename "$f" .json)" || rm -f "${f:?}"
     done
     sync_files
-    sync_devel
     copy_images
+    # Developer docs are unversioned: one copy at the root, synced from the
+    # codebase HEAD so contributor docs never lag the repo, whatever release
+    # the user docs track. Every version's sidebar links here (docs-sidebar
+    # treats dev/ slugs as unversioned and starlight-versions excludes them).
+    archive_ref "${HELIX_DEV_REF:-main}"
+    use_source "$SRC_ROOT"
+    sync_devel
+    copy_devel_images
   else
     echo ""
     echo "=== Version $slug (at /$slug/) from $ref ==="
@@ -624,7 +632,6 @@ for row in "${VERSION_ROWS[@]}"; do
     echo "Cleaning $DEST_DOCS ..."
     rm -rf "${DOCS_ROOT:?}/${slug:?}" "${IMAGES_ROOT:?}/${slug:?}" "${VERSIONS_DIR:?}/${slug:?}.json"
     sync_files
-    sync_devel
     copy_images
     node --input-type=module -e "
       import { writeVersionConfig } from '$PROJECT_ROOT/src/data/docs-sidebar.mjs';
