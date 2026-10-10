@@ -6,3 +6,8 @@ dist/
 .worktrees/
 # Staged by scripts/stage-esp32-firmware.mjs at deploy time
 public/flash/esp32/
+
+# Secrets / tokens (never commit)
+helixscreen-website-dispatch-token.txt
+*-token.txt
+*.pem
