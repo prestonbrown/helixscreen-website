@@ -41,7 +41,7 @@ OTHER_SLUGS=()
 for row in "${VERSION_ROWS[@]:1}"; do OTHER_SLUGS+=("${row%%|*}"); done
 
 # Per-version state read by the functions below.
-SOURCE_DOCS=""; SOURCE_DEVEL=""; SOURCE_IMAGES=""; SOURCE_GALLERY=""
+SOURCE_DOCS=""; SOURCE_DEVEL=""; SOURCE_IMAGES=""; SOURCE_DEVEL_IMAGES=""; SOURCE_GALLERY=""
 DEST_DOCS=""; DEST_IMAGES=""; VERSION_SLUG=""; IMG_SUBDIR=""; EXTRA_DEPTH=0
 
 # ---------- 3. File mapping ----------
@@ -472,6 +472,14 @@ copy_images() {
     cp -R "$SOURCE_IMAGES/"* "$DEST_IMAGES/" 2>/dev/null || true
   fi
 
+  # Devel-doc images live at the docs/images root (beside user/); synced dev
+  # pages reference them through the same assets/images/docs prefix.
+  if [[ -d "$SOURCE_DEVEL_IMAGES" ]]; then
+    find "$SOURCE_DEVEL_IMAGES" -maxdepth 1 -type f \
+      \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.svg' \) \
+      -exec cp {} "$DEST_IMAGES/" \;
+  fi
+
   # Also copy gallery-level screenshots (referenced from some docs as ../../images/foo.png)
   if [[ -d "$SOURCE_GALLERY" ]]; then
     # Copy only image files from gallery root (not subdirectories)
@@ -525,6 +533,7 @@ use_source() {
   SOURCE_DOCS="$1/docs/user"
   SOURCE_DEVEL="$1/docs/devel"
   SOURCE_IMAGES="$1/docs/images/user"
+  SOURCE_DEVEL_IMAGES="$1/docs/images"
   SOURCE_GALLERY="$1/docs/images"
   if [[ ! -d "$SOURCE_DOCS" ]]; then
     echo "ERROR: Source docs directory not found: $SOURCE_DOCS" >&2
