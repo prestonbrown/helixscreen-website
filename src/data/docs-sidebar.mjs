@@ -122,6 +122,12 @@ export const SIDEBAR = [
         ],
       },
       {
+        label: 'Tutorials',
+        items: [
+          { label: 'Your First Plugin', slug: 'dev/tutorials/first-plugin' },
+        ],
+      },
+      {
         label: 'Reference',
         items: [
           { label: 'LVGL9 XML Guide', slug: 'dev/reference/xml-guide' },

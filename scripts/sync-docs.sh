@@ -249,6 +249,9 @@ DEVEL_FILES=(
   "PLUGIN_DEVELOPMENT.md|dev/contributing/plugins.md|Plugin Development|4|2"
   "COPYRIGHT_HEADERS.md|dev/contributing/copyright.md|Copyright Headers|5|2"
 
+  # Tutorials (depth 2: dev/tutorials/)
+  "PLUGIN_TUTORIAL.md|dev/tutorials/first-plugin.md|Your First Plugin|1|2"
+
   # Reference for contributors (depth 2: dev/reference/)
   "LVGL9_XML_GUIDE.md|dev/reference/xml-guide.md|LVGL9 XML Guide|1|2"
   "MODAL_SYSTEM.md|dev/reference/modals.md|Modal System|2|2"
@@ -280,6 +283,7 @@ declare -A DEVEL_LINK_MAP=(
   [THEME_CONTRIBUTOR_GUIDE.md]="/dev/contributing/themes/"
   [TRANSLATION_CONTRIBUTOR_GUIDE.md]="/dev/contributing/translations/"
   [PLUGIN_DEVELOPMENT.md]="/dev/contributing/plugins/"
+  [PLUGIN_TUTORIAL.md]="/dev/tutorials/first-plugin/"
   [COPYRIGHT_HEADERS.md]="/dev/contributing/copyright/"
   [LVGL9_XML_GUIDE.md]="/dev/reference/xml-guide/"
   [MODAL_SYSTEM.md]="/dev/reference/modals/"
