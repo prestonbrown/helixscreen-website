@@ -614,6 +614,7 @@ for row in "${VERSION_ROWS[@]}"; do
     echo "Cleaning $DEST_DOCS ..."
     rm -rf "${DOCS_ROOT:?}/${slug:?}" "${IMAGES_ROOT:?}/${slug:?}" "${VERSIONS_DIR:?}/${slug:?}.json"
     sync_files
+    sync_devel
     copy_images
     node --input-type=module -e "
       import { writeVersionConfig } from '$PROJECT_ROOT/src/data/docs-sidebar.mjs';
