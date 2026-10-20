@@ -1,0 +1,164 @@
+---
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import SiteNav from '../components/marketing/SiteNav.astro';
+import Colophon from '../components/marketing/Colophon.astro';
+
+const link = 'text-secondary underline underline-offset-2';
+---
+<MarketingLayout
+  title="Easy installer - HelixScreen"
+  description="A desktop app that installs HelixScreen on your printer without a terminal. Download it for Windows, macOS or Linux."
+>
+  <SiteNav />
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h1 class="text-3xl leading-tight mb-3">HelixScreen easy installer</h1>
+    <p class="ui text-sm text-ink-muted mb-3 max-w-[62ch]">
+      A desktop app that installs HelixScreen on your printer for you. It finds the printer on your
+      network, checks it, and walks you through anything that needs a hand at the printer, such as
+      turning on root access or plugging in a USB stick. It only installs what it is sure fits your
+      printer, and stops without changing anything when it isn't.
+    </p>
+    <p class="ui text-sm text-ink-muted mb-10 max-w-[62ch]">
+      The printers it covers are listed in the <a href="/installation/" class={link}>installation guide</a>.
+      For anything else, use the command-line install from the same page.
+    </p>
+
+    <h2 class="text-xl mb-3">Download</h2>
+    <div id="installer-download" class="mb-10" data-repo="prestonbrown/helix-installer">
+      <p class="ui text-sm text-ink max-w-[62ch]" data-state="loading">Looking for the latest release...</p>
+      <p class="ui text-sm text-ink max-w-[62ch] hidden" data-state="none">
+        No release of the easy installer is published yet. Until it is, use the command-line install
+        in the <a href="/installation/" class={link}>installation guide</a>.
+      </p>
+      <p class="ui text-sm text-ink max-w-[62ch] hidden" data-state="error">
+        The release list could not be loaded. Reload the page in a minute, or use the command-line
+        install in the <a href="/installation/" class={link}>installation guide</a>.
+      </p>
+      <div class="hidden" data-state="ready">
+        <p class="ui text-sm text-ink-muted mb-4 max-w-[62ch]">
+          Version <span class="tabular" data-field="version"></span>
+        </p>
+        <p class="mb-4 hidden" data-field="primary-row">
+          <a href="#" class="btn btn-strong" data-field="primary"></a>
+        </p>
+        <p class="ui text-sm text-ink-muted mb-2 max-w-[62ch]">All downloads for this version:</p>
+        <ul class="ui text-sm text-ink-muted max-w-[62ch] list-disc pl-5 space-y-1" data-field="all"></ul>
+      </div>
+    </div>
+
+    <h2 class="text-xl mb-3">The first time you open it</h2>
+    <p class="ui text-sm text-ink-muted mb-4 max-w-[62ch]">
+      The app is not code-signed yet, so your computer warns you before it runs. That is expected.
+      The warning is about who published the app, not about anything in it.
+    </p>
+
+    <h3 class="text-base mb-2">macOS</h3>
+    <ol class="ui text-sm text-ink-muted mb-6 max-w-[62ch] list-decimal pl-5 space-y-1">
+      <li>Open the downloaded <span class="font-mono">.dmg</span> and drag HelixScreen Installer into Applications.</li>
+      <li>In Applications, right-click (or Control-click) the app and choose <strong>Open</strong>, then click <strong>Open</strong> in the dialog.</li>
+      <li>
+        If macOS only offers to move it to the Bin, close the dialog and open
+        <strong>System Settings &gt; Privacy &amp; Security</strong>. Scroll to the Security section
+        and click <strong>Open Anyway</strong> next to the app's name, then confirm.
+      </li>
+    </ol>
+
+    <h3 class="text-base mb-2">Windows</h3>
+    <ol class="ui text-sm text-ink-muted mb-6 max-w-[62ch] list-decimal pl-5 space-y-1">
+      <li>Run the downloaded <span class="font-mono">-setup.exe</span> (or the <span class="font-mono">.msi</span>).</li>
+      <li>
+        If SmartScreen shows "Windows protected your PC", click <strong>More info</strong>, then
+        <strong>Run anyway</strong>.
+      </li>
+    </ol>
+
+    <h3 class="text-base mb-2">Linux</h3>
+    <ul class="ui text-sm text-ink-muted mb-10 max-w-[62ch] list-disc pl-5 space-y-1">
+      <li>AppImage: make it executable (<span class="font-mono">chmod +x</span> on the file) and run it.</li>
+      <li>Debian and Ubuntu: <span class="font-mono">sudo apt install ./HelixScreen.Installer_*.deb</span></li>
+      <li>Fedora and openSUSE: <span class="font-mono">sudo dnf install ./HelixScreen.Installer-*.rpm</span></li>
+    </ul>
+
+    <h2 class="text-xl mb-3">Flashing a K-Touch</h2>
+    <p class="ui text-sm text-ink-muted max-w-[62ch]">
+      The installer can flash a BigTreeTech K-Touch over USB. On Linux your user needs the
+      <span class="font-mono">dialout</span> group; on Windows you may need the CH340 driver from WCH;
+      macOS needs nothing. The <a href="/1.1/guide/install-esp32/#with-the-easy-installer" class={link}>K-Touch guide</a>
+      has the details. You can also <a href="/flash/" class={link}>flash from your browser</a>.
+    </p>
+  </main>
+  <Colophon />
+
+  <script is:inline>
+    (function () {
+      var root = document.getElementById('installer-download');
+      if (!root) return;
+      var show = function (state) {
+        root.querySelectorAll('[data-state]').forEach(function (el) {
+          el.classList.toggle('hidden', el.getAttribute('data-state') !== state);
+        });
+      };
+      var field = function (name) { return root.querySelector('[data-field="' + name + '"]'); };
+
+      // One entry per OS: how its files are named in a release, best choice first.
+      var KINDS = [
+        { os: 'mac', label: 'macOS (Apple silicon and Intel)', re: /universal\.dmg$/ },
+        { os: 'win', label: 'Windows installer (.exe)', re: /x64-setup\.exe$/ },
+        { os: 'win', label: 'Windows installer (.msi)', re: /x64_en-US\.msi$/ },
+        { os: 'linux', label: 'Linux AppImage', re: /amd64\.AppImage$/ },
+        { os: 'linux', label: 'Debian and Ubuntu (.deb)', re: /amd64\.deb$/ },
+        { os: 'linux', label: 'Fedora and openSUSE (.rpm)', re: /\.x86_64\.rpm$/ }
+      ];
+
+      var detectOs = function () {
+        var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+        var ua = navigator.userAgent || '';
+        var s = (p + ' ' + ua).toLowerCase();
+        if (/android|iphone|ipad|ipod/.test(s)) return null;
+        if (s.indexOf('mac') !== -1) return 'mac';
+        if (s.indexOf('win') !== -1) return 'win';
+        if (s.indexOf('linux') !== -1 || s.indexOf('x11') !== -1) return 'linux';
+        return null;
+      };
+
+      fetch('https://api.github.com/repos/' + root.getAttribute('data-repo') + '/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json' }
+      })
+        .then(function (r) {
+          if (r.status === 404) return null;
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (rel) {
+          if (!rel) return show('none');
+          var found = [];
+          KINDS.forEach(function (k) {
+            var a = (rel.assets || []).filter(function (x) { return k.re.test(x.name); })[0];
+            if (a) found.push({ kind: k, url: a.browser_download_url, name: a.name });
+          });
+          if (!found.length) return show('none');
+          field('version').textContent = (rel.tag_name || '').replace(/^v/, '');
+          var list = field('all');
+          found.forEach(function (f) {
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = f.url;
+            a.textContent = f.kind.label;
+            a.className = 'text-secondary underline underline-offset-2';
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+          var os = detectOs();
+          var mine = found.filter(function (f) { return f.kind.os === os; })[0];
+          if (mine) {
+            var btn = field('primary');
+            btn.href = mine.url;
+            btn.textContent = 'Download for ' + { mac: 'macOS', win: 'Windows', linux: 'Linux' }[os];
+            field('primary-row').classList.remove('hidden');
+          }
+          show('ready');
+        })
+        .catch(function () { show('error'); });
+    })();
+  </script>
+</MarketingLayout>

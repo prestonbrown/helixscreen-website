@@ -92,6 +92,10 @@ FILES=(
   "guide/install-sonicpad.md|guide/install-sonicpad.md|Sonic Pad Install|30|1"
   "guide/install-u1.md|guide/install-u1.md|Snapmaker U1 Install|31|1"
   "guide/install-esp32.md|guide/install-esp32.md|K-Touch (ESP32) Install|32|1"
+  "guide/install-k1.md|guide/install-k1.md|Creality K1 Series Install|33|1"
+  "guide/install-qidi.md|guide/install-qidi.md|QIDI Install|34|1"
+  "guide/install-generic.md|guide/install-generic.md|Klipper Host Install|35|1"
+  "guide/easy-installer-unsupported.md|guide/easy-installer-unsupported.md|Printers the Easy Installer Doesn't Handle|36|1"
   "guide/settings.md|guide/settings/index.md|Settings|1|2"
   # Two settings layouts: the 1.0 line ships display-sound + hardware, 1.1 and
   # later split them into the pages below. Missing sources are skipped, so
@@ -159,27 +163,27 @@ process_file() {
 
   # --- Internal link rewriting ---
   # Top-level docs with uppercase names (with any number of ../ prefixes)
-  body=$(echo "$body" | sed -E 's|\((\.\./)*INSTALL\.md\)|(/installation/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*UPGRADING\.md\)|(/upgrading/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*CONFIGURATION\.md\)|(/reference/configuration/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*TROUBLESHOOTING\.md\)|(/reference/troubleshooting/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md\)|(/reference/faq/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md\)|(/legal/privacy/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md\)|(/legal/telemetry/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/guide/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*INSTALL\.md(#[^)]*)?\)|(/installation/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*UPGRADING\.md(#[^)]*)?\)|(/upgrading/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*CONFIGURATION\.md(#[^)]*)?\)|(/reference/configuration/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*TROUBLESHOOTING\.md(#[^)]*)?\)|(/reference/troubleshooting/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md(#[^)]*)?\)|(/reference/faq/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md(#[^)]*)?\)|(/legal/privacy/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md(#[^)]*)?\)|(/legal/telemetry/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md(#[^)]*)?\)|(/guide/\2)|g')
 
   # guide/settings/*.md links (must come before guide/*.md)
   # From guide/ files linking to settings/foo.md
-  body=$(echo "$body" | sed -E 's|\((\.\./)*settings/([a-z-]+)\.md\)|(/guide/settings/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*settings/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/settings/\2/\3)|g')
   # From settings/ files linking to ../settings.md (the index)
-  body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md\)|(/guide/settings/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md(#[^)]*)?\)|(/guide/settings/\2)|g')
 
   # guide/*.md links — with optional ../ prefixes for cross-directory references
-  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z-]+)\.md\)|(/guide/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\2/\3)|g')
 
   # Sibling links to guide-level pages from settings/ files (e.g. ../advanced.md)
   # These are guide/*.md pages referenced with ../ from settings/
-  body=$(echo "$body" | sed -E 's|\(\.\./([a-z-]+)\.md\)|(/guide/\1/)|g')
+  body=$(echo "$body" | sed -E 's|\(\.\./([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\1/\2)|g')
 
   # Sibling .md links within guide/ or guide/settings/ (e.g. (printing.md) -> /guide/printing/)
   # Sibling .md links — use the SOURCE directory to determine context,
@@ -188,10 +192,10 @@ process_file() {
   src_dir=$(dirname "$src")
   if [[ "$src_dir" == "guide/settings" ]]; then
     # Sibling links in settings/ (e.g. printer.md -> /guide/settings/printer/)
-    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/guide/settings/\1/)|g')
+    body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/settings/\1/\2)|g')
   elif [[ "$src_dir" == "guide" || "$src_dir" == "." ]]; then
     # Sibling links in guide/ (e.g. printing.md -> /guide/printing/)
-    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/guide/\1/)|g')
+    body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\1/\2)|g')
   fi
 
   # Drop links to files outside our scope (e.g. ../DEVELOPMENT.md)
