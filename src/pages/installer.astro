@@ -26,6 +26,12 @@ const link = 'text-secondary underline underline-offset-2';
     <h2 class="text-xl mb-3">Download</h2>
     <div id="installer-download" class="mb-10" data-repo="prestonbrown/helix-installer">
       <p class="ui text-sm text-ink max-w-[62ch]" data-state="loading">Looking for the latest release...</p>
+      <noscript>
+        <p class="ui text-sm text-ink max-w-[62ch]">
+          This page needs JavaScript to find the latest download. Get it from the
+          <a href="https://github.com/prestonbrown/helix-installer/releases" class={link}>releases page</a>.
+        </p>
+      </noscript>
       <p class="ui text-sm text-ink max-w-[62ch] hidden" data-state="none">
         No release of the easy installer is published yet. Until it is, use the command-line install
         in the <a href="/installation/" class={link}>installation guide</a>.
@@ -48,20 +54,25 @@ const link = 'text-secondary underline underline-offset-2';
 
     <h2 class="text-xl mb-3">The first time you open it</h2>
     <p class="ui text-sm text-ink-muted mb-4 max-w-[62ch]">
-      The app is not code-signed yet, so your computer warns you before it runs. That is expected.
+      Builds without a code-signing certificate are unsigned, and your computer warns you before it runs one. That is expected.
       The warning is about who published the app, not about anything in it.
     </p>
 
     <h3 class="text-base mb-2">macOS</h3>
-    <ol class="ui text-sm text-ink-muted mb-6 max-w-[62ch] list-decimal pl-5 space-y-1">
+    <ol class="ui text-sm text-ink-muted mb-3 max-w-[62ch] list-decimal pl-5 space-y-1">
       <li>Open the downloaded <span class="font-mono">.dmg</span> and drag HelixScreen Installer into Applications.</li>
-      <li>In Applications, right-click (or Control-click) the app and choose <strong>Open</strong>, then click <strong>Open</strong> in the dialog.</li>
+      <li>Open the app from Applications. macOS blocks it the first time: click <strong>Done</strong> (not Move to Trash).</li>
       <li>
-        If macOS only offers to move it to the Bin, close the dialog and open
-        <strong>System Settings &gt; Privacy &amp; Security</strong>. Scroll to the Security section
-        and click <strong>Open Anyway</strong> next to the app's name, then confirm.
+        Open <strong>System Settings &gt; Privacy &amp; Security</strong> and scroll to the Security
+        section. Click <strong>Open Anyway</strong> next to the app's name, then confirm with your
+        password or Touch ID.
       </li>
     </ol>
+    <p class="ui text-sm text-ink-muted mb-6 max-w-[62ch]">
+      On macOS 14 and older you can instead right-click (or Control-click) the app and choose
+      <strong>Open</strong>. If macOS says the app "is damaged and can't be opened", run
+      <span class="font-mono">xattr -cr "/Applications/HelixScreen Installer.app"</span> in Terminal and open it again.
+    </p>
 
     <h3 class="text-base mb-2">Windows</h3>
     <ol class="ui text-sm text-ink-muted mb-6 max-w-[62ch] list-decimal pl-5 space-y-1">
@@ -74,9 +85,10 @@ const link = 'text-secondary underline underline-offset-2';
 
     <h3 class="text-base mb-2">Linux</h3>
     <ul class="ui text-sm text-ink-muted mb-10 max-w-[62ch] list-disc pl-5 space-y-1">
-      <li>AppImage: make it executable (<span class="font-mono">chmod +x</span> on the file) and run it.</li>
+      <li>AppImage: make it executable (<span class="font-mono">chmod +x</span> on the file) and run it. Ubuntu 22.04 and newer also need FUSE 2 (<span class="font-mono">sudo apt install libfuse2</span>).</li>
       <li>Debian and Ubuntu: <span class="font-mono">sudo apt install ./HelixScreen.Installer_*.deb</span></li>
-      <li>Fedora and openSUSE: <span class="font-mono">sudo dnf install ./HelixScreen.Installer-*.rpm</span></li>
+      <li>Fedora: <span class="font-mono">sudo dnf install ./HelixScreen.Installer-*.rpm</span></li>
+      <li>openSUSE: <span class="font-mono">sudo zypper install ./HelixScreen.Installer-*.rpm</span></li>
     </ul>
 
     <h2 class="text-xl mb-3">Flashing a K-Touch</h2>
@@ -121,7 +133,7 @@ const link = 'text-secondary underline underline-offset-2';
         return null;
       };
 
-      fetch('https://api.github.com/repos/' + root.getAttribute('data-repo') + '/releases/latest', {
+      fetch('https://api.github.com/repos/' + root.getAttribute('data-repo') + '/releases?per_page=10', {
         headers: { Accept: 'application/vnd.github+json' }
       })
         .then(function (r) {
@@ -129,7 +141,9 @@ const link = 'text-secondary underline underline-offset-2';
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.json();
         })
-        .then(function (rel) {
+        .then(function (list) {
+          // The newest published release, prereleases included; drafts never show to visitors.
+          var rel = (list || []).filter(function (r) { return !r.draft; })[0];
           if (!rel) return show('none');
           var found = [];
           KINDS.forEach(function (k) {
