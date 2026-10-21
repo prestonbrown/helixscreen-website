@@ -67,6 +67,7 @@ export const SIDEBAR = [
   {
     label: 'Platform Guides',
     items: [
+      { label: 'Creality K1 Series', slug: 'guide/install-k1' },
       { label: 'Creality K1C Setup', slug: 'guide/creality-k1c-setup' },
       { label: 'Creality K2 Series', slug: 'guide/install-k2' },
       { label: 'Adventurer 5M', slug: 'guide/install-ad5m' },
@@ -74,6 +75,9 @@ export const SIDEBAR = [
       { label: 'Centauri Carbon', slug: 'guide/install-cc1' },
       { label: 'Sonic Pad', slug: 'guide/install-sonicpad' },
       { label: 'Snapmaker U1', slug: 'guide/install-u1' },
+      { label: 'QIDI', slug: 'guide/install-qidi' },
+      { label: 'Klipper Host (Pi, BTT)', slug: 'guide/install-generic' },
+      { label: 'Easy Installer: Not Yet Supported', slug: 'guide/easy-installer-unsupported' },
       { label: 'Chamber Heater', slug: 'guide/chamber-heater' },
       { label: 'Bluetooth Setup', slug: 'guide/bluetooth-setup' },
       { label: 'Barcode Scanner', slug: 'guide/barcode-scanner' },
