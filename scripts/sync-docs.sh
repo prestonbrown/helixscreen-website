@@ -41,7 +41,7 @@ OTHER_SLUGS=()
 for row in "${VERSION_ROWS[@]:1}"; do OTHER_SLUGS+=("${row%%|*}"); done
 
 # Per-version state read by the functions below.
-SOURCE_DOCS=""; SOURCE_DEVEL=""; SOURCE_IMAGES=""; SOURCE_GALLERY=""
+SOURCE_DOCS=""; SOURCE_DEVEL=""; SOURCE_IMAGES=""; SOURCE_DEVEL_IMAGES=""; SOURCE_GALLERY=""
 DEST_DOCS=""; DEST_IMAGES=""; VERSION_SLUG=""; IMG_SUBDIR=""; EXTRA_DEPTH=0
 
 # ---------- 3. File mapping ----------
@@ -92,6 +92,10 @@ FILES=(
   "guide/install-sonicpad.md|guide/install-sonicpad.md|Sonic Pad Install|30|1"
   "guide/install-u1.md|guide/install-u1.md|Snapmaker U1 Install|31|1"
   "guide/install-esp32.md|guide/install-esp32.md|K-Touch (ESP32) Install|32|1"
+  "guide/install-k1.md|guide/install-k1.md|Creality K1 Series Install|33|1"
+  "guide/install-qidi.md|guide/install-qidi.md|QIDI Install|34|1"
+  "guide/install-generic.md|guide/install-generic.md|Klipper Host Install|35|1"
+  "guide/easy-installer-unsupported.md|guide/easy-installer-unsupported.md|Printers the Easy Installer Doesn't Handle|36|1"
   "guide/settings.md|guide/settings/index.md|Settings|1|2"
   # Two settings layouts: the 1.0 line ships display-sound + hardware, 1.1 and
   # later split them into the pages below. Missing sources are skipped, so
@@ -159,27 +163,27 @@ process_file() {
 
   # --- Internal link rewriting ---
   # Top-level docs with uppercase names (with any number of ../ prefixes)
-  body=$(echo "$body" | sed -E 's|\((\.\./)*INSTALL\.md\)|(/installation/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*UPGRADING\.md\)|(/upgrading/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*CONFIGURATION\.md\)|(/reference/configuration/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*TROUBLESHOOTING\.md\)|(/reference/troubleshooting/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md\)|(/reference/faq/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md\)|(/legal/privacy/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md\)|(/legal/telemetry/)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md\)|(/guide/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*INSTALL\.md(#[^)]*)?\)|(/installation/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*UPGRADING\.md(#[^)]*)?\)|(/upgrading/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*CONFIGURATION\.md(#[^)]*)?\)|(/reference/configuration/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*TROUBLESHOOTING\.md(#[^)]*)?\)|(/reference/troubleshooting/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*FAQ\.md(#[^)]*)?\)|(/reference/faq/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*PRIVACY_POLICY\.md(#[^)]*)?\)|(/legal/privacy/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*TELEMETRY\.md(#[^)]*)?\)|(/legal/telemetry/\2)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*USER_GUIDE\.md(#[^)]*)?\)|(/guide/\2)|g')
 
   # guide/settings/*.md links (must come before guide/*.md)
   # From guide/ files linking to settings/foo.md
-  body=$(echo "$body" | sed -E 's|\((\.\./)*settings/([a-z-]+)\.md\)|(/guide/settings/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*settings/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/settings/\2/\3)|g')
   # From settings/ files linking to ../settings.md (the index)
-  body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md\)|(/guide/settings/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md(#[^)]*)?\)|(/guide/settings/\2)|g')
 
   # guide/*.md links — with optional ../ prefixes for cross-directory references
-  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z-]+)\.md\)|(/guide/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\2/\3)|g')
 
   # Sibling links to guide-level pages from settings/ files (e.g. ../advanced.md)
   # These are guide/*.md pages referenced with ../ from settings/
-  body=$(echo "$body" | sed -E 's|\(\.\./([a-z-]+)\.md\)|(/guide/\1/)|g')
+  body=$(echo "$body" | sed -E 's|\(\.\./([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\1/\2)|g')
 
   # Sibling .md links within guide/ or guide/settings/ (e.g. (printing.md) -> /guide/printing/)
   # Sibling .md links — use the SOURCE directory to determine context,
@@ -188,10 +192,10 @@ process_file() {
   src_dir=$(dirname "$src")
   if [[ "$src_dir" == "guide/settings" ]]; then
     # Sibling links in settings/ (e.g. printer.md -> /guide/settings/printer/)
-    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/guide/settings/\1/)|g')
+    body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/settings/\1/\2)|g')
   elif [[ "$src_dir" == "guide" || "$src_dir" == "." ]]; then
     # Sibling links in guide/ (e.g. printing.md -> /guide/printing/)
-    body=$(echo "$body" | sed -E 's|\(([a-z-]+)\.md\)|(/guide/\1/)|g')
+    body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\1/\2)|g')
   fi
 
   # Drop links to files outside our scope (e.g. ../DEVELOPMENT.md)
@@ -249,6 +253,9 @@ DEVEL_FILES=(
   "PLUGIN_DEVELOPMENT.md|dev/contributing/plugins.md|Plugin Development|4|2"
   "COPYRIGHT_HEADERS.md|dev/contributing/copyright.md|Copyright Headers|5|2"
 
+  # Tutorials (depth 2: dev/tutorials/)
+  "PLUGIN_TUTORIAL.md|dev/tutorials/first-plugin.md|Your First Plugin|1|2"
+
   # Reference for contributors (depth 2: dev/reference/)
   "LVGL9_XML_GUIDE.md|dev/reference/xml-guide.md|LVGL9 XML Guide|1|2"
   "MODAL_SYSTEM.md|dev/reference/modals.md|Modal System|2|2"
@@ -280,6 +287,7 @@ declare -A DEVEL_LINK_MAP=(
   [THEME_CONTRIBUTOR_GUIDE.md]="/dev/contributing/themes/"
   [TRANSLATION_CONTRIBUTOR_GUIDE.md]="/dev/contributing/translations/"
   [PLUGIN_DEVELOPMENT.md]="/dev/contributing/plugins/"
+  [PLUGIN_TUTORIAL.md]="/dev/tutorials/first-plugin/"
   [COPYRIGHT_HEADERS.md]="/dev/contributing/copyright/"
   [LVGL9_XML_GUIDE.md]="/dev/reference/xml-guide/"
   [MODAL_SYSTEM.md]="/dev/reference/modals/"
@@ -398,6 +406,16 @@ process_devel_file() {
   echo "  OK: devel/$src -> $dst"
 }
 
+
+copy_devel_images() {
+  # Devel-doc images live at the docs/images root (beside user/); synced dev
+  # pages reference them through the same assets/images/docs prefix.
+  if [[ -d "$SOURCE_DEVEL_IMAGES" ]]; then
+    find "$SOURCE_DEVEL_IMAGES" -maxdepth 1 -type f \
+      \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif' -o -name '*.svg' \) \
+      -exec cp {} "$DEST_IMAGES/" \;
+  fi
+}
 
 sync_devel() {
   echo ""
@@ -520,6 +538,7 @@ use_source() {
   SOURCE_DOCS="$1/docs/user"
   SOURCE_DEVEL="$1/docs/devel"
   SOURCE_IMAGES="$1/docs/images/user"
+  SOURCE_DEVEL_IMAGES="$1/docs/images"
   SOURCE_GALLERY="$1/docs/images"
   if [[ ! -d "$SOURCE_DOCS" ]]; then
     echo "ERROR: Source docs directory not found: $SOURCE_DOCS" >&2
@@ -600,8 +619,15 @@ for row in "${VERSION_ROWS[@]}"; do
       is_other_slug "$(basename "$f" .json)" || rm -f "${f:?}"
     done
     sync_files
-    sync_devel
     copy_images
+    # Developer docs are unversioned: one copy at the root, synced from the
+    # codebase HEAD so contributor docs never lag the repo, whatever release
+    # the user docs track. Every version's sidebar links here (docs-sidebar
+    # treats dev/ slugs as unversioned and starlight-versions excludes them).
+    archive_ref "${HELIX_DEV_REF:-main}"
+    use_source "$SRC_ROOT"
+    sync_devel
+    copy_devel_images
   else
     echo ""
     echo "=== Version $slug (at /$slug/) from $ref ==="
