@@ -29,3 +29,13 @@ export function docsPrefix(slug, versions = DOC_VERSIONS) {
 export function refEnvVar(slug, versions = DOC_VERSIONS) {
   return slug === versions.current.slug ? 'HELIX_DOCS_REF' : `HELIX_DOCS_REF_${slug.replace(/[^A-Za-z0-9]/g, '_')}`;
 }
+
+/**
+ * Cloudflare Pages `_redirects` body sending the current version's slug to the
+ * root, so /<slug>/guide/ resolves for every version. A screen builds its docs
+ * link from its own version, and the stable one is served at the plain URLs.
+ */
+export function currentSlugRedirects(versions = DOC_VERSIONS) {
+  const slug = versions.current.slug;
+  return `/${slug} / 301\n/${slug}/* /:splat 301\n`;
+}

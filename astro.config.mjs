@@ -2,12 +2,19 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightVersions from 'starlight-versions';
 import tailwindcss from '@tailwindcss/vite';
-import { DOC_VERSIONS } from './src/data/doc-versions.mjs';
+import { writeFileSync } from 'node:fs';
+import { DOC_VERSIONS, currentSlugRedirects } from './src/data/doc-versions.mjs';
 import { SIDEBAR, UNVERSIONED_PREFIX, docExists, presentSidebar } from './src/data/docs-sidebar.mjs';
 
 export default defineConfig({
   site: 'https://helixscreen.org',
   integrations: [
+    {
+      name: 'current-slug-redirects',
+      hooks: {
+        'astro:build:done': ({ dir }) => writeFileSync(new URL('_redirects', dir), currentSlugRedirects()),
+      },
+    },
     starlight({
       title: 'HelixScreen',
       logo: {

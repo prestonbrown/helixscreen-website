@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { DOC_VERSIONS, docsPrefix, refEnvVar } from '../src/data/doc-versions.mjs';
+import { DOC_VERSIONS, currentSlugRedirects, docsPrefix, refEnvVar } from '../src/data/doc-versions.mjs';
 import { docExists, presentSidebar, versionConfig } from '../src/data/docs-sidebar.mjs';
 import { parseOverrides, pickDocRef, resolveDocRefs } from '../scripts/resolve-doc-refs.mjs';
 
@@ -174,4 +174,10 @@ test('docs pages carry both the version picker and the theme switcher', { skip: 
     assert.match(html, /<starlight-version-select/, f);
     assert.match(html, /class="hx-switcher/, f);
   }
+});
+
+test('the current version slug redirects to the root, other versions keep their prefix', () => {
+  const body = currentSlugRedirects({ current: BETA, others: [STABLE] });
+  assert.equal(body, '/1.1 / 301\n/1.1/* /:splat 301\n');
+  assert.ok(!body.includes('/1.0'));
 });
