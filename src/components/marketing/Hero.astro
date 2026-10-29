@@ -3,6 +3,7 @@ import StatRow from './StatRow.astro';
 import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
 import printers from '../../data/printers.generated.json';
+import backends from '../../data/backends.generated.json';
 import repo from '../../data/repo.generated.json';
 import whatsnew from '../../data/whatsnew.generated.json';
 
@@ -27,7 +28,7 @@ const spec = [
   { k: 'X11 / browser', v: 'not required', tone: 'subtle' as const },
   { k: 'Panels', v: '30+' },
   { k: 'Themes', v: String(themes.length) },
-  { k: 'Multi-material', v: '7' },
+  { k: 'Multi-material', v: String(backends.count) },
   { k: 'License', v: 'GPL-3.0' },
 ];
 
