@@ -1,11 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { buildRepoStats } from '../scripts/gen-repo-stats.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 test('groups thousands so the page does no formatting of its own', () => {
   assert.equal(buildRepoStats('12437').commitsDisplay, '12,437');
@@ -63,8 +59,3 @@ test('refuses any count from a shallow clone', () => {
   assert.equal(buildRepoStats('12437', { shallow: false }).commits, 12437);
 });
 
-test('the committed output is a usable count and its display string matches', () => {
-  const data = JSON.parse(readFileSync(join(root, 'src', 'data', 'repo.generated.json'), 'utf8'));
-  assert.ok(Number.isInteger(data.commits) && data.commits > 0, 'committed commit count is unusable');
-  assert.equal(data.commitsDisplay, buildRepoStats(String(data.commits)).commitsDisplay);
-});

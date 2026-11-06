@@ -21,6 +21,21 @@ export function buildRepoStats(revListOutput, { shallow = false } = {}) {
   return { commits, commitsDisplay: commits.toLocaleString('en-US') };
 }
 
+/**
+ * The output is not committed, so a build without a countable helixscreen
+ * checkout writes an empty count and the hero leaves the stat out. CI always
+ * has the full history, so there a missing count fails the build instead of
+ * quietly dropping the stat from the live site.
+ */
+function noCount(reason) {
+  if (process.env.CI) {
+    console.error(`[gen-repo-stats] ${reason}`);
+    process.exit(1);
+  }
+  console.warn(`[gen-repo-stats] ${reason}; the commit stat is left off the page.`);
+  return { commits: null, commitsDisplay: null };
+}
+
 const isMain = process.argv[1] &&
   fileURLToPath(import.meta.url) === process.argv[1];
 
@@ -38,25 +53,20 @@ if (isMain) {
     const shallow = git('rev-parse', '--is-shallow-repository').trim() === 'true';
     out = buildRepoStats(git('rev-list', '--count', 'HEAD'), { shallow });
   } catch (err) {
-    // Committed output means a checkout without the sibling repo still builds.
     const detail = String(err.stderr ?? '').trim().split('\n').pop() || err.code || err.message;
-    console.warn(`[gen-repo-stats] ${src} unavailable (${detail}); keeping committed output.`);
-    process.exit(0);
+    out = noCount(`${src} unavailable (${detail})`);
   }
 
   // A repository with no commits is not a state this site can be built from, so
   // an unusable count means git answered something this generator did not expect.
   // Writing it would replace a real number with a claim that the project has
   // never been committed to, and still exit clean.
-  if (!out) {
-    console.warn('[gen-repo-stats] no usable commit count from git (shallow clone?); keeping committed output.');
-    process.exit(0);
-  }
+  if (!out) out = noCount('no usable commit count from git (shallow clone?)');
 
   mkdirSync(join(root, 'src', 'data'), { recursive: true });
   writeFileSync(
     join(root, 'src', 'data', 'repo.generated.json'),
     JSON.stringify(out, null, 2) + '\n'
   );
-  console.log(`[gen-repo-stats] wrote ${out.commitsDisplay} commits`);
+  if (out.commits) console.log(`[gen-repo-stats] wrote ${out.commitsDisplay} commits`);
 }

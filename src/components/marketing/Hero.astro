@@ -4,8 +4,12 @@ import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
 import printers from '../../data/printers.generated.json';
 import backends from '../../data/backends.generated.json';
-import repo from '../../data/repo.generated.json';
 import whatsnew from '../../data/whatsnew.generated.json';
+
+// repo.generated.json is not committed; a build that skipped prebuild has none.
+const repo = Object.values(
+  import.meta.glob<{ commitsDisplay: string | null }>('../../data/repo.generated.json', { eager: true, import: 'default' }),
+)[0];
 
 const [major, minor] = whatsnew.version.split('.').map(Number);
 
@@ -16,7 +20,7 @@ const isLaunch = major === 1 && minor === 0;
 const series = Number.isFinite(major) && Number.isFinite(minor) ? `${major}.${minor}` : null;
 
 const stats = [
-  { value: repo.commitsDisplay, label: 'commits since October 2025' },
+  ...(repo?.commitsDisplay ? [{ value: repo.commitsDisplay, label: 'commits since October 2025' }] : []),
   { value: '~15 MB', label: 'resident on an armv7 printer board' },
   { value: String(printers.count), label: 'printers detected automatically' },
 ];
