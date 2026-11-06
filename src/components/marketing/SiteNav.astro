@@ -4,6 +4,17 @@ import SiteSearch from './SiteSearch.astro';
 import ThemeSwitcher from '../ThemeSwitcher.astro';
 import logo from '../../assets/images/logo/helix-icon-64.png';
 import whatsnew from '../../data/whatsnew.generated.json';
+import { DOC_VERSIONS, docsPrefix } from '../../data/doc-versions.mjs';
+
+// Each option opens that version's docs. The stable entry names the exact
+// release; the others have no release number at build time, only their line.
+const versionOptions = [
+  { href: '/guide/', label: `${whatsnew.version} stable` },
+  ...DOC_VERSIONS.others.map((v) => ({
+    href: `${docsPrefix(v.slug)}/guide/`,
+    label: `${v.slug} ${v.prerelease ? 'beta' : ''}`.trim(),
+  })),
+];
 ---
 <header id="site-nav" class="sticky top-0 z-50 bg-canvas">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-3 sm:gap-6 h-14">
@@ -13,7 +24,7 @@ import whatsnew from '../../data/whatsnew.generated.json';
     </a>
 
     <!-- Desktop nav -->
-    <nav class="hidden md:flex items-center gap-5 ui text-sm text-ink-muted">
+    <nav class="hidden min-[1200px]:flex items-center gap-4 lg:gap-5 ui text-sm text-ink-muted whitespace-nowrap">
       <a href="/installation/" class="hover:text-ink">Install</a>
       <a href="/guide/getting-started/" class="hover:text-ink">Docs</a>
       <a href="/printers/" class="hover:text-ink">Printers</a>
@@ -26,7 +37,15 @@ import whatsnew from '../../data/whatsnew.generated.json';
     <div class="ml-auto flex items-center gap-2 sm:gap-3">
       <SiteSearch />
       <ThemeSwitcher />
-      <span class="hidden sm:inline-flex ui text-xs text-ink border border-alert rounded-[var(--hx-radius)] px-2 py-1 tabular">{whatsnew.version}</span>
+      <label class="hidden sm:inline-flex">
+        <span class="sr-only">Documentation version</span>
+        <select
+          id="version-select"
+          class="ui text-xs text-ink bg-transparent border border-alert rounded-[var(--hx-radius)] px-1.5 py-1 tabular cursor-pointer"
+        >
+          {versionOptions.map((o, i) => <option value={o.href} selected={i === 0}>{o.label}</option>)}
+        </select>
+      </label>
 
       <!-- Hidden below sm, where the bar is already full; the mobile menu carries
            it at those widths instead, so it is never rendered twice. -->
@@ -41,7 +60,7 @@ import whatsnew from '../../data/whatsnew.generated.json';
       <button
         id="nav-toggle"
         type="button"
-        class="md:hidden text-ink-muted hover:text-ink transition-colors p-2 -mr-2"
+        class="min-[1200px]:hidden text-ink-muted hover:text-ink transition-colors p-2 -mr-2"
         aria-label="Toggle navigation menu"
         aria-controls="mobile-menu"
         aria-expanded="false"
@@ -60,7 +79,7 @@ import whatsnew from '../../data/whatsnew.generated.json';
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" class="hidden md:hidden border-t border-hairline bg-overlay">
+  <div id="mobile-menu" class="hidden min-[1200px]:hidden border-t border-hairline bg-overlay">
     <nav class="px-4 sm:px-6 py-4 flex flex-col gap-1 ui text-sm">
       <a href="/installation/" class="text-ink-muted hover:text-ink transition-colors py-2">Install</a>
       <a href="/guide/getting-started/" class="text-ink-muted hover:text-ink transition-colors py-2">Docs</a>
@@ -89,6 +108,14 @@ import whatsnew from '../../data/whatsnew.generated.json';
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  // The version picker is a jump to that version's docs, so it always rests on
+  // stable; a back navigation restores the page from cache with the old choice.
+  const versionSelect = document.getElementById('version-select') as HTMLSelectElement | null;
+  if (versionSelect) {
+    versionSelect.addEventListener('change', () => { window.location.href = versionSelect.value; });
+    window.addEventListener('pageshow', () => { versionSelect.selectedIndex = 0; });
+  }
 
   // Mobile menu toggle
   const toggle = document.getElementById('nav-toggle');
