@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import backends from '../../data/backends.generated.json';
 import ams from '../../assets/images/screenshots/ams.png';
 import ercf from '../../assets/images/ams/ercf.svg';
 import boxTurtle from '../../assets/images/ams/box_turtle.svg';
@@ -27,14 +28,14 @@ const url = (s: any) => (typeof s === 'string' ? s : s.src);
     </div>
     <div>
       <p class="ui text-xs uppercase tracking-[0.16em] text-warn mb-4">Multi-material</p>
-      <h2 class="text-3xl leading-tight mb-4">Seven multi-material systems, one interface</h2>
+      <h2 class="text-3xl leading-tight mb-4">{backends.count} multi-material systems, one interface</h2>
       <p class="text-base leading-relaxed text-ink-muted mb-4">
         Happy Hare, AFC, ACE, AD5X IFS, Creality CFS, Snapmaker U1 with RFID spool
-        recognition, and tool changers. Filament paths render as 3D tubes, toolheads animate
+        recognition, QIDI Box, OpenAMS, Bondtech INDX in early support, and tool changers. Filament paths render as 3D tubes, toolheads animate
         as they move, and buffer health stays on screen for the whole print.
       </p>
       <p class="text-base leading-relaxed text-ink-muted mb-6">
-        I didn't set out to support seven of them. People kept asking, and the ones who
+        I didn't set out to support this many. People kept asking, and the ones who
         owned the hardware sent patches.
       </p>
       <p class="ui text-xs text-ink-muted mb-3">
