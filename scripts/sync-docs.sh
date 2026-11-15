@@ -52,7 +52,7 @@ DEST_DOCS=""; DEST_IMAGES=""; VERSION_SLUG=""; IMG_SUBDIR=""; EXTRA_DEPTH=0
 # depth = nesting level of dest file under that root, for image-path rewriting
 #   0 = root (e.g. installation.md)
 #   1 = guide/ or reference/ or legal/
-#   2 = guide/settings/
+#   2 = guide/settings/ or reference/configuration/ or reference/troubleshooting/
 
 FILES=(
   # The User Guide overview lives at /guide/ rather than the docs root: the
@@ -63,10 +63,23 @@ FILES=(
   "UPGRADING.md|upgrading.md|Upgrading|2|0"
   "guide/getting-started.md|guide/getting-started.md|Getting Started|1|1"
   "guide/home-panel.md|guide/home-panel.md|Home Panel|2|1"
+  # Home Panel sub-pages (1.1 and later), nested under the hub in the sidebar.
+  "guide/home-widgets.md|guide/home-widgets.md|Widget Catalog|2.1|1"
+  "guide/home-widgets-print.md|guide/home-widgets-print.md|Print Widgets|2.2|1"
+  "guide/home-widgets-filament.md|guide/home-widgets-filament.md|Filament Widgets|2.3|1"
+  "guide/home-widgets-controls.md|guide/home-widgets-controls.md|Control and System Widgets|2.4|1"
+  "guide/home-edit-mode.md|guide/home-edit-mode.md|Edit Mode|2.5|1"
+  "guide/printer-manager.md|guide/printer-manager.md|Printer Manager|2.6|1"
   "guide/printing.md|guide/printing.md|Printing|3|1"
   "guide/temperature.md|guide/temperature.md|Temperature|4|1"
   "guide/motion.md|guide/motion.md|Motion|5|1"
   "guide/filament.md|guide/filament.md|Filament|6|1"
+  # Filament sub-pages (1.1 and later), nested under the hub in the sidebar.
+  "guide/filament-ams-panel.md|guide/filament-ams-panel.md|Filament System Panel|6.1|1"
+  "guide/filament-mapping.md|guide/filament-mapping.md|Filament Mapping|6.2|1"
+  "guide/filament-tool-changers.md|guide/filament-tool-changers.md|Snapmaker U1 and MedusaHC|6.3|1"
+  "guide/filament-cfs.md|guide/filament-cfs.md|Creality Filament System (CFS)|6.4|1"
+  "guide/filament-drying.md|guide/filament-drying.md|Filament Drying and Humidity|6.5|1"
   "guide/calibration.md|guide/calibration.md|Calibration|7|1"
   "guide/advanced.md|guide/advanced.md|Advanced|8|1"
   "guide/tips.md|guide/tips.md|Tips|9|1"
@@ -96,6 +109,9 @@ FILES=(
   "guide/install-qidi.md|guide/install-qidi.md|QIDI Install|34|1"
   "guide/install-generic.md|guide/install-generic.md|Klipper Host Install|35|1"
   "guide/easy-installer-unsupported.md|guide/easy-installer-unsupported.md|Printers the Easy Installer Doesn't Handle|36|1"
+  "guide/install-linux-desktop.md|guide/install-linux-desktop.md|Linux Desktop Install|37|1"
+  "guide/helixprint-plugin.md|guide/helixprint-plugin.md|HelixPrint Plugin|38|1"
+  "guide/screen-sharing.md|guide/screen-sharing.md|Screen Sharing and Remote Control|39|1"
   "guide/settings.md|guide/settings/index.md|Settings|1|2"
   # Two settings layouts: the 1.0 line ships display-sound + hardware, 1.1 and
   # later split them into the pages below. Missing sources are skipped, so
@@ -115,8 +131,32 @@ FILES=(
   "guide/settings/updates.md|guide/settings/updates.md|Updates|12|2"
   "guide/settings/help-about.md|guide/settings/help-about.md|Help & About|13|2"
   "guide/settings/led-settings.md|guide/settings/led-settings.md|LED Settings|14|2"
-  "CONFIGURATION.md|reference/configuration.md|Configuration|1|1"
-  "TROUBLESHOOTING.md|reference/troubleshooting.md|Troubleshooting|2|1"
+  # The Configuration and Troubleshooting hubs are the index pages of their own
+  # directories (same URLs as before); their topic pages sit beside them.
+  "CONFIGURATION.md|reference/configuration/index.md|Configuration|1|2"
+  "configuration/appearance.md|reference/configuration/appearance.md|Appearance and Previews|2|2"
+  "configuration/display.md|reference/configuration/display.md|Display, Language and Time|3|2"
+  "configuration/environment.md|reference/configuration/environment.md|Command Line and Environment Variables|4|2"
+  "configuration/filament.md|reference/configuration/filament.md|Filament, Multi-Filament Systems and Sensors|5|2"
+  "configuration/home-panel.md|reference/configuration/home-panel.md|Home Screen Layout|6|2"
+  "configuration/input.md|reference/configuration/input.md|Touch and Input|7|2"
+  "configuration/label-printer.md|reference/configuration/label-printer.md|Label Printer|8|2"
+  "configuration/leds.md|reference/configuration/leds.md|Lights (LEDs)|9|2"
+  "configuration/network.md|reference/configuration/network.md|Printer and Connection|10|2"
+  "configuration/printer.md|reference/configuration/printer.md|Printer Hardware and Motion|11|2"
+  "configuration/safety-alerts.md|reference/configuration/safety-alerts.md|Safety, Alerts and Screen Lock|12|2"
+  "configuration/settings-file.md|reference/configuration/settings-file.md|The Settings File|13|2"
+  "configuration/sound.md|reference/configuration/sound.md|Sound|14|2"
+  "configuration/system.md|reference/configuration/system.md|Logging, Updates, Telemetry and Storage|15|2"
+  "TROUBLESHOOTING.md|reference/troubleshooting/index.md|Troubleshooting|1|2"
+  "troubleshooting/connection.md|reference/troubleshooting/connection.md|Connection and Network|2|2"
+  "troubleshooting/diagnostics.md|reference/troubleshooting/diagnostics.md|Logs, Debug Bundles and Help|3|2"
+  "troubleshooting/display-touch.md|reference/troubleshooting/display-touch.md|Screen and Touch|4|2"
+  "troubleshooting/filament-systems.md|reference/troubleshooting/filament-systems.md|Filament Systems and Spoolman|5|2"
+  "troubleshooting/performance.md|reference/troubleshooting/performance.md|Slow Interface and Memory|6|2"
+  "troubleshooting/printing.md|reference/troubleshooting/printing.md|Printing and Calibration|7|2"
+  "troubleshooting/settings-config.md|reference/troubleshooting/settings-config.md|Settings, Setup Wizard and Model|8|2"
+  "troubleshooting/updates-install.md|reference/troubleshooting/updates-install.md|Install, Update and Printer-Specific|9|2"
   "FAQ.md|reference/faq.md|FAQ|3|1"
   "PRIVACY_POLICY.md|legal/privacy.md|Privacy Policy|1|1"
   "TELEMETRY.md|legal/telemetry.md|Telemetry|2|1"
@@ -178,6 +218,12 @@ process_file() {
   # From settings/ files linking to ../settings.md (the index)
   body=$(echo "$body" | sed -E 's|\((\.\./)*settings\.md(#[^)]*)?\)|(/guide/settings/\2)|g')
 
+  # Configuration and troubleshooting topic pages (any ../ depth)
+  body=$(echo "$body" | sed -E 's|\((\.\./)*configuration/([a-z0-9-]+)\.md(#[^)]*)?\)|(/reference/configuration/\2/\3)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)*troubleshooting/([a-z0-9-]+)\.md(#[^)]*)?\)|(/reference/troubleshooting/\2/\3)|g')
+  # guide/settings/*.md linked with an explicit guide/ prefix (e.g. from configuration/)
+  body=$(echo "$body" | sed -E 's|\((\.\./)*guide/settings/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/settings/\2/\3)|g')
+
   # guide/*.md links — with optional ../ prefixes for cross-directory references
   body=$(echo "$body" | sed -E 's|\((\.\./)*guide/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\2/\3)|g')
 
@@ -193,6 +239,10 @@ process_file() {
   if [[ "$src_dir" == "guide/settings" ]]; then
     # Sibling links in settings/ (e.g. printer.md -> /guide/settings/printer/)
     body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/settings/\1/\2)|g')
+  elif [[ "$src_dir" == "configuration" ]]; then
+    body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/reference/configuration/\1/\2)|g')
+  elif [[ "$src_dir" == "troubleshooting" ]]; then
+    body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/reference/troubleshooting/\1/\2)|g')
   elif [[ "$src_dir" == "guide" || "$src_dir" == "." ]]; then
     # Sibling links in guide/ (e.g. printing.md -> /guide/printing/)
     body=$(echo "$body" | sed -E 's|\(([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\1/\2)|g')
@@ -359,7 +409,9 @@ process_devel_file() {
   body=$(echo "$body" | sed -E 's|\((\.\./)+user/TELEMETRY\.md\)|(/legal/telemetry/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)+user/guide/settings/([a-z0-9-]+)\.md\)|(/guide/settings/\2/)|g')
   body=$(echo "$body" | sed -E 's|\((\.\./)+user/guide/settings\.md(#[^)]*)?\)|(/guide/settings/\2)|g')
-  body=$(echo "$body" | sed -E 's|\((\.\./)+user/guide/([a-z0-9-]+)\.md\)|(/guide/\2/)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)+user/configuration/([a-z0-9-]+)\.md(#[^)]*)?\)|(/reference/configuration/\2/\3)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)+user/troubleshooting/([a-z0-9-]+)\.md(#[^)]*)?\)|(/reference/troubleshooting/\2/\3)|g')
+  body=$(echo "$body" | sed -E 's|\((\.\./)+user/guide/([a-z0-9-]+)\.md(#[^)]*)?\)|(/guide/\2/\3)|g')
 
   # --- Synced devel-doc cross-refs ---
   # Rewrite known synced docs to their site URL. Loop through the map.
