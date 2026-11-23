@@ -36,12 +36,12 @@ const cells = [
   </article>
   <article class="pb-10 mb-10 border-b border-hairline">
     <h3 class="text-xl mb-1.5">A layout for every display</h3>
-    <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-6">Portrait and ultrawide panels get layouts of their own, not a stretched landscape one. A new Print Status screen is built around a picture of your printer, with a chip for each heater, fan and light pointing at its part, and a checklist of the start sequence while the print prepares.</p>
+    <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-6">Portrait and ultrawide panels get layouts of their own, not a stretched landscape one. A new Print Status screen is built around a picture of your printer, with a chip for each heater, fan and light pointing at its part. A checklist of the start sequence shows while the print prepares.</p>
     <div class="grid md:grid-cols-[220px_1fr] gap-6 items-center">
       <div class="plinth">
         <Image
           src={homePortrait}
-          alt="Home screen on a tall 480 by 800 panel, with the printer picture and temperatures above the last print, a temperature graph and the spool strip, and the navigation bar along the bottom"
+          alt="Home screen on a tall 480 by 800 panel, showing a Voron 2.4 picture and temperatures above the last print, a temperature graph and the spool strip, with the navigation bar along the bottom"
           widths={[220, 440]}
           sizes="(max-width: 768px) 60vw, 220px"
         />
@@ -49,7 +49,7 @@ const cells = [
       <div class="plinth">
         <Image
           src={statusUltrawide}
-          alt="Print Status screen on a 1920 by 480 ultrawide panel, with the model preview, progress, the printer picture with heater and fan chips, the filament strip and the Pause, Tune, More and Cancel buttons in one row"
+          alt="Print Status screen on a 1920 by 480 ultrawide panel, a print at 43 percent: the model preview, progress and layer count, a Voron 2.4 picture with heater and fan chips, the filament strip, and the Pause, Tune, More and Cancel buttons in one column"
           widths={[640, 960, 1280]}
           sizes="(max-width: 768px) 92vw, 60vw"
         />
