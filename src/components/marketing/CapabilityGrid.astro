@@ -1,20 +1,22 @@
 ---
 import { Image } from 'astro:assets';
-import homeEdit from '../../assets/images/screenshots/home-edit-mode.png';
-import zoffset from '../../assets/images/screenshots/advanced-zoffset.png';
-import shaper from '../../assets/images/screenshots/advanced-shaper.png';
+import homeEdit from '../../assets/images/screenshots/home-grid-edit.png';
+import homePortrait from '../../assets/images/screenshots/home-portrait.png';
+import statusUltrawide from '../../assets/images/screenshots/print-status-ultrawide.png';
+import spoolEditor from '../../assets/images/screenshots/spool-editor.png';
+import spoolman from '../../assets/images/screenshots/spoolman.png';
+import beltTension from '../../assets/images/screenshots/belt-tension.png';
+import paTuning from '../../assets/images/screenshots/pa-tuning.png';
 import printSelect from '../../assets/images/screenshots/print-select.png';
-import history from '../../assets/images/screenshots/advanced-history.png';
-import spoolman from '../../assets/images/screenshots/advanced-spoolman.png';
-import ledControl from '../../assets/images/screenshots/led-control.png';
+import history from '../../assets/images/screenshots/print-history.png';
 
 const cells = [
+  { img: spoolEditor, alt: 'Spool editor for one lane, showing the spool, its remaining weight, the lane settings and Save and Clear Lane buttons', t: 'A spool editor, one job per page', b: 'Tap a lane to see its spool, set the remaining weight, or start a new spool from your favorite filaments. Edits are written where the printer keeps them, on AFC, Happy Hare, ACE, CFS and the Snapmaker U1, and a spool Spoolman does not track joins it in one tap.' },
   { img: spoolman,    alt: 'Spoolman panel listing spools with material, color, and remaining weight', t: 'Spool tracking, with or without Spoolman', b: 'Material, color and remaining weight for every spool, kept up to date from what each print extrudes. Connect Spoolman to pull from your inventory, with the spool in each AMS slot and 66 material profiles with drying settings.' },
-  { img: zoffset,     alt: 'Z-offset calibration panel showing the four-step paper test method', t: 'Guided Z-offset',  b: 'Four numbered steps take you through the paper test, starting from homing.' },
-  { img: shaper,      alt: 'Input shaper panel showing a live frequency response graph after calibration', t: 'Input shaper on the printer', b: 'Run the resonance test, read the frequency response chart and save the result, all from the touchscreen.' },
-  { img: printSelect, alt: 'File browser showing a grid of print files with 3D thumbnail previews', t: 'File browser with 3D thumbnails', b: 'Thumbnail previews and filenames in a grid that stays fast with hundreds of files.' },
-  { img: history,     alt: 'Print history panel showing total prints, success rate, print time, and filament used', t: 'Print history',   b: 'Total prints, success rate, print time and filament used, plus Moonraker-Timelapse capture and playback.' },
-  { img: ledControl,  alt: 'LED control panel with light zone toggles, color presets, brightness slider, and effects', t: 'Lighting by printer state', b: 'Klipper LEDs, output pins, WLED, led_effects and macros, each able to change with the printer state.' },
+  { img: beltTension, alt: 'Belt Tension screen showing the two diagonal belt paths of a CoreXY printer and a Start Check button', t: 'Belt tension you can act on', b: 'On a CoreXY printer with an accelerometer, the check overlays the response of both belt paths. It can buzz each motor to show which belt is which, and Tune Belts then walks you through the adjustment.' },
+  { img: paTuning,    alt: 'Pressure advance tuning screen with material and extruder choices and a Print Test Tower button', t: 'Pressure advance on a test tower', b: 'Pick the material and extruder type, and the printer prints a calibration tower. Printers that can measure pressure advance themselves can skip the tower.' },
+  { img: printSelect, alt: 'File browser showing a grid of print files with 3D thumbnail previews', t: 'File browser with 3D thumbnails', b: 'Thumbnail previews and filenames in a grid that stays fast with hundreds of files. Pick objects to skip, or skip the bed mesh for one print, before you start.' },
+  { img: history,     alt: 'Print history panel showing total prints, success rate, print time, and filament used', t: 'Print history', b: 'Total prints, success rate, print time and filament used, plus Moonraker-Timelapse capture and playback. The list loads older jobs as you scroll.' },
 ];
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-hairline">
@@ -29,7 +31,29 @@ const cells = [
     </div>
     <div>
       <h3 class="text-xl mb-1.5">A home screen you arrange</h3>
-      <p class="text-sm leading-relaxed text-ink-muted">Drag widgets around a grid sized to your display, resize them, and spread them across pages like a phone's home screen. First launch sets up a default layout for your screen size, and every change saves as you make it.</p>
+      <p class="text-sm leading-relaxed text-ink-muted">Drag widgets around a grid of square cells, resize them in half-cell steps, and spread them across pages like a phone's home screen. Drop one widget on another to swap them, and Undo brings back one you removed. The default layout is built for your screen size and the hardware your printer has, and every change saves as you make it.</p>
+    </div>
+  </article>
+  <article class="pb-10 mb-10 border-b border-hairline">
+    <h3 class="text-xl mb-1.5">A layout for every display</h3>
+    <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-6">Portrait and ultrawide panels get layouts of their own, not a stretched landscape one. A new Print Status screen is built around a picture of your printer, with a chip for each heater, fan and light pointing at its part, and a checklist of the start sequence while the print prepares.</p>
+    <div class="grid md:grid-cols-[220px_1fr] gap-6 items-center">
+      <div class="plinth">
+        <Image
+          src={homePortrait}
+          alt="Home screen on a tall 480 by 800 panel, with the printer picture and temperatures above the last print, a temperature graph and the spool strip, and the navigation bar along the bottom"
+          widths={[220, 440]}
+          sizes="(max-width: 768px) 60vw, 220px"
+        />
+      </div>
+      <div class="plinth">
+        <Image
+          src={statusUltrawide}
+          alt="Print Status screen on a 1920 by 480 ultrawide panel, with the model preview, progress, the printer picture with heater and fan chips, the filament strip and the Pause, Tune, More and Cancel buttons in one row"
+          widths={[640, 960, 1280]}
+          sizes="(max-width: 768px) 92vw, 60vw"
+        />
+      </div>
     </div>
   </article>
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
@@ -42,5 +66,16 @@ const cells = [
         <p class="text-sm leading-relaxed text-ink-muted">{c.b}</p>
       </article>
     ))}
+  </div>
+  <div class="mt-14 pt-10 border-t border-hairline">
+    <h3 class="text-xl mb-4">Also new in 1.1</h3>
+    <ul class="grid md:grid-cols-2 gap-x-10 gap-y-3 max-w-4xl">
+      <li class="text-sm leading-relaxed text-ink-muted">A Motion screen with Jog and Move tabs, named bed positions, and tap-to-move on a map of the plate.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">Tool changers get a Tool Offsets screen with automatic calibration, and IDEX printers get multi-tool screens.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">OpenAMS, several daisy-chained ACE units and, in early support, Bondtech INDX join the filament systems.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">A pre-print checklist, a job queue you can add to while a print runs, and a pause at a chosen layer.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">Lua plugins can add home screen tiles, screens and a settings page. They run in a sandbox and ask before they touch G-code, Moonraker or the network. The HelixPrint plugin adds quick reprints that skip the bed mesh.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">A beta firmware for the BTT K-Touch. <a href="/flash/" class="text-secondary underline underline-offset-2">Flash it from your browser</a>.</li>
+    </ul>
   </div>
 </section>
