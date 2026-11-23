@@ -314,19 +314,19 @@ test('the headline is present exactly once on the landing page', () => {
   assert.equal(matches.length, 1);
 });
 
-// The 1.0 marker is derived from the built version, never written by hand. A
-// website-only deploy syncs whatever helixscreen main is at, which trails the
-// release tag, so a hardcoded banner would announce 1.0 beside a 0.99 badge.
-test('the 1.0 marker appears only when the built version is 1.0', () => {
+// The release announcement is derived from the built version, never written by
+// hand. A website-only deploy can trail the release tag, so a hardcoded banner
+// would announce 1.1 beside a 1.0 badge.
+test('the 1.1 announcement appears only when the built version is 1.1', () => {
   const { version } = JSON.parse(
     readFileSync(join('src', 'data', 'whatsnew.generated.json'), 'utf8')
   );
   const [major, minor] = version.split('.').map(Number);
-  const shouldShow = major === 1 && minor === 0;
+  const shouldShow = major === 1 && minor === 1;
   assert.equal(
-    landing().includes('is the first stable release'),
+    landing().includes('HelixScreen 1.1 is out'),
     shouldShow,
-    `built version ${version} ${shouldShow ? 'should' : 'must not'} show the 1.0 marker`
+    `built version ${version} ${shouldShow ? 'should' : 'must not'} show the 1.1 announcement`
   );
 });
 

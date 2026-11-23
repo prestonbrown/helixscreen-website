@@ -34,40 +34,37 @@ Beta features are always enabled when running with `--test`.
 
 ## Beta Feature List
 
-When beta features are enabled, the following appear in the UI with an orange "BETA" badge and left accent border:
+When beta features are enabled, the following appear in the UI:
 
 | Feature | Location | Description | Status |
 |---------|----------|-------------|--------|
-| **HelixPrint Plugin** | Advanced panel | Install/uninstall the HelixPrint Klipper plugin for advanced print start control | Functional; plugin manages bed mesh, QGL, z-tilt skipping |
-| **Configure PRINT_START** | Advanced panel | Make bed mesh and QGL skippable in your print start macro | Functional; needs only Beta Features enabled — writes your Klipper config directly via Moonraker, no plugin required |
-| **Plugins** | Settings panel | View installed plugins and their status | Functional; plugin system is early-stage |
-| **Dev Update Channel** | Settings panel | Adds **Dev** to the Update Channel selector, which otherwise offers Stable and Beta to everyone | Functional; needs `update.dev_url` set in the config file |
-| **Macro Browser** | Advanced panel | Browse and execute custom Klipper macros | Functional; hides system macros, confirms dangerous ones |
-| **Z Calibration** | Controls panel | Quick-access `PROBE_CALIBRATE` button (probe Z endstop) — distinct from the graduated Z-Offset Calibration flow | Functional; requires probe hardware |
-| **MPC Calibration** | Heater Calibration panel | Model Predictive Control calibration as an alternative to PID | Functional; requires Kalico firmware |
-| **Multi-Printer Management** | Settings panel, Navbar, Printer Manager | Add, switch between, and manage multiple Klipper printers from one touchscreen | Functional; switch/add/delete printers with one-tap switching |
+| **Dev Update Channel** | Settings > Updates | Adds **Dev** to the Update Channel selector, which otherwise offers Stable and Beta to everyone | Functional; needs `dev_url` set in `/var/lib/helixscreen/update_urls.json` (root-owned) |
+| **HelixPrint Plugin Prompt** | After setup, once connected | Offers to install the HelixPrint Moonraker plugin when the printer does not have it. Declining stops the offer | Functional; the plugin's Install row on the Advanced screen works without beta features |
 
-> **Graduated from beta:** the **Sound System**, PID Calibration, Input Shaper, the **Spool Wizard**, the **G-code Console**, **Probe Management**, **Z-Offset Calibration**, and **Timelapse** are now available to all users without enabling beta features.
+> **Graduated from beta:** the **Sound System**, PID Calibration, Input Shaper, the **Spool Wizard**, the **G-code Console**, **Probe Management**, **Z-Offset Calibration**, **Timelapse**, the **Macro Browser**, **MPC Calibration**, **Belt Tension**, **Pressure Advance Tuning** (with the print Tune overlay's PA row and saving pressure advance to Spoolman), **Tool Offsets**, **Pause at a Layer** and **Choosing Lanes to Dry** are available to all users without enabling beta features. The **HelixPrint plugin** install/uninstall rows, the **Z Calibration** button, and **Multi-Printer Management** are likewise available to everyone.
 
 ---
 
-## ESP32-S3 Firmware (Alpha)
+## ESP32-S3 Firmware (Beta)
 
 Besides running on a printer's host computer (Linux, Raspberry Pi, Android), HelixScreen can be built as firmware that runs directly on ESP32-S3 display panels — the BTT K-Touch class of hardware.
 
-**Status: alpha.** This is an early, experimental port for developers and early testers. Expect rough edges, missing features, and instability — not for daily use, and not a scheduled release. The Linux, Pi, and Android targets are unaffected and remain the production ones.
+**Status: beta.** This is the newest port, so expect rough edges and missing features. The Linux, Pi, and Android targets are unaffected.
 
 What works today:
 
 - Boots to the Home panel; heavier screens load on first visit to fit the panel's memory
 - Live printer status and bed mesh over WiFi through Moonraker
 - WiFi setup on first boot: the panel broadcasts its own setup hotspot — join it from your phone to configure the network
-- Over-the-air updates, with a fallback slot to recover a bad flash
-- All nine languages and the printer image set, packed to fit the panel's storage
+- Updating over USB that keeps your WiFi and settings. There are no over-the-air updates yet
+- Seven languages (English, German, French, Spanish, Russian, Portuguese, Italian); Chinese and Japanese need a font the panel has no room for
+- Printer pictures for the DIY and Klipper-converted machines an add-on panel usually drives (Voron, RatRig, Sovol SV08, Zero G and others); other printers show a generic picture
+- Notification history: tap the bell to see past alerts
+- Temperature graphs that start from the printer's recent history
 
 Not yet available on this target: the camera feed and QR features, the 2D G-code view, and the 3D bed mesh view.
 
-There is no release download yet — the firmware is built from the source tree with the ESP-IDF toolchain.
+Release builds (1.1 betas and newer) include a ready-to-flash firmware zip. Installing, first-boot setup, updating and recovery are covered in [K-Touch Install](/guide/install-esp32/).
 
 ---
 

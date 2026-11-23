@@ -5,9 +5,9 @@ sidebar:
 ---
 
 
-How the modal dialog system works internally, how to create new modals, and how to migrate old patterns to the standardized system.
+How the modal dialog system works internally and how to create new modals.
 
-**Key files**: `include/ui_modal.h`, `src/ui/ui_modal.cpp`, `src/ui/ui_dialog.cpp`, `ui_xml/modal_dialog.xml`
+**Key files**: `include/ui_modal.h`, `src/ui/ui_modal.cpp`, `src/ui/components/ui_dialog.cpp`, `ui_xml/components/dialog_frame.xml`, `ui_xml/modal_dialog.xml`
 
 ---
 
@@ -22,22 +22,50 @@ Modal class (C++ RAII lifecycle, show/hide, button wiring)
   |
   +-> ui_dialog (XML custom widget, theme-aware card background)
   |
+  +-> dialog_frame (the titled card every dialog extends: header, scrolling body, footer)
+  |
   +-> Reusable XML components:
         modal_button_row  (divider + 2-button footer, optional 3rd action)
-        modal_header      (icon + title row, optional close button)
-        modal_dialog      (generic title/message dialog)
+        modal_header      (icon + title row, optional close button; dialog_frame's header)
+        modal_dialog      (generic title/message dialog, a dialog_frame)
 ```
 
 ### How It Works
 
-1. **C++ calls `Modal::show()` or `modal.show(parent)`**
+1. **C++ calls `modal.show(parent)`, `Modal::show_owned(...)` or `ComponentModal::show_owned("component")`**
 2. A full-screen **backdrop** is created programmatically (semi-transparent overlay)
 3. The XML component is instantiated via `lv_xml_create()` inside the backdrop
 4. The dialog gets an **entrance animation** (scale + fade)
 5. The **ModalStack** tracks the backdrop/dialog pair for z-ordering
 6. On hide, an **exit animation** plays, then both backdrop and dialog are destroyed
 
-Backdrops are always created in C++ -- never in XML. This avoids the old pattern of inline XML backdrops that caused double-backdrop bugs and inconsistent behavior.
+**An open modal covers the navbar, E-stop included.** `ModalStack` holds the screen chrome under
+its backdrops (`helix::ui::set_chrome_covered()`), so a tap meant to dismiss the modal cannot land
+on a navbar button. The one exception is the E-stop's own confirmation, which calls
+`Modal::set_covers_chrome(dialog, false)` so a second press on the E-stop reaches the button.
+
+Backdrops are always created in C++, never in XML, so a dialog never ends up with two.
+
+**A backdrop is a picture of the screen, taken without closing modals.** Where blur is on,
+`helix::ui::create_fullscreen_backdrop()` snapshots the screen (`lv_snapshot_take()` in
+`src/ui/effects/backdrop_blur.cpp#create_blurred_backdrop`) and shows it blurred and dimmed; the
+image does not follow later changes by itself. A modal still in its exit animation when the next one opens would
+stay in that image long after it is gone, so `Modal::show()` and `Modal::create_and_show()` take
+the backdrop through `create_modal_backdrop()` (`src/ui/ui_modal.cpp#create_modal_backdrop`): it
+hides every backdrop `ModalStack::exiting_backdrops()` lists for the one snapshot, then restores
+them so their exit animation finishes. A caller replacing one dialog with another (the runout
+dialog closing as a recovery dialog opens) needs no delay between `hide()` and the next show.
+
+The picture is blurred on 32-bit displays and darkened on RGB565; on ESP32, or once a snapshot
+has failed, the backdrop is a plain translucent dim layer instead. A picture does not track what
+changes beneath it, so `NavigationManager` asks
+`ModalStack::schedule_backdrop_refresh()` to re-take every visible modal's picture after a panel
+switch, an overlay push or pop, a theme or light/dark switch, and the printer switcher appearing
+in or leaving the navbar. The re-take waits a fixed 250ms (`kModalBackdropSettleMs`), long
+enough for the 200ms overlay slide and the navbar's 180ms crossfade to finish; content a panel
+fills in later than that is not in the picture until the next re-take. `ModalStack::refresh_backdrops()` re-takes them
+lowest first, each into the buffer it already owns, with itself and every modal above it hidden.
+A change beneath an open modal that navigation does not cover calls it directly.
 
 ---
 
@@ -92,13 +120,13 @@ helix::ui::modal_alert(
     ModalSeverity::Info);
 ```
 
-`helix::ui::modal_confirm()` returns the dialog widget pointer for callers that dismiss it programmatically. Store it in a `ModalGuard` for RAII:
+`helix::ui::modal_confirm()` returns the dialog widget pointer for callers that dismiss it programmatically. Hold it in a `helix::ui::WidgetRef`, which reads `nullptr` once the dialog is deleted, whoever deleted it:
 
 ```cpp
-#include "ui/ui_modal_guard.h"
+#include "ui_widget_ref.h"
 
 class MyPanel {
-    helix::ui::ModalGuard delete_dialog_;  // Auto-hides in destructor
+    helix::ui::WidgetRef delete_dialog_;  // nullptr once the dialog is gone
 
     void show_delete() {
         delete_dialog_ = helix::ui::modal_confirm(...);
@@ -122,7 +150,7 @@ class MyPanel {
 > NOT fire it (each `hide()` entry point defaults to `Programmatic`, which `on_hide()` gates
 > on), so closing the dialog from teardown cannot arm a deferred callback against a
 > destructor that has already run. Nulling the stored handle first is still good hygiene,
-> but it is no longer the only thing standing between a close and a use-after-free.
+> but it is not the only thing standing between a close and a use-after-free.
 >
 > **If the capture can die before the dialog, pass a lifetime token too.** The dialog
 > outlives its exit animation, and a `std::function` capturing a panel that has since been
@@ -132,30 +160,38 @@ class MyPanel {
 > **New code should prefer `modal_confirm()` / `modal_alert()`.** They take `std::function`
 > throughout, attach nothing of the caller's to a widget, and close the dialog themselves -
 > so a callback never has to guess at `Modal::get_top()` to dismiss the dialog it was fired
-> from. Their `owner_token` also gates **all three** callbacks, not just the dismissal,
-> which became possible when the `lv_event_cb_t` forms were retired: those callbacks were
-> invoked by LVGL straight off the button, so their `void*` still has to outlive the dialog
-> on its own.
+> from. Their `owner_token` also gates **all three** callbacks, not just the dismissal.
 
 **Severity levels** control the header icon:
 - `ModalSeverity::Info` -- blue info icon
 - `ModalSeverity::Warning` -- yellow alert icon
 - `ModalSeverity::Error` -- red octagon icon
 
-### 2. Static `Modal::show()` (no subclass, custom XML)
+### 2. `ComponentModal` (no subclass, custom XML)
 
-For modals with custom XML layout but no complex C++ logic:
+For a modal with its own XML layout whose buttons are XML event callbacks, and no C++
+hooks of its own:
 
 ```cpp
-// Show a custom XML modal
-lv_obj_t* dialog = Modal::show("my_custom_modal");
+// Show a custom XML modal; ModalStack owns the instance
+dialog_ = helix::ui::ComponentModal::show_owned("my_custom_modal");
 
-// Wire up buttons or do work with the dialog...
-lv_obj_t* btn = lv_obj_find_by_name(dialog, "btn_primary");
+// Find inputs, register keyboards...
+lv_obj_t* input = lv_obj_find_by_name(dialog_, "name_input");
 
 // Later, hide it
-Modal::hide(dialog);
+Modal::hide(dialog_);
 ```
+
+The dialog has an owner, like every other modal: `Modal::hide(dialog)` runs the instance
+teardown and `Modal::from_event()` resolves it. ESC closes it without pressing a button,
+the same as a backdrop tap. A dialog whose buttons are wired in C++ to do more than close
+it gets its own subclass instead (approach 3), with the wiring in `on_show()`:
+`TelemetryInfoModal` (`include/ui_telemetry_info_modal.h`) is the smallest one.
+
+The bare static `Modal::show("component")` factory, which leaves the dialog with no owner,
+is for tests only: `scripts/check_growth_ratchets.py` refuses it, and the
+`helix::ui::modal_show()` wrapper around it, anywhere under `src/` or `include/`.
 
 ### 3. Modal Subclass (custom XML + C++ logic)
 
@@ -219,12 +255,23 @@ The Modal destructor auto-hides if visible, so storing a `Modal` subclass as a m
 |------|---------|------------|
 | `on_show()` | no-op | After modal is created and visible |
 | `on_hide()` | no-op | Before modal is destroyed |
-| `on_ok()` | `hide()` | When primary button is clicked |
-| `on_cancel()` | `hide()` | When secondary button is clicked |
-| `on_tertiary()` | `hide()` | Third button clicked |
-| `on_quaternary()` | `hide()` | Fourth button clicked |
-| `on_quinary()` | `hide()` | Fifth button clicked |
-| `on_senary()` | `hide()` | Sixth button clicked |
+| `on_dismissed()` | no-op | After `on_hide()`, when the close was not a button's answer: backdrop tap, hot reload, a system sweep, or a programmatic `hide()` |
+| `on_ok()` | `hide(ButtonPress)` | When primary button is clicked |
+| `on_cancel()` | `hide(ButtonPress)` | When secondary button is clicked |
+| `on_escape()` | `on_cancel()` | On ESC. Override it to close without acting (`hide(EscKey)`) when Cancel commits something: Abort, Resume, a saved preference |
+| `on_tertiary()` | `hide(ButtonPress)` | Third button clicked |
+| `on_quaternary()` | `hide(ButtonPress)` | Fourth button clicked |
+| `on_quinary()` | `hide(ButtonPress)` | Fifth button clicked |
+| `on_senary()` | `hide(ButtonPress)` | Sixth button clicked |
+
+**`on_dismissed()` is where a subclass resolves state its buttons were meant to resolve.**
+A button's answer closes with `hide(ModalCloseReason::ButtonPress)`; every other close reaches
+`on_dismissed()` once. Override it when the caller holds a pending guard or the dialog previews a
+change it must revert: `ExcludeObjectModal` reports a cancel, `LanAuthPromptModal` drops the
+request, `FilamentMappingModal` reverts the auto-color-map toggle. Cleanup that must run on every
+close, answered or not, belongs in `on_hide()` (`MacroParamModal` drops its widget pointers
+there). A button handler that closes the dialog passes `ButtonPress`, or its close reads as a
+dismissal.
 
 ### Button Wiring Helpers
 
@@ -248,20 +295,58 @@ The button names must match `name="..."` attributes in your XML. These use `lv_o
 This means **no XML callback attribute is needed** on the button. `modal_button_row` can omit `primary_callback` / `secondary_callback` entirely when using a Modal subclass:
 
 ```xml
-<!-- Preferred for Modal subclasses — no callback attributes needed -->
+<!-- Preferred for Modal subclasses - no callback attributes needed -->
 <modal_button_row primary_text="Save" secondary_text="Cancel"/>
 ```
 
-The generic XML callbacks (`on_modal_ok_clicked`, `on_modal_cancel_clicked`) are retained for the static `Modal::show("component")` API, which doesn't use `wire_*_button()`.
+The generic XML callbacks (`on_modal_ok_clicked`, `on_modal_cancel_clicked`) are retained for XML that names them on a dialog shown without `wire_*_button()`.
 
-If both an XML callback and `wire_*_button()` are present on the same button, the handler may fire twice — this is safe because `hide()` guards against double-execution.
+If both an XML callback and `wire_*_button()` are present on the same button, the handler may fire twice - this is safe because `hide()` guards against double-execution.
+
+### Finding the instance from an XML callback
+
+An XML `<event_cb callback="...">` handler is registered once per process with
+`lv_xml_register_event_cb()` and arrives with no `this`. The one sanctioned way for it to
+reach its instance is `Modal::from_event<T>(e)`: the widget that fired is walked up to the
+dialog `ModalStack` tracks, and that entry's owner is returned when it is a `T`. A widget a
+modal parents outside its dialog (a dropdown's list, the keyboard) resolves to the modal on
+top. Two instances of one class can be open at once, each answering for its own widgets.
+
+```cpp
+class JobQueueModal : public Modal {
+  public:
+    const char* component_name() const override { return "job_queue_modal"; }
+    HELIX_KIND_TAG(JobQueueModal) // what from_event<JobQueueModal>() compares; no RTTI
+    // ...
+};
+
+lv_xml_register_event_cb(nullptr, "on_jq_modal_close", [](lv_event_t* e) {
+    if (auto* self = Modal::from_event<JobQueueModal>(e)) {
+        self->hide();
+    }
+});
+```
+
+`HELIX_KIND_TAG(Self)` (`include/helix_type_tag.h`) is required: a subclass without it keeps
+`helix::kUndeclaredKind`, so `from_event<T>()` returns nullptr for every `T` and logs the
+mismatch. The untyped `Modal::from_event(e)` returns the owner without the check. A dialog
+from the bare static `Modal::show()` factory (tests only) has no owner and resolves to nothing, as does a
+modal that is already closing.
+
+Overlays have the same shape: `OverlayBase::from_event<T>(e)` answers the open overlay whose
+tree holds the widget, on top of the stack or buried under another, from the create inside
+`show()` until `destroy_overlay_ui()` or `cleanup()`.
+
+A `static Foo* active_instance_` pointing at "the current instance" is the pattern this
+replaces: it cannot tell two open instances apart, and it goes stale when an owner destroys
+a modal without `hide()`. `scripts/check_growth_ratchets.py` refuses new ones.
 
 ### Protected Members
 
 | Member | Type | Purpose |
 |--------|------|---------|
-| `backdrop_` | `lv_obj_t*` | The full-screen backdrop overlay |
-| `dialog_` | `lv_obj_t*` | The dialog card widget |
+| `backdrop_` | `helix::ui::WidgetRef` | The full-screen backdrop overlay (reads `nullptr` once deleted) |
+| `dialog_` | `helix::ui::WidgetRef` | The dialog card widget |
 | `parent_` | `lv_obj_t*` | Parent passed to `show()` |
 
 ### Helper: `find_widget(name)`
@@ -280,12 +365,9 @@ The base container for all modal dialog cards. Registered as a custom LVGL XML w
 - Zero padding, zero border, zero shadow by default
 - Rounded corner clipping (for full-bleed bottom buttons)
 - Disabled state at 50% opacity
-- `LV_OBJ_FLAG_USER_1` flag for context-aware input styling. `ThemeManager`
-  answers "am I inside a dialog" by walking an object's parents looking for this
-  bit, so **nothing else may set it**, on any object, for any reason. It is one
-  of only four user flag bits; see the ledger in
-  [chapter 09 — Home panel widgets](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/architecture/09-home-widgets.md) before claiming
-  one
+
+Inputs need no dialog-specific styling: fields are unfilled and outlined, so they read on the
+dialog's `elevated_bg` the same way they read on a card or the screen.
 
 Usage in XML:
 
@@ -296,6 +378,65 @@ Usage in XML:
   <!-- content here -->
 </view>
 ```
+
+### `dialog_frame`
+
+The titled card a dialog extends (`ui_xml/components/dialog_frame.xml`). It wraps `ui_dialog`
+and owns everything a dialog repeated by hand: the card (`width`, default `70%`;
+`style_max_height="85%"`; a column with no gap), the header (a `modal_header`: the icon, then
+the title, left-aligned), a body column padded `#space_lg` on the sides and bottom with a
+`#space_md` gap and capped at `#dialog_content_max` (it scrolls past that), and a footer for
+the button rows. A dialog supplies its content and its buttons, nothing else.
+
+**Props:**
+
+| Prop | Default | Meaning |
+|------|---------|---------|
+| `title`, `title_tag` | "" | The title, and its translation key when the key differs from the text |
+| `title_subject` | unset | A string subject that retitles the dialog live; unset binds nothing |
+| `icon`, `icon_variant` | "", `primary` | An icon name shown before the title (empty shows none) and its color variant (`primary`, `warning`, `danger`, `success`, `accent`...) |
+| `width` | `70%` | The card's width |
+| `hide_close`, `close_callback` | `true`, "" | Pass `hide_close="false"` and a registered callback for an X after the title |
+
+**Slots** (declared in its `<api>`, see [LVGL9_XML_GUIDE.md](/dev/reference/xml-guide/#slots-filling-a-component-from-outside)):
+
+| Slot | Host | What goes there |
+|------|------|-----------------|
+| `body` (default) | `dialog_body` | Every widget child of the view. Restyle the body on its slot tag: `<dialog_frame-body style_flex_cross_place="center">` |
+| `footer` | `dialog_footer` | The `<modal_button_row>`(s), in `<dialog_frame-footer>`. Hidden while empty |
+| `header_extra` | `header_extra` | Widgets between the title and the X, in `<dialog_frame-header_extra>`. Hidden while empty |
+
+The frame names its own parts `dialog_header`, `dialog_icon`, `dialog_title`, `dialog_body` and
+`dialog_footer`; names inside the body and footer belong to the dialog and keep working.
+`dialog_title` is `kModalTitleWidgetName`, the widget code and tests read as the modal's
+title. C++ that fills the body at runtime asks `lv_xml_component_get_slot(dialog, nullptr)`
+for it rather than finding a container by name.
+
+```xml
+<view name="bed_mesh_rename_modal" extends="dialog_frame" title="Rename Mesh Profile" icon="pencil">
+  <dialog_frame-body>
+    <text_input name="rename_new_name_input" width="100%" height="#input_height"
+                placeholder_text="New profile name"/>
+  </dialog_frame-body>
+  <dialog_frame-footer>
+    <modal_button_row primary_text="Rename" secondary_text="Cancel"
+                      primary_callback="on_bed_mesh_rename_confirm"
+                      secondary_callback="on_bed_mesh_rename_cancel"/>
+  </dialog_frame-footer>
+</view>
+```
+
+**Severity icons are props.** A dialog whose icon depends on a severity takes it as `icon` and
+`icon_variant`, which the caller sets when it creates the dialog, as
+`helix::ui::ModalDialogAttrs` does for `modal_dialog`. There are no hidden per-severity icons
+to toggle. A test that needs the icon checks the shown glyph (`visible_glyphs()` in
+`tests/unit/test_dialog_frame.cpp`), not a named `icon_*` widget.
+
+**When a dialog stays on `ui_dialog`.** Only when it is not a titled card with a body and
+buttons: `color_picker_modal` (the picker is the card), `klipper_recovery_dialog` (its header
+row carries the error code and the X, and its message caps at `#dialog_content_recovery_max`)
+and `macro_param_modal` (a card that widens with its field count). Such a dialog says why in
+its XML.
 
 ### `modal_button_row`
 
@@ -311,14 +452,43 @@ Reusable button footer with divider. Provides the standard "secondary | primary"
 | `secondary_callback` | string | -- | Registered XML callback name |
 | `primary_tag` / `secondary_tag` | string | "" | Translation tag for the label |
 | `primary_icon` / `secondary_icon` | string | "" | Optional leading icon name |
-| `primary_variant` | string | "primary" | Primary button style variant (`primary`, `danger`, ...) |
-| `show_secondary` | string | "true" | Show/hide secondary button |
+| `primary_variant` / `secondary_variant` | string | "primary" / "secondary" | Button style variant (`primary`, `danger`, ...) |
+| `hide_secondary` | string | "false" | Pass `"true"` to hide the secondary button |
+| `secondary_show_subject` | string | "" | Subject carrying 1 shows the secondary button and its divider |
+| `primary_subject` / `secondary_subject` | string | "" | Subject-bound caption in place of the static text |
+| `primary_moves_machine` | string | "false" | `"true"` installs the toolhead guard on the primary (rows whose primary runs a filament op) |
+| `primary_enable_subject` | string | "" | Subject carrying 1 enables the primary button, 0 disables it |
+| `*_user_data` | string | "" | User data on each button's event |
 | `tertiary_text` | string | "" | Optional third (leading) action label |
 | `tertiary_callback` | string | "" | Registered XML callback for the tertiary button |
 | `tertiary_tag` | string | "" | Translation tag for the tertiary label |
 | `tertiary_icon` | string | "" | Optional icon for the tertiary button |
 | `tertiary_variant` | string | "secondary" | Tertiary button style variant |
 | `hide_tertiary` | string | "true" | Hidden by default; pass `"false"` to reveal it |
+| `tertiary_show_subject` | string | "" | Subject carrying 0 hides the tertiary button and its divider |
+| `quaternary_text` / `_tag` / `_callback` / `_icon` / `_variant` | string | "" / "secondary" | Optional fourth action, leftmost |
+| `hide_quaternary` | string | "true" | Pass `"false"` to reveal the fourth action |
+| `primary_name` / `secondary_name` / `tertiary_name` / `quaternary_name` | string | `btn_primary` ... | Widget names, for C++ lookups and `wire_*_button()`; set them when a dialog has several rows |
+| `primary_hide_subject` | string | "" | Subject carrying 1 hides the primary button and the divider before it |
+| `primary_disable_subject` | string | "" | Subject carrying 1 disables the primary button (inverse of `primary_enable_subject`) |
+| `primary_accent_subject` | string | "" | Subject carrying 1 rings the primary button with `styles.accent_outline` |
+
+A dialog that shows different buttons per state uses one `modal_button_row` per state, each
+with a `name` and a `bind_flag_if_*` child on the instance (`ui_xml/debug_bundle_modal.xml`).
+Each row carries its own top divider, so there is no shared `divider_horizontal` above them.
+Subject props resolve in `modal_button_row`'s scope plus globals, so a subject declared in
+the calling component's own `<subjects>` cannot be passed in.
+
+**Row height.** The row fixes every button at `#modal_button_height`, not `#button_height`.
+The two match at every breakpoint except micro (480x272), where `#button_height` is 26px and
+`#modal_button_height` is 44px: a dialog's confirm/cancel pair is the one control the user must
+hit, so it stays a full touch target on the smallest screen. A hand-built footer shaped like the
+row (`network_test_modal`, `update_download_modal`) and any action button standing in the
+footer's place (the runout dialog's Load/Unload/Purge and Use Another Toolhead buttons,
+`ui_xml/runout_guidance_modal.xml`) sets `height="#modal_button_height"` too. The chrome-budget
+gate recognizes a hand-built row by either height token. `helix::ui::fit_dialog_to_screen()`
+(`src/ui/ui_modal.cpp#fit_dialog_to_screen`) gives the taller row its room by shrinking the
+content scroll area, and the measured content caps below already include the 44px row.
 
 Use `primary_variant="danger"` (not a color override) for destructive primaries. The
 tertiary button is hidden by default so existing two-button callers are unaffected; a
@@ -345,7 +515,10 @@ Buttons are edge-to-edge with zero radius, matching the `modal_dialog.xml` style
 
 ### `modal_header`
 
-Reusable icon + title row for modal headers.
+Reusable icon + title row for modal headers, and the header `dialog_frame` builds. An empty
+`icon_src` hides the icon as `hide_icon="true"` does. Its `extra` slot (`header_extra`, hidden
+while empty) takes widgets between the title and the X: `<modal_header-extra>`, or
+`<dialog_frame-header_extra>` through the frame.
 
 **API props:**
 
@@ -358,7 +531,8 @@ Reusable icon + title row for modal headers.
 | `title_tag` | string | "" | Translation tag |
 | `title_subject` | string | -- | Bind the title to a subject (attribute dropped when omitted) |
 | `hide_close` | string | "true" | Pass `"false"` to show a close (X) button |
-| `close_callback` | string | "" | Registered XML callback fired by the close button |
+| `close_callback` / `close_user_data` | string | "" | Registered XML callback fired by the close button, and its user data |
+| `icon_name` / `title_name` / `close_name` | string | `header_icon` / `header_title` / `btn_close` | Widget names for C++ lookups |
 
 Usage in XML:
 
@@ -369,12 +543,7 @@ Usage in XML:
 
 ### `modal_dialog`
 
-The generic title + message dialog used by `helix::ui::modal_confirm()` and `helix::ui::modal_alert()`. Uses subject bindings for dynamic content:
-
-- `dialog_severity` -- controls which icon is shown (0=info, 1=warning, 2=error)
-- `dialog_show_cancel` -- toggles cancel button visibility
-- `dialog_primary_text` -- primary button label
-- `dialog_cancel_text` -- cancel button label
+The generic title + message dialog used by `helix::ui::modal_confirm()` and `helix::ui::modal_alert()`: a `dialog_frame` with one wrapped `dialog_message` in its body and one `modal_button_row` in its footer. Severity and captions are per-dialog attrs (`icon`/`icon_variant`, mapped from the `ModalSeverity`, plus `primary_text`, `secondary_text`, `hide_secondary`, `primary_variant`), built by `helix::ui::ModalDialogAttrs`, so stacked dialogs never share caption state.
 
 You rarely interact with `modal_dialog` directly. Use `helix::ui::modal_confirm()` or `helix::ui::modal_alert()` instead.
 
@@ -390,38 +559,26 @@ When creating a new modal with custom layout, follow this template:
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- NOTE: Backdrop created programmatically by Modal system -->
 <component>
-  <view name="my_feature_modal"
-        extends="ui_dialog" width="70%" height="content" align="center"
-        flex_flow="column" style_flex_main_place="start" style_pad_gap="0">
-
-    <!-- Header (option A: use modal_header component) -->
-    <modal_header icon_src="alert" icon_variant="warning"
-                  title="My Title" title_tag="My Title"/>
-
-    <!-- Content area -->
-    <lv_obj width="100%" height="content"
-            style_pad_left="#space_lg" style_pad_right="#space_lg"
-            style_pad_top="0" style_pad_bottom="#space_lg">
-      <text_body name="dialog_message" width="100%"
-                 text="Some message here" long_mode="wrap"/>
-    </lv_obj>
-
-    <!-- Button row -->
-    <modal_button_row
-        secondary_text="Cancel" secondary_callback="on_my_cancel"
-        primary_text="Confirm" primary_callback="on_my_confirm"/>
+  <view name="my_feature_modal" extends="dialog_frame" title="My Title" icon="alert" icon_variant="warning">
+    <text_body name="my_feature_message" width="100%" text="Some message here" long_mode="wrap"/>
+    <dialog_frame-footer>
+      <modal_button_row secondary_text="Cancel" secondary_callback="on_my_cancel"
+                        primary_text="Confirm" primary_callback="on_my_confirm"/>
+    </dialog_frame-footer>
   </view>
 </component>
 ```
 
 Key rules:
-- Always `extends="ui_dialog"` (never plain `lv_obj` or `ui_card`)
+- Always `extends="dialog_frame"`; `extends="ui_dialog"` only for the shapes listed under
+  [`dialog_frame`](#dialog_frame), with the reason in a comment. Never plain `lv_obj` or `ui_card`
 - Never include a backdrop in XML (comment: "Backdrop created programmatically by Modal system")
+- The title, icon and close button are frame props, never a hand-built header row
+- Content goes in the body; anything that must not scroll still belongs inside it (see the
+  next section); button rows go in `<dialog_frame-footer>`
 - Use `modal_button_row` for standard two-button footers
-- Use `modal_header` for icon + title rows (or build custom headers)
 - Use design tokens for all spacing (`#space_lg`, `#space_md`, etc.)
-- Cap the card at `style_max_height="85%"` and the scroll area at a
-  `#dialog_content_*` token — see the next section
+- `title_tag` only when the translation key differs from `title`
 
 ### Height budget: the `#dialog_content_*` ladder family
 
@@ -429,8 +586,8 @@ The card cap and the content cap are ONE piece of arithmetic, shared by every
 modal: the card is `height="content"` capped at **85% of the screen**, and the
 scrollable body is capped at a token whose per-breakpoint values were measured
 as (85% cap − that shape's chrome). There is no flex-shrink in LVGL, so a card
-whose children total more than its cap clips its LAST child off the bottom —
-the button row — and the modal cannot be dismissed.
+whose children total more than its cap clips its LAST child off the bottom -
+the button row - and the modal cannot be dismissed.
 
 Pick the token by the card's chrome shape (values in `ui_xml/globals.xml`):
 
@@ -438,62 +595,74 @@ Pick the token by the card's chrome shape (values in `ui_xml/globals.xml`):
 |-------|------------|-------------|
 | `#dialog_content_max` | header + divider + scroll area + divider + ONE button row | `modal_dialog` |
 | `#dialog_content_pinned_max` | …plus ONE pinned block below the scroll area (a diagram, a status row) | `ams_loading_error_modal` |
-| `#dialog_content_tall_chrome_max` | …plus a SECOND button row with its divider | `klipper_recovery_dialog` |
+| `#dialog_content_recovery_max` | header + divider + scroll area + ONE button row, measured on that card | `klipper_recovery_dialog` |
 
-- Prefer moving content INSIDE the scroll container over pinning it — then
+The micro values carry the 44px `#modal_button_height` row in their measured chrome:
+`#dialog_content_pinned_max` is 103px there and `#dialog_content_recovery_max` 135px, with the
+card cap still 85% of the screen. A change to the footer row's height at any breakpoint means
+re-measuring these two ladders at that breakpoint (the comment above each in `globals.xml`
+lists the measured chrome per breakpoint).
+
+- `dialog_frame` is the `#dialog_content_max` shape: its body is the scroll area, capped at
+  that token, and its footer holds the one button row. Content in the body is correct by
+  construction.
+- Prefer moving content INSIDE the scroll container over pinning it - then
   `#dialog_content_max` is correct by construction.
-- Never raise a card above 85% to fit extra chrome (klipper_recovery carried
-  90% for a while; #1277 ported it back onto the tall-chrome token). The
+- Never raise a card above 85% to fit extra chrome (#1277). The
   chrome-budget lint gate (`scripts/check_modal_chrome_budget.py`) flags both
-  the raised cap and an unbudgeted block below a scroll area.
+  the raised cap and an unbudgeted block below a scroll area. It counts the container a
+  component's `footer` slot targets (`dialog_footer`) as the button row, so a frame's footer
+  passes, while a block placed between the body and the footer is still flagged.
 - A shape beyond one extra block (action_prompt's diagram + wrapping rows +
   footer) fits no single ladder: measure it at every breakpoint with
   `ctl demo` + `ctl geom` and mark the file `MODAL_CHROME_OK`.
 
 ---
 
-## ModalGuard (RAII for Static API)
+## Holding a dialog handle
 
-When using `Modal::show()` or a `modal_confirm()` whose handle you keep, the returned `lv_obj_t*` must eventually be hidden. `ModalGuard` automates this:
+A `ComponentModal::show_owned()` or `modal_confirm()` handle you keep is a `helix::ui::WidgetRef`
+(`include/ui_widget_ref.h`), never a raw `lv_obj_t*`. The handle hooks the dialog's own
+`LV_EVENT_DELETE`, so it reads `nullptr` once the dialog is gone by any route: a button, a
+backdrop tap, ESC, a hot-reload rebuild, the screen being deleted out from under it, or
+`ModalStack::clear()` at shutdown. A raw pointer keeps the dead address, and an `if
+(dialog_) return;` re-entry guard then swallows every later press.
 
 ```cpp
-#include "ui/ui_modal_guard.h"
+#include "ui_widget_ref.h"
 
 class ControlsPanel {
-    helix::ui::ModalGuard motors_dialog_;
-    helix::ui::ModalGuard z_offset_dialog_;
+    helix::ui::WidgetRef motors_dialog_;
 
     void confirm_disable_motors() {
-        // ModalGuard::operator= hides any previous dialog first
+        if (motors_dialog_) {
+            return; // still up; reads nullptr the moment the dialog is deleted
+        }
         motors_dialog_ = helix::ui::modal_confirm(
             lv_tr("Disable Motors?"),
             lv_tr("Release all stepper motors."),
-            ModalSeverity::Warning, lv_tr("Disable"),
-            on_confirm, on_cancel, this);
+            ModalSeverity::Warning, lv_tr("Disable"), on_confirm, opts);
     }
 };
-// Panel destructor -> ModalGuard destructor -> helix::ui::modal_hide() called automatically
 ```
 
-`ModalGuard` supports move semantics, assignment from raw `lv_obj_t*`, explicit `hide()`, and `release()` to take ownership.
-
-> **`ModalGuard` guarantees the dialog gets hidden, not that it is gone.** It calls the
-> static `Modal::hide()`, which starts a 150ms exit animation - so the sequence in the
-> comment above is: the panel destructor runs the guard, and the dialog then outlives the
-> panel. For tier-2 dialogs whose buttons a caller hand-wired with `wire_button_with()`,
-> that means whatever those callbacks capture must outlive the dialog too.
+> **A handle tells you the dialog is gone, not that it is closed.** `Modal::hide()` starts
+> a 150ms exit animation, and the handle stays set until the tree is actually deleted at
+> the end of it. A caller whose guard must open at the close itself clears the handle in
+> `on_dismiss` (and `on_cancel`/`on_confirm` when it passes them), which is what
+> `show_low_ram_resonance_warning()` and `show_motors_off_confirm()` do for their callers.
 >
 > `Modal::hide()` disarms the tree on the way out (`Modal::disarm_tree`), so a click can no
-> longer reach those callbacks. What it does not do is make the pointer valid: a teardown
-> that never goes through `hide()` - the screen being deleted out from under the dialog, or
-> `ModalStack::clear()` at shutdown - leaves the tree fully armed. The helper forms
-> (`modal_confirm()`/`modal_alert()`) avoid the question entirely: their callbacks are
-> std::function copies gated by `owner_token`, not pointers attached to widgets.
+> longer reach hand-wired `wire_button_with()` callbacks. A teardown that never goes
+> through `hide()` leaves the tree armed until it is deleted, so whatever those callbacks
+> capture must outlive the dialog. The helper forms (`modal_confirm()`/`modal_alert()`)
+> avoid the question entirely: their callbacks are std::function copies gated by
+> `owner_token`, not pointers attached to widgets. If the callbacks capture something that
+> dies with the owner, own a `Modal` subclass and let its teardown run instead.
 >
-> Despite the name this is not the `ObserverGuard` bargain: `ObserverGuard` detaches the
-> observer so nothing can dispatch afterwards, while `ModalGuard` only asks the dialog to
-> close. If the callbacks capture something that dies with the owner, own a `Modal`
-> subclass and let its teardown run instead.
+> `WidgetRef` neither copies nor moves (the hook's user_data is its address): hold it as a
+> member of an owner that does not move. A value-type record that is moved into a container
+> holds a `helix::ui::WeakWidget` instead.
 
 ---
 
@@ -503,24 +672,40 @@ class ControlsPanel {
 
 - **Z-ordering**: Multiple stacked modals maintain correct visual order
 - **Top-modal queries**: `Modal::get_top()` returns the topmost dialog
-- **Animation state**: `mark_exiting()` prevents double-hide during exit animation
+- **Animation state**: `mark_exiting()` prevents double-hide during exit animation; `exiting_backdrops()` lists the backdrops still fading out, which a new modal's snapshot leaves out
 - **Backdrop-to-dialog mapping**: Links each backdrop to its dialog
 - **Owner tracking**: Records the `Modal*` that shows each dialog, so a dialog can be traced back to the C++ instance behind it
 
 You should not interact with `ModalStack` directly. Use the `Modal` class API instead.
 
+### Modals stay above overlays
+
+Modals and overlays are both children of the active screen, so their order on screen is
+the order they were created. `NavigationManager::push_overlay` therefore raises every
+visible modal back above the overlay it just brought forward
+(`ModalStack::raise_visible_to_foreground`), and closing a modal raises the ones still
+visible. An overlay pushed while a dialog is up appears beneath it.
+
+### Tags: app modals and plugin dialogs
+
+Each stack entry may carry a tag: empty for the app's own modals, the plugin id for a
+plugin dialog or confirm (`ModalStack::set_tag`). `has_visible_untagged()` answers "is an
+app dialog up", and `top_visible_tag()` names the plugin whose dialog is on top. Plugin
+surfaces wait while any app cover is up, which `include/ui_presentation_gate.h#app_blocked`
+decides (untagged modals, the PIN pad's external cover, the lock screen, the abort and
+busy screens). App code never waits: an app modal always opens on top. The plugin side is
+`PLUGIN_DEVELOPMENT.md` §8, Presentation order.
+
 ### Why the stack records an owner
 
 The two `hide` overloads do different amounts of work. Instance `Modal::hide()` runs the
-full teardown — `lifetime_.invalidate()`, `user_data` clearing, `on_hide()`. Static
+full teardown - `lifetime_.invalidate()`, `user_data` clearing, `on_hide()`. Static
 `Modal::hide(lv_obj_t*)` only animates the widgets away.
 
 Most callers reach for the static one as `Modal::hide(Modal::get_top())` and cannot know
-whether the dialog on top belongs to a `Modal` subclass. Without the owner, hiding a
-subclass that way skipped `on_hide()`: the instance leaked, any `active_instance_` static
-stayed non-null, and `backdrop_`/`dialog_` dangled. The static overload now looks the
+whether the dialog on top belongs to a `Modal` subclass. The static overload looks the
 owner up and delegates, so both spellings tear a modal down identically **when the dialog
-has an owner**.
+has an owner**; without that, the subclass's `on_hide()` would never run.
 
 The confirmation and alert helpers are owned. Each one builds an internal
 `ConfirmationModal` (`src/ui/ui_modal.cpp`), so `on_hide()` runs, `lifetime_` is
@@ -530,21 +715,19 @@ Modals" above.
 One-shot modals are owned by their stack entry. `Modal::show_owned()` (or the
 `assume_ownership()` call inside a class's own show helper) hands the instance to
 the entry that tracks its widgets; the entry frees it when it goes - one tick
-after the exit animation on a normal close, immediately in `clear()`. That
-replaced the self-delete-from-on_hide() idiom across every one-shot modal
-(InfoQrModal, CrashReportModal, PreflightCheckModal, ...), whose only free path
-was `on_hide()`: any teardown that bypassed `hide()` - `ModalStack::clear()` at a
-soft restart, `hide()`'s untracked-backdrop early return - leaked the C++ object
-(prestonbrown/helixscreen#1382). A modal that is reshown stays owned by its
+after the exit animation on a normal close, immediately in `clear()`. So a
+teardown that bypasses `hide()` (`ModalStack::clear()` at a soft restart,
+`hide()`'s untracked-backdrop early return) still frees it (#1382); a modal must
+never delete itself from `on_hide()`. A modal that is reshown stays owned by its
 member or `unique_ptr` holder and uses plain `show()`.
 
-The bare static `Modal::show()` factory is the shape with no owner: it pushes with
+The bare static `Modal::show()` factory, which only tests still call, is the shape with no owner: it pushes with
 `owner = nullptr`, so there is nothing to delegate to and the static teardown is all that
 runs. It never reaches `on_hide()`, and there is no `lifetime_` to invalidate because
 there is no instance to own one. **A dialog shown that way cannot tell anyone it was
 dismissed.**
 
-`Modal::rebuild_top()` (the `HELIX_HOT_RELOAD=1` path) uses the owner differently — an
+`Modal::rebuild_top()` (the `HELIX_HOT_RELOAD=1` path) uses the owner differently - an
 instance-backed modal is hidden rather than rebuilt, because re-creating it from XML alone
 would skip `on_show()` and the subclass's button wiring and leave a dialog whose buttons do
 nothing.
@@ -571,10 +754,10 @@ For modals that manage their own subjects and complex state:
 ```cpp
 class SpoolEditModal : public Modal {
     SubjectManager subjects_;       // RAII subject lifecycle
-    lv_subject_t color_subject_;    // Bound to XML elements
+    helix::Subject color_subject_;  // Bound to XML elements
     char color_buf_[32] = {0};      // String buffer for subject
 
-    const char* get_name() const override { return "Edit Spool Modal"; }
+    const char* get_name() const override { return "Spool Edit Modal"; }
     const char* component_name() const override { return "spoolman_edit_modal"; }
 
     void on_show() override {
@@ -588,13 +771,11 @@ class SpoolEditModal : public Modal {
 };
 ```
 
-> **Note:** The AMS slot editor is NOT a modal anymore — it is `AmsEditOverlay`,
-> a NavigationManager overlay hosting four internal views selected by the
-> `ams_edit_view` subject: overview (spool card + "Change filament" row),
-> Spoolman spool picker, a unified spool-edit view (identity + color +
-> logistics, `VIEW_SPOOL_EDIT`), and the color view. `SpoolEditModal`,
-> `ColorPicker`, and `FilamentCatalogPickerModal` remain standalone modals for
-> their other consumers (SpoolmanPanel, LED/theme pickers, FilamentPanel
+> **Note:** The AMS slot editor is not a modal: it is `AmsEditOverlay`, a
+> NavigationManager overlay (`include/ui_ams_edit_overlay.h`) whose colors open
+> the color page (`ColorPickerPage`), another overlay. `SpoolEditModal`,
+> `ColorPickerModal` and `FilamentCatalogPickerModal` remain standalone modals
+> for their other consumers (SpoolmanPanel, the LED control, FilamentPanel
 > presets).
 
 ### Modals with Many Buttons (RunoutGuidanceModal)
@@ -620,6 +801,26 @@ void on_quinary() override {
     // Don't call hide() - user may want to purge multiple times
 }
 ```
+
+**Subject-driven conditional sections.** The six button hooks are only half the story - which
+buttons and rows are even visible is driven by XML bindings on C++-owned global subjects that
+`RunoutGuidanceModal` sets before each `show()`, not by hiding/showing widgets from C++:
+
+- `runout_autofeed_capable` (0/1) - set from the active backend's `recovers_filament_on_resume()`.
+  When 1 (autofeed, e.g. Snapmaker U1), the manual Load/Unload/Purge row is hidden entirely and
+  the message changes to "Refill the spool, then Resume." because Resume alone recovers the
+  runout.
+- `print_state_enum` - also hides the manual row while `== 1` (printing; Load/Unload/Purge mid-print
+  destroys the print), and swaps the Close button row for a Cancel Print / Resume Print row while
+  `== 2` (paused).
+- `runout_is_advisory` (0/1) - swaps the warning icon (`alert`) for a neutral one (`filament`)
+  when the dialog was opened by a deliberate user tap rather than an actual runout. Owned by
+  `RunoutGuidanceModal`; every show site must call `set_advisory()` itself since the subject is
+  static and outlives any one show - inheriting the previous call's value would latch it.
+
+All three live in `ui_xml/runout_guidance_modal.xml` as `<bind_flag_if_eq>` /
+`<bind_flag_if>` bindings, not `on_show()` visibility toggles - see rule 2 in the root
+`CLAUDE.md`'s declarative-UI table.
 
 ### Modals with Keyboard Input (WiFi Password)
 
@@ -647,116 +848,19 @@ In XML, use `primary_variant` on `modal_button_row` for destructive actions:
 
 ---
 
-## Migration Guide (Old Pattern to New Pattern)
-
-The cc046ad2 refactor converted 9 modals. Here is the pattern transformation:
-
-### XML: Inline Backdrop to ui_dialog
-
-**Before** (inline backdrop in XML):
-```xml
-<component>
-  <view name="my_modal_backdrop"
-        extends="lv_obj" width="100%" height="100%"
-        style_bg_opa="180" style_border_width="0"
-        style_radius="0" clickable="true">
-    <lv_obj width="400" height="200" align="center"
-            style_radius="#border_radius" style_pad_all="#space_2xl"
-            flex_flow="column">
-      <!-- content -->
-      <lv_obj width="100%" height="#button_height" flex_flow="row"
-              style_pad_gap="#space_lg">
-        <ui_button name="btn_cancel" width="160" text="Cancel">
-          <event_cb trigger="clicked" callback="on_cancel"/>
-        </ui_button>
-        <ui_button name="btn_confirm" width="160" text="Confirm">
-          <event_cb trigger="clicked" callback="on_confirm"/>
-        </ui_button>
-      </lv_obj>
-    </lv_obj>
-  </view>
-</component>
-```
-
-**After** (ui_dialog + modal_button_row):
-```xml
-<component>
-  <!-- NOTE: Backdrop created programmatically by Modal system -->
-  <view name="my_modal"
-        extends="ui_dialog" width="70%" height="content" align="center"
-        flex_flow="column" style_flex_main_place="start" style_pad_gap="0">
-    <!-- content -->
-    <modal_button_row
-        secondary_text="Cancel" secondary_callback="on_cancel"
-        primary_text="Confirm" primary_callback="on_confirm"/>
-  </view>
-</component>
-```
-
-### C++: Manual Show/Hide to Modal System
-
-**Before** (manual backdrop + hidden flag toggling):
-```cpp
-// Showing
-lv_obj_t* backdrop = lv_obj_find_by_name(screen, "my_modal_backdrop");
-lv_obj_remove_flag(backdrop, LV_OBJ_FLAG_HIDDEN);
-
-// Hiding
-lv_obj_add_flag(backdrop, LV_OBJ_FLAG_HIDDEN);
-```
-
-**After** (Modal system):
-```cpp
-// Showing
-lv_obj_t* dialog = helix::ui::modal_show("my_modal");
-
-// Hiding
-helix::ui::modal_hide(dialog);
-```
-
-### C++: Manual Button Wiring to Confirmation Helper
-
-**Before** (18+ lines):
-```cpp
-const char* attrs[] = {"title", "Delete?", "message", "Cannot be undone.", nullptr};
-helix::ui::modal_configure(ModalSeverity::Warning, true, "Delete", "Cancel");
-dialog_ = helix::ui::modal_show("modal_dialog", attrs);
-if (!dialog_) return;
-lv_obj_t* cancel = lv_obj_find_by_name(dialog_, "btn_secondary");
-if (cancel) lv_obj_add_event_cb(cancel, on_cancel, LV_EVENT_CLICKED, this);
-lv_obj_t* confirm = lv_obj_find_by_name(dialog_, "btn_primary");
-if (confirm) lv_obj_add_event_cb(confirm, on_confirm, LV_EVENT_CLICKED, this);
-```
-
-**After** (single call):
-```cpp
-helix::ui::ConfirmOptions opts;
-opts.on_cancel = on_cancel;
-dialog_ = helix::ui::modal_confirm(
-    "Delete?", "Cannot be undone.",
-    ModalSeverity::Warning, "Delete", on_confirm, opts);
-```
-
-### C++: extends="ui_card" to extends="ui_dialog"
-
-If your XML used `extends="ui_card"`, simply change to `extends="ui_dialog"`. The `ui_dialog` widget provides the correct theme-aware background, corner clipping, and context flag.
-
----
-
 ## Checklist: Adding a New Modal
 
-1. **Choose approach**: Helper function, static `Modal::show()`, or subclass? Pick a
+1. **Choose approach**: Helper function, `ComponentModal`, or subclass? Pick a
    subclass when a dismissal has to be observable (the caller holds a guard, flag or
    pending entry that the buttons are supposed to clear), or when the callbacks capture
    something shorter-lived than the dialog. Helper otherwise. This is a lifetime question,
    not a question of how many buttons the dialog has.
-2. **Create XML** in `ui_xml/` using `extends="ui_dialog"` and `modal_button_row`
-3. **Register XML** in `src/xml_registration.cpp` (components must be registered before they're used by other components)
-4. **Register callbacks** via `lv_xml_register_event_cb()` in your C++ code
-5. **If subclass**: Create header in `include/`, implement `get_name()` and `component_name()`
-6. **Wire buttons** in `on_show()` using `wire_ok_button()` / `wire_cancel_button()`
-7. **Store the modal** as a member (subclass) or in a `ModalGuard` (static API)
-8. **Test**: Modal should auto-hide when parent panel is destroyed
+2. **Create XML** in `ui_xml/` using `extends="dialog_frame"`, with a `modal_button_row` in `<dialog_frame-footer>`
+3. **Register callbacks** via `lv_xml_register_event_cb()` in your C++ code (the XML itself registers on first use; no list to edit); a callback reaches its instance with `Modal::from_event<T>(e)`, so declare `HELIX_KIND_TAG(T)` in the class
+4. **If subclass**: Create header in `include/`, implement `get_name()` and `component_name()`
+5. **Wire buttons** in `on_show()` using `wire_ok_button()` / `wire_cancel_button()`
+6. **Store the modal** as a member (subclass) or its dialog in a `helix::ui::WidgetRef` (`ComponentModal`, helpers)
+7. **Test**: a backdrop-tap dismissal leaves the handle `nullptr` and the caller's guard open
 
 ---
 
@@ -782,9 +886,9 @@ void MyModal::start_operation() {
 > the *caller's* token instead - `owner_token`
 > on `modal_confirm()` / `modal_alert()` - because the thing that can die early there is the
 > caller, not the modal. Only the bare static `Modal::show()` factory has no protection at
-> all, which is one reason not to reach for it.
+> all, which is why app code may not call it.
 
-`Modal::hide()` calls `lifetime_.invalidate()` before `on_hide()`, so all outstanding tokens expire automatically. Your `on_hide()` override does **not** need to manually invalidate — just handle observer cleanup and state reset.
+`Modal::hide()` calls `lifetime_.invalidate()` before `on_hide()`, so all outstanding tokens expire automatically. Your `on_hide()` override does **not** need to manually invalidate - just handle observer cleanup and state reset.
 
 For cancel-and-retry scenarios (e.g., user clicks "Test Connection" again while a test is in flight), call `lifetime_.invalidate()` explicitly before starting the new operation:
 
@@ -803,16 +907,13 @@ See `include/async_lifetime_guard.h` for the full API documentation.
 ## Free-function Wrappers
 
 The `helix::ui::modal_*()` free functions are thin inline wrappers around the `Modal`
-class, provided for convenience. (There is no `ui_modal_*` prefix — those aliases were
-removed.) All live in `include/ui_modal.h`, `namespace helix::ui`:
+class, provided for convenience. All live in `include/ui_modal.h`, `namespace helix::ui`:
 
 | Free function | Underlying |
 |--------|---------|
-| `helix::ui::modal_show(name)` | `Modal::show(name)` |
 | `helix::ui::modal_hide(dialog)` | `Modal::hide(dialog)` |
 | `helix::ui::modal_get_top()` | `Modal::get_top()` |
 | `Modal::any_visible()` | (static method; no free-function wrapper) |
-| `helix::ui::modal_init_subjects()` | subject registration |
-| `helix::ui::modal_configure(...)` | configures the shared `modal_dialog` |
+| `helix::ui::modal_init_subjects()` | modal XML callback registration |
 
-Use the `Modal::` class methods or the `helix::ui::modal_confirm()` / `helix::ui::modal_alert()` helpers; the `lv_event_cb_t` spellings (`modal_show_confirmation()` / `modal_show_alert()`) are gone. Subject to the rule in "Three Ways to Create Modals": if the dialog needs custom content rather than title + message + buttons, own a `Modal` subclass instead.
+Use the `Modal::` class methods or the `helix::ui::modal_confirm()` / `helix::ui::modal_alert()` helpers. Subject to the rule in "Three Ways to Create Modals": if the dialog needs custom content rather than title + message + buttons, own a `Modal` subclass instead.

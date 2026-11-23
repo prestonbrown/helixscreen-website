@@ -2,6 +2,7 @@
 import MarketingLayout from '../layouts/MarketingLayout.astro';
 import SiteNav from '../components/marketing/SiteNav.astro';
 import Colophon from '../components/marketing/Colophon.astro';
+import { docsPrefix } from '../data/doc-versions.mjs';
 
 const link = 'text-secondary underline underline-offset-2';
 ---
@@ -95,7 +96,7 @@ const link = 'text-secondary underline underline-offset-2';
     <p class="ui text-sm text-ink-muted max-w-[62ch]">
       The installer can flash a BigTreeTech K-Touch over USB. On Linux your user needs the
       <span class="font-mono">dialout</span> group; on Windows you may need the CH340 driver from WCH;
-      macOS needs nothing. The <a href="/1.1/guide/install-esp32/#with-the-easy-installer" class={link}>K-Touch guide</a>
+      macOS needs nothing. The <a href={`${docsPrefix('1.1')}/guide/install-esp32/#with-the-easy-installer`} class={link}>K-Touch guide</a>
       has the details. You can also <a href="/flash/" class={link}>flash from your browser</a>.
     </p>
   </main>

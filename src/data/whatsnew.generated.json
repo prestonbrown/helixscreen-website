@@ -1,134 +1,124 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "featured": [
     {
-      "version": "1.0.0",
-      "date": "2026-09-09",
-      "lead": "The first stable release.",
+      "version": "1.1.0",
+      "date": "2026-11-23",
+      "lead": "1.1 is the first release since 1.0 that changes how HelixScreen looks and what it can drive.",
       "body": [
-        "Everything your printer can do, on the screen already attached to it: a dashboard you arrange yourself, bed mesh and input shaper you can actually see, multi-material handling, and print history. It runs on the hardware you own.",
-        "80+ printers auto-detected. 9 languages. Nine platforms, from a printer's own MIPS panel to a Raspberry Pi.",
-        "Coming from 0.99, this is an ordinary update."
+        "The home screen becomes a grid you arrange yourself, with new widgets and screens built for ultrawide and portrait panels; filament handling is rebuilt around a new spool editor and works across AFC, Happy Hare, ACE, CFS, the Snapmaker U1 and more; calibration and tuning move to guided screens; and Lua plugins, the HelixPrint companion plugin and a beta BTT K-Touch firmware join the line-up. It also fixes a long list of crashes, hangs and printer-specific problems found since 1.0."
       ],
       "bullets": []
     },
     {
-      "version": "0.99.118",
-      "date": "2026-08-30",
-      "lead": "The fifth 1.0 release candidate. Highlights:",
+      "version": "1.0.6",
+      "date": "2026-10-21",
+      "lead": null,
       "body": [],
       "bullets": [
-        "Tapping an object in the preview outlines it in white instead of recolouring it",
-        "A filament remap chosen before printing now sticks",
-        "Dismissing a confirmation no longer strands the screen behind it",
-        "One filament runout no longer stacks six notifications",
-        "Dark filaments show real form instead of reading as a flat cut-out",
-        "Installing an update no longer locks up the touchscreen",
-        "AD5M printers on the Forge-X 1.4.2 mod keep working"
+        "No more frozen screen when Wi-Fi hangs, and fixes for crashes on reprint and camera stop",
+        "Filament systems recover from a Klipper restart instead of sticking on busy",
+        "Snapmaker U1, K2 Plus CFS, ACE and AFC fixes: resume, tool changes, box readings",
+        "Runout recovery heats the nozzle first; Cool Down turns off every toolhead",
+        "Updates and installs that failed on K1 and systemd printers now work, and say why"
       ]
     },
     {
-      "version": "0.99.117",
-      "date": "2026-08-26",
-      "lead": "The fourth 1.0 release candidate. Highlights:",
+      "version": "1.0.5",
+      "date": "2026-10-13",
+      "lead": null,
       "body": [],
       "bullets": [
-        "A bed mesh that runs long no longer throws away the print behind it",
-        "Saving a Z offset stops warning you it failed when it actually worked",
-        "Chambers and beds get their own heat limit, not one 400C catch-all",
-        "Touch lands where you press on screens that report their size wrong",
-        "AD5X bed screw hints said tighten when they meant loosen",
-        "Large G-code files open faster, and every layer of the preview is drawn"
+        "Plugin installs work on Creality K1-series printers",
+        "The QR scanner finds cameras Moonraker lists, and a stock K1's built-in camera",
+        "Creality CFS auto-refill shows and sets the right state",
+        "Update failures say why, before downloading",
+        "Fix for repeated 3D G-code viewer crashes on some GPUs"
       ]
     },
     {
-      "version": "0.99.116",
-      "date": "2026-08-24",
-      "lead": "The third 1.0 release candidate. Highlights:",
+      "version": "1.0.4",
+      "date": "2026-10-08",
+      "lead": null,
       "body": [],
       "bullets": [
-        "The FlashForge AD5X is its own printer now, not one borrowed from the AD5M",
-        "Touch works on first boot on AD5X and AD5M",
-        "K2 camera traffic no longer fills the printer's disk and kills your uploads",
-        "Opening a large G-code file no longer restarts the app on low-memory printers",
-        "A real unload for K1 printers, and honest pre-print countdowns on K1C and K2",
-        "MedusaHC hotend changers, and tool changers that remember their spools"
+        "Happy Hare v4 support",
+        "K2 filament cuts no longer drive the toolhead into the frame",
+        "USB prints copy the file to the printer first",
+        "Spoolman temperature, spool weight and active-spool fixes",
+        "Fixes for crashes at boot with a labeled USB stick and when closing the macro wizard",
+        "Saved brightness and screen rotation apply at startup"
       ]
     },
     {
-      "version": "0.99.115",
-      "date": "2026-08-20",
-      "lead": "The second 1.0 release candidate. Highlights:",
-      "body": [],
-      "bullets": [
-        "Printers are no longer guessed at from thin evidence, and you can correct the model yourself",
-        "The window between pressing Print and the first layer is now tracked properly",
-        "Buttons no longer send macros your printer does not have",
-        "Input shaper sweeps your printer's real frequency range and shows what changed",
-        "K2 Auto Bed Mesh actually meshes, at the job's own temperatures",
-        "Fixes for crashes in the power panel and panel navigation"
-      ]
+      "version": "1.0.2",
+      "date": "2026-09-25",
+      "lead": "The second patch release on the 1.0 line.",
+      "body": [
+        "Display sleep is fixed: panels that wedged, glowed or showed a test pattern on AD5X, U1, K1, K2 and Pi DSI now sleep by turning the backlight off, and the screen comes back properly on wake. Several crashes are gone, including the K1 blank-screen crash and crashes after a printer switch. QIDI printers get their .3mf thumbnails back."
+      ],
+      "bullets": []
     }
   ],
   "history": [
     {
-      "version": "1.0.0",
-      "date": "2026-09-09",
+      "version": "1.1.0",
+      "date": "2026-11-23",
       "withdrawn": false
     },
     {
-      "version": "0.99.118",
-      "date": "2026-08-30",
+      "version": "1.1.0-rc.6",
+      "date": "2026-11-22",
       "withdrawn": false
     },
     {
-      "version": "0.99.117",
-      "date": "2026-08-26",
+      "version": "1.1.0-rc.5",
+      "date": "2026-11-21",
       "withdrawn": false
     },
     {
-      "version": "0.99.116",
-      "date": "2026-08-24",
+      "version": "1.1.0-rc.4",
+      "date": "2026-11-18",
       "withdrawn": false
     },
     {
-      "version": "0.99.115",
-      "date": "2026-08-20",
+      "version": "1.1.0-rc.3",
+      "date": "2026-11-17",
       "withdrawn": false
     },
     {
-      "version": "0.99.114",
-      "date": "2026-08-16",
+      "version": "1.1.0-rc.2",
+      "date": "2026-11-17",
       "withdrawn": false
     },
     {
-      "version": "0.99.113",
-      "date": "2026-08-13",
+      "version": "1.1.0-rc.1",
+      "date": "2026-11-10",
       "withdrawn": false
     },
     {
-      "version": "0.99.112",
-      "date": "2026-08-13",
+      "version": "1.1.0-beta.18",
+      "date": "2026-11-08",
       "withdrawn": false
     },
     {
-      "version": "0.99.111",
-      "date": "2026-08-12",
+      "version": "1.1.0-beta.17",
+      "date": "2026-11-06",
       "withdrawn": false
     },
     {
-      "version": "0.99.110",
-      "date": "2026-08-11",
-      "withdrawn": true
+      "version": "1.1.0-beta.16",
+      "date": "2026-11-04",
+      "withdrawn": false
     },
     {
-      "version": "0.99.109",
-      "date": "2026-08-10",
-      "withdrawn": true
+      "version": "1.1.0-beta.15",
+      "date": "2026-11-02",
+      "withdrawn": false
     },
     {
-      "version": "0.99.108",
-      "date": "2026-08-09",
+      "version": "1.1.0-beta.14",
+      "date": "2026-10-28",
       "withdrawn": false
     }
   ]

@@ -40,13 +40,13 @@ Both actions require the current PIN, so someone who doesn't know it can't chang
 
 The **Auto-lock** toggle (shown only when a PIN is set) ties the screen lock to the display sleep timeout. When auto-lock is on, the screen locks automatically as the display wakes from sleep or screensaver/dim — so the printer is protected whenever it's been idle. You'll need to enter your PIN to use the screen again.
 
-> The display sleep timeout itself is configured under display settings. Auto-lock simply hooks into that same idle behaviour rather than having its own separate timer — there's no separate "lock after X minutes" setting to configure.
+> The display sleep timeout itself is configured under display settings. Auto-lock simply hooks into that same idle behavior rather than having its own separate timer — there's no separate "lock after X minutes" setting to configure.
 
 Auto-lock only engages after the display has actually gone idle (dimmed or slept on its own). Previewing a screensaver from settings does **not** lock the screen, since you're clearly right there using it.
 
 ### Locking manually
 
-You can also lock the screen instantly at any time using the **Lock** widget on the Home dashboard, if it's added to your home widgets (long-press the Home panel to enter Edit Mode, then tap **+** to add it from the Widget Catalog). One tap locks the screen and shows the keypad.
+You can also lock the screen instantly at any time using the **Lock Screen** widget on the Home dashboard. Add it from the Widget Catalog: long-press the widget grid to enter Edit Mode, long-press an empty area, and pick it out of the **System** category. One tap locks the screen and shows the keypad.
 
 The Lock widget shows a closed padlock when a PIN is set and an open padlock when one isn't. If you tap it while no PIN is set, it opens the Security settings so you can create one instead.
 

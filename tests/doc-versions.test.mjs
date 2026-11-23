@@ -46,9 +46,9 @@ test('overrides pin versions by slug and reject unknown slugs', () => {
 });
 
 test('every configured version gets one env var, current first', () => {
-  const refs = resolveDocRefs(RELEASES, { '1.1': 'main' });
+  const refs = resolveDocRefs(RELEASES, { '1.0': 'main' });
   assert.equal(refs[0][0], 'HELIX_DOCS_REF');
-  assert.deepEqual(refs.find(([name]) => name === 'HELIX_DOCS_REF_1_1'), ['HELIX_DOCS_REF_1_1', 'main']);
+  assert.deepEqual(refs.find(([name]) => name === 'HELIX_DOCS_REF_1_0'), ['HELIX_DOCS_REF_1_0', 'main']);
   assert.equal(refs.length, 1 + DOC_VERSIONS.others.length);
 });
 
@@ -65,9 +65,10 @@ test('promoting 1.1 moves it to the root and 1.0 under /1.0/', () => {
   assert.equal(pickDocRef(RELEASES, swapped.current), 'main');
 });
 
-test('the shipped config serves 1.1 under /1.1/ and the current version at the root', () => {
+test('the shipped config serves 1.1 at the root and 1.0 under /1.0/', () => {
+  assert.equal(DOC_VERSIONS.current.slug, '1.1');
   assert.equal(docsPrefix(DOC_VERSIONS.current.slug), '');
-  assert.equal(docsPrefix('1.1'), '/1.1');
+  assert.equal(docsPrefix('1.0'), '/1.0');
 });
 
 const SIDEBAR = [

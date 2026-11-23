@@ -9,7 +9,7 @@ Touch calibration maps the raw coordinates from your touchscreen to the actual p
 
 **Which screens need calibration?**
 
-- **Resistive touchscreens** — Common on budget printers like the Creality AD5M (sun4i_ts) and Nebula Pad (NS2009). These almost always need calibration.
+- **Resistive touchscreens** — Common on budget printers like the FlashForge AD5M (sun4i_ts) and Nebula Pad (NS2009). These almost always need calibration.
 - **Most capacitive touchscreens** — Goodix, FocalTech, and similar controllers come factory-calibrated. No calibration needed.
 - **USB touchscreens** — BTT HDMI displays and generic USB HID screens report pre-mapped coordinates. No calibration needed.
 - **Raspberry Pi Official Touchscreen** — Factory calibrated. No calibration needed.
@@ -57,7 +57,7 @@ You may need to recalibrate if:
 
 **To recalibrate:**
 
-1. Go to **Settings > System > Touch Calibration**
+1. Go to **Settings > Touch & Input > Touch Calibration**
 2. You'll see a status indicator showing **Calibrated** or **Not calibrated**
 3. Tap the option — calibration starts immediately
 4. Complete the same 3-point crosshair flow described above
@@ -78,7 +78,7 @@ Sometimes you need to force calibration even when HelixScreen doesn't think it's
 
 If you can navigate the UI:
 
-1. Go to **Settings > System > Touch Calibration**
+1. Go to **Settings > Touch & Input > Touch Calibration**
 2. Tap to start the calibration flow
 
 ### Method 2: Environment Variable (recommended when touch is broken)
@@ -99,8 +99,11 @@ Use this when your screen is too damaged to navigate the UI. It's the least erro
    sudo systemctl restart helixscreen
 
    # Printer firmware (init.d):
-   /etc/init.d/S99helixscreen restart   # K1 / K2 / Snapmaker U1
-   /etc/init.d/S80helixscreen restart   # AD5M
+   /etc/init.d/S99helixscreen restart   # K1 / K2
+   /userdata/helixscreen/config/helixscreen.init restart # Snapmaker U1
+   /etc/init.d/S80helixscreen restart   # AD5M (Klipper Mod, ZMOD)
+   /usr/sbin/chroot /data/.mod/.forge-x /etc/init.d/S90helixscreen restart   # AD5M (Forge-X)
+   chroot /usr/data/.mod/.zmod /etc/init.d/S80helixscreen restart          # AD5X / Creator 5 (Z-Mod)
    /etc/init.d/helixscreen restart      # CC1
    ```
 5. Complete the 3-point crosshair flow when it appears
@@ -114,8 +117,11 @@ Use this for automation, remote management, or as an alternative to the env var.
 2. Stop the service so it doesn't overwrite your edits — use the command that matches your platform:
    ```bash
    sudo systemctl stop helixscreen          # Raspberry Pi
-   /etc/init.d/S99helixscreen stop          # K1 / K2 / Snapmaker U1
-   /etc/init.d/S80helixscreen stop          # AD5M
+   /etc/init.d/S99helixscreen stop          # K1 / K2
+   /userdata/helixscreen/config/helixscreen.init stop # Snapmaker U1
+   /etc/init.d/S80helixscreen stop          # AD5M (Klipper Mod, ZMOD)
+   /usr/sbin/chroot /data/.mod/.forge-x /etc/init.d/S90helixscreen stop   # AD5M (Forge-X)
+   chroot /usr/data/.mod/.zmod /etc/init.d/S80helixscreen stop          # AD5X / Creator 5 (Z-Mod)
    /etc/init.d/helixscreen stop             # CC1
    ```
 3. Open the config file for your platform (see [Config File Locations](#config-file-locations))
@@ -153,7 +159,7 @@ If nothing else works:
 1. Go to **Settings > System > Factory Reset**
 2. Confirm the reset
 
-This resets **all** settings and re-runs the Setup Wizard from scratch, including calibration if your screen needs it. Only use this as a last resort.
+This resets **all** settings and re-runs the Setup Wizard from scratch, including calibration if your screen needs it. The reset also clears the backup copies of your settings, so the wizard cannot be skipped by a restore. Only use this as a last resort. If the screen is too broken to reach Settings at all, use Method 2 or 3 above, or the SSH procedure in [Reset HelixScreen or re-run the setup wizard](/reference/troubleshooting/#reset-helixscreen-or-re-run-the-setup-wizard).
 
 ---
 
@@ -167,13 +173,14 @@ This resets **all** settings and re-runs the Setup Wizard from scratch, includin
 |----------|-------------|-----------|
 | MainsailOS / Raspberry Pi (with Klipper detected) | `~/helixscreen` | `~/helixscreen/config/settings.json` |
 | MainsailOS / Raspberry Pi (no Klipper ecosystem) | `/opt/helixscreen` | `/opt/helixscreen/config/settings.json` |
-| FlashForge AD5M — Forge-X | `/opt/helixscreen` | `/opt/helixscreen/config/settings.json` |
-| FlashForge AD5M — Klipper Mod (v00.06+) | `/opt/helixscreen` | `/opt/helixscreen/config/settings.json` |
-| FlashForge AD5M — Klipper Mod (v00.05 and earlier) | `/root/printer_software/helixscreen` | `/root/printer_software/helixscreen/config/settings.json` |
-| FlashForge AD5M — ZMOD | `/srv/helixscreen` | `/srv/helixscreen/config/settings.json` |
+| FlashForge AD5M (Forge-X) | `/opt/config/mod_data/helixscreen` | `/opt/config/mod_data/helixscreen/config/settings.json` |
+| FlashForge AD5M (Klipper Mod v00.06+) | `/opt/helixscreen` | `/opt/helixscreen/config/settings.json` |
+| FlashForge AD5M (Klipper Mod v00.05 and earlier) | `/root/printer_software/helixscreen` | `/root/printer_software/helixscreen/config/settings.json` |
+| FlashForge AD5M (ZMOD) | `/srv/helixscreen` | `/srv/helixscreen/config/settings.json` |
 | FlashForge AD5X (ZMOD) | `/srv/helixscreen` | `/srv/helixscreen/config/settings.json` |
+| FlashForge Creator 5 / Creator 5 Pro (Z-Mod) | `/srv/helixscreen` inside Z-Mod's system folder (`/usr/data/.mod/.zmod/srv/helixscreen` from a plain SSH login) | `/srv/helixscreen/config/settings.json` |
 | Creality K1 series | `/usr/data/helixscreen` | `/usr/data/helixscreen/config/settings.json` |
-| Creality K2 series | `/opt/helixscreen` | `/opt/helixscreen/config/settings.json` |
+| Creality K2 series | `/mnt/UDISK/helixscreen` | `/mnt/UDISK/helixscreen/config/settings.json` |
 | Elegoo Centauri Carbon (CC1) | `/user-resource/helixscreen` | `/user-resource/helixscreen/config/settings.json` |
 | Snapmaker U1 | `/userdata/helixscreen` | `/userdata/helixscreen/config/settings.json` |
 | Development (running from source) | `./` | `./config/settings.json` |
@@ -245,8 +252,11 @@ Restart commands:
 
 ```bash
 sudo systemctl restart helixscreen        # Raspberry Pi
-/etc/init.d/S99helixscreen restart        # K1 / K2 / Snapmaker U1
-/etc/init.d/S80helixscreen restart        # AD5M
+/etc/init.d/S99helixscreen restart        # K1 / K2
+/userdata/helixscreen/config/helixscreen.init restart # Snapmaker U1
+/etc/init.d/S80helixscreen restart        # AD5M (Klipper Mod, ZMOD)
+/usr/sbin/chroot /data/.mod/.forge-x /etc/init.d/S90helixscreen restart   # AD5M (Forge-X)
+chroot /usr/data/.mod/.zmod /etc/init.d/S80helixscreen restart          # AD5X / Creator 5 (Z-Mod)
 /etc/init.d/helixscreen restart           # CC1
 ```
 
@@ -275,11 +285,10 @@ For power users and developers. These override config file settings and are usef
 | `HELIX_TOUCH_SWAP_AXES` | Swap X and Y axes before calibration (axis swap is also auto-detected during calibration — use this only to force it) | `1` |
 | `HELIX_DISPLAY_ROTATION` | Display rotation (touch auto-adjusts) | `90`, `180`, `270` |
 | `HELIX_DEBUG_TOUCH` | Draw ripple at each touch point + calibration logging (alias: `HELIX_DEBUG_TOUCHES`) | `1` |
-| `HELIX_TOUCH_JITTER` | Touch jitter filter dead zone (pixels) | `5` |
 
 > **Note:** The MIN/MAX variables provide a simple linear calibration that bypasses the 3-point system. Most users should use the built-in calibration instead.
 >
-> **Jitter filter:** If taps are being misread as swipes, the jitter filter suppresses small coordinate noise from the touch controller. The default of 5 pixels is enough for most screens; raise it to 15–25 for very noisy controllers (common on Goodix GT9xx panels), or set to `0` to disable. See also [scroll_limit and scroll_guard](../CONFIGURATION.md#input-settings) for related touch-feel tuning.
+> **Jitter filter:** If taps are being misread as swipes, the jitter filter suppresses small coordinate noise from the touch controller. The default of 5 pixels is enough for most screens; raise it to 15–25 for very noisy controllers (common on Goodix GT9xx panels), or set to `0` to disable. See also [scroll_limit and scroll_guard](/reference/configuration/#input-settings) for related touch-feel tuning.
 
 **Setting environment variables on Raspberry Pi (systemd):**
 
@@ -307,8 +316,11 @@ HELIX_TOUCH_DEVICE=/dev/input/event0
 HELIX_DISPLAY_ROTATION=90
 
 # Then restart helix-screen (varies by platform — usually):
-/etc/init.d/S99helixscreen restart   # K1 / K2 / Snapmaker U1
-/etc/init.d/S80helixscreen restart   # AD5M
+/etc/init.d/S99helixscreen restart   # K1 / K2
+/userdata/helixscreen/config/helixscreen.init restart # Snapmaker U1
+/etc/init.d/S80helixscreen restart   # AD5M (Klipper Mod, ZMOD)
+/usr/sbin/chroot /data/.mod/.forge-x /etc/init.d/S90helixscreen restart   # AD5M (Forge-X)
+chroot /usr/data/.mod/.zmod /etc/init.d/S80helixscreen restart          # AD5X / Creator 5 (Z-Mod)
 /etc/init.d/helixscreen restart      # CC1
 ```
 
@@ -318,8 +330,10 @@ HELIX_DISPLAY_ROTATION=90
 
 | Device / Screen | Type | Needs Calibration? | Notes |
 |----------------|------|-------------------|-------|
-| Creality AD5M built-in | Resistive (sun4i_ts) | Yes | Auto-detected |
+| FlashForge AD5M built-in | Resistive (sun4i_ts) | Yes | Auto-detected |
 | Nebula Pad | Resistive (NS2009) | Yes | Auto-detected |
+| Creality K1C built-in | Capacitive (goodix-ts) | No | Declared ABS range matches the panel, so the wizard auto-skips |
+| Creality K2 Plus built-in | Capacitive (gt9xxnew_ts) | No | Declared ABS range matches the panel, so the wizard auto-skips |
 | BTT HDMI 5"/7" | USB capacitive | No | Reports mapped coordinates |
 | Raspberry Pi Official Touchscreen | Capacitive (Goodix) | No | Factory calibrated |
 | Goodix GT911 panels | Capacitive | Usually no | May need calibration if wired to a mismatched-resolution display |

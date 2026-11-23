@@ -22,8 +22,8 @@ versions are defined**: astro.config.mjs, sync-docs.sh, deploy.yml (through
 
 | Version | URL | Synced from |
 |---|---|---|
-| `current` (1.0, "1.0 (stable)") | plain URLs: `/installation/`, `/guide/...` | newest published `v1.0.*` release, not prerelease |
-| `1.1` ("1.1 (beta)") | `/1.1/installation/`, `/1.1/guide/...` | newest published `v1.1.*` release, prereleases included; `main` if none |
+| `current` (1.1, "1.1 (stable)") | plain URLs: `/installation/`, `/guide/...` | newest published `v1.1.*` release, not prerelease; `main` if none |
+| `1.0` ("1.0 (previous)") | `/1.0/installation/`, `/1.0/guide/...` | newest published `v1.0.*` release, not prerelease |
 
 A non-current version lives in `src/content/docs/<slug>/`, its images in
 `src/assets/images/docs/<slug>/`, and its sidebar in
@@ -35,10 +35,12 @@ The plugin snapshots the current docs into a configured version whose directory
 is missing. The sync always writes every version's directory, so that never
 fires unless a version is skipped (see below) on a fresh tree.
 
-**Promoting 1.1 to stable:** edit `src/data/doc-versions.mjs` as its header
-comment says (current = 1.1, others = [1.0]), run `npm run sync-docs` with
-`HELIX_DOCS_REF=<1.1 tag> HELIX_DOCS_REF_1_0=v1.0.<n>`, build, and commit the
-config and the regenerated content together. The /flash/ guide link follows.
+**Promoting a line to stable:** edit `src/data/doc-versions.mjs` as its header
+comment says (the new line becomes `current`, the old stable moves to `others`),
+run `npm run sync-docs` with `HELIX_DOCS_REF=<new tag> HELIX_DOCS_REF_<old slug>=<old tag>`,
+build, and commit the config and the regenerated content together. The /flash/
+guide link follows. The hero announcement in `Hero.astro` (`ANNOUNCED_SERIES`) and
+the `gen-*` data files come from the helixscreen tree the build runs in.
 
 **Opening a new version:** append it to `others` in the same file.
 

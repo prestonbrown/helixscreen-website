@@ -9,6 +9,8 @@ sidebar:
 
 Access via the **More** icon in the navigation bar.
 
+The panel groups its rows into sections (Tools, Calibration, and so on). A row that does not apply to your printer is hidden, and a section with no rows left disappears along with its heading. Calibration rows, including **Pressure Advance** on printers that can measure it, are covered in [Calibration & Tuning](/guide/calibration/); **Dry Filament** is covered in [Drying Filament on the Bed](/guide/temperature/#drying-filament-on-the-bed).
+
 ---
 
 ## G-code Console
@@ -76,7 +78,7 @@ Browse and execute all of your Klipper macros.
 
 **Opening the Macros panel:**
 
-- Navigate to **Advanced > Macros**, or
+- Navigate to **Advanced > Macro Browser**, or
 - Add the **Macros** widget to your home panel for one-tap access
 
 **Browsing macros:**
@@ -95,6 +97,19 @@ Some macros accept parameters (variables or arguments defined in your Klipper co
 - Parameters are pre-detected when HelixScreen connects to your printer, so there's no loading delay
 
 If HelixScreen can't determine the parameters (e.g., complex Jinja2 templates), a freeform text field lets you type raw parameters.
+
+**Saved default values:**
+
+If you type the same values every time, save them once:
+
+1. Open the editor: in the Macros panel, press-and-hold to enter edit mode and tap the **tune icon** on the macro's row — or, on a home panel Macro Button, open **Customize → Options → Default Parameters**
+2. Fill in the values you want remembered
+3. Leave **Ask for parameters** on, or switch it off
+4. Tap **Save**
+
+With **Ask for parameters** on (the default), tapping the macro still opens the form — but every field starts filled with your saved values, so you can adjust one and run. With it off, the macro runs immediately using the saved values, with no form at all.
+
+> **Note:** The dangerous-macro confirmation is never skipped by saved defaults, and a Macro Button with "Require Confirmation?" off runs with the saved values directly. Saved defaults are kept per printer, like your hidden-macro choices.
 
 **Dangerous macro protection:**
 
@@ -124,50 +139,6 @@ If your macro list is cluttered with macros you never run, you can hide them fro
 
 ---
 
-## Configure PRINT_START
-
-HelixScreen's [pre-print skip toggles](printing.md#pre-print-options) — Auto bed level, Quad gantry level, Z-tilt adjust, Nozzle clean — can only skip a step if that step is written so it can be turned off. When those operations live *inside* your `PRINT_START` (or `START_PRINT`) macro, they run every time and the toggles can't reach them.
-
-**Configure PRINT_START** reads your own macro, finds those operations, and — with your approval — rewrites the macro so each one becomes optional. Afterward, the matching toggle on the print screen actually skips it.
-
-> **Safety:** This feature **edits your Klipper printer configuration** on the printer. It is a deliberate, consent-based action: nothing is changed until you review each operation and tap **Apply Changes**. A backup of your config is saved automatically before anything is written, and Klipper restarts once the changes are applied.
-
-### Opening the wizard
-
-1. Enable **Beta Features** first (see [Beta Features](/guide/beta-features/)) — this tool lives behind the beta flag.
-2. Navigate to **Advanced → Configure PRINT_START**.
-
-HelixScreen may also prompt you on its own: when it notices skippable steps in your macro, a notification reading **"PRINT_START has N skippable operations"** appears with a **Configure** button that opens the same wizard.
-
-If your macro is already set up (or has nothing that can be made optional), you'll see **"Your print start is already fully configured!"** instead, and the wizard won't open.
-
-### Reviewing each operation
-
-The wizard walks you through one operation at a time (a progress counter like **"1 of 3"** shows your place). For each one — Bed Mesh, Quad Gantry Leveling, Z-Tilt Adjustment, or Nozzle Cleaning — it asks **"Make [operation] Optional?"** and explains in plain language what changes.
-
-You have two choices per operation:
-
-| Button | What it does |
-|--------|--------------|
-| **Keep Required** | Leave this operation alone — it will always run |
-| **Make Optional** | Rewrite it so the pre-print toggle can skip it |
-
-> **Note:** Homing is never offered here — it's required for safe printing and can't be made skippable.
-
-### Applying your changes
-
-After the last operation, a **Ready to Apply** summary lists every change you approved under **"Your PRINT_START macro will be updated to give you control over:"**.
-
-- The **"Create backup of printer.cfg before applying"** option is checked by default.
-- A reminder notes that **"Klipper will restart to apply changes"**.
-- Tap **Cancel** to discard everything, or **Apply Changes** to write them.
-
-While applying, the wizard shows its progress (creating the backup, then writing the changes). When it finishes you'll see a **Setup Complete!** confirmation letting you know a backup was saved and the new skip options are now available in the print details before each print. Tap **Close** to finish.
-
-> **Tip:** The changes are reversible. You can undo them later from the Macro Viewer, or re-run the wizard if you edit your macro again.
-
----
-
 ## Interactive Prompts
 
 Some Klipper macros can ask you questions mid-run — "Which lane should I load?", "Purge complete?", "Tip formed cleanly?" — using Klipper's standard prompt protocol. HelixScreen renders these as a native touchscreen dialog automatically. This is common with multi-material systems like Happy Hare / ERCF, and with custom confirmation macros.
@@ -191,7 +162,7 @@ Buttons are color-coded by the macro author to signal intent:
 
 > **Note:** Colors are chosen by whoever wrote the macro — they're a hint, not a rule. Always read the button label. Macro authors can also specify an exact custom color.
 
-Longer menus wrap onto multiple lines automatically, and some macros place a row of **footer buttons** across the bottom of the dialog (often used for "Cancel" or menu navigation). If a prompt is flagged as an error, a red warning icon appears next to the title.
+Some macros place a row of **footer buttons** across the bottom of the dialog (often used for "Cancel" or menu navigation). Five or more buttons in one row line up in a grid of two or three columns, and a prompt too long for the screen scrolls its text and buttons while the footer row stays in view. If a prompt is flagged as an error, a red warning icon appears next to the title.
 
 > **Tip:** Tapping any button sends its command straight to the printer and dismisses the dialog. If you're not sure what a button does, check the macro that produced the prompt — HelixScreen simply displays whatever the macro defines.
 
@@ -207,7 +178,7 @@ View and control your Z probe. HelixScreen auto-detects your probe type (Cartogr
 4. Access universal actions: Accuracy Test, Z-Offset Calibration, Bed Mesh
 5. Edit probe configuration values (offsets, samples, speed, tolerance)
 
-For full details, see [Calibration & Tuning — Probe Management](calibration.md#probe-management).
+For full details, see [Calibration & Tuning — Probe Management](/guide/calibration/#probe-management).
 
 ---
 
@@ -225,7 +196,7 @@ A **power-cycle button** appears on the home panel when power devices are config
 
 ### Full Power Panel
 
-1. Navigate to **Advanced > Power Devices**, or **Settings > System > Power Devices** (hidden when no power devices are detected)
+1. Navigate to **Advanced > Power Devices**, or **Settings > Devices > Power Devices** (hidden when no power devices are detected)
 2. Toggle individual devices on/off with switches
 
 **Main Power Button section:**
@@ -250,7 +221,19 @@ A locked device behaves as follows **for the whole time a job owns the printer**
 - A **lock icon** appears on the row
 - The status text reads **"Locked during print"**
 
-When no job is running, the device unlocks and toggles normally again — that includes cancelling during preparation, which unlocks the device without a print ever having started. Devices without `locked_while_printing` are never locked.
+When no job is running, the device unlocks and toggles normally again — that includes canceling during preparation, which unlocks the device without a print ever having started. Devices without `locked_while_printing` are never locked.
+
+---
+
+## HelixPrint Plugin
+
+When the HelixPrint plugin is installed, **Advanced > HelixPrint Plugin** shows its version and every feature it runs on your printer, each marked **Active**, **Off** or **Unavailable** with the reason. Tap a feature that has a setting to open the page where its switch lives, for example **Settings > Printing** for power-loss recovery. This page only shows status: the switches themselves are on those settings pages. **Install HelixPrint Plugin** and **Uninstall HelixPrint Plugin** are on the Advanced screen too. See [HelixPrint Plugin](/guide/helixprint-plugin/) for what each feature does and how to install the plugin.
+
+---
+
+## Restarting Moonraker
+
+The bar at the bottom of the Advanced panel has a **Restart Moonraker** button next to **Restart Klipper** and **Firmware Restart**. Use it when Moonraker is misbehaving, for example when files, history or Spoolman stop updating. HelixScreen asks you to confirm, then reconnects by itself once Moonraker is back, usually within a few seconds. The button is refused while a print is running or paused, and while a Klipper restart is still under way.
 
 ---
 
@@ -258,7 +241,7 @@ When no job is running, the device unlocks and toggles normally again — that i
 
 ![Print History](../../../assets/images/docs/advanced-history.png)
 
-HelixScreen keeps a record of your completed, failed, and cancelled prints, sourced from Moonraker's job history. Open it from **Advanced > Print History**. You get a dashboard of statistics and trend charts, a searchable and sortable list of past jobs, and per-job details with reprint and delete.
+HelixScreen keeps a record of your completed, failed, and canceled prints, sourced from Moonraker's job history. Open it from **Advanced > Print History**. You get a dashboard of statistics and trend charts, a searchable and sortable list of past jobs, and per-job details with reprint and delete.
 
 See [Print History](/guide/print-history/) for the full guide.
 
@@ -268,15 +251,33 @@ See [Print History](/guide/print-history/) for the full guide.
 
 Review past system notifications:
 
-1. Tap the **Notifications** widget on the Home screen
+1. Tap the **Notifications** widget on the Home screen. If you have removed that widget, open **Advanced > Notification History** instead; the row appears there only while no Notifications widget is on any home page.
 2. Scroll through history
 3. Tap **Clear All** to dismiss
 
 **Color coding:**
 
 - Blue: Info
+- Green: Success
 - Yellow: Warning
 - Red: Error
+
+Some notifications can be tapped to act on them, such as an update notice that opens the update dialog.
+
+### Printer Events
+
+Notifications are what HelixScreen told you. **Printer Events** is what happened to the printer: Klipper shutting down and why, a lost connection to a controller board (MCU), Klipper disconnecting or coming back ready, a firmware restart, a print pausing and what paused it, a filament runout, error messages from the printer, and how each print ended (completed, canceled, or failed and why).
+
+1. Open Notification History, from the **Notifications** widget or **Advanced > Notification History**
+2. Tap **Printer Events** at the top
+3. The newest event is at the top. Each shows its time and, when a print was running, the file name
+
+A line under the title says where the list comes from:
+
+- **Recorded by the [HelixPrint plugin](/guide/helixprint-plugin/)**: the printer keeps the record itself, so it includes everything that happened while no HelixScreen was connected, and every screen connected to the printer shows the same list.
+- **Recorded by this screen while connected**: without the plugin, the screen keeps its own record. When it reconnects, it fills in what it missed from what the printer still remembers (recent errors, how prints ended, and recent shutdowns). Those entries are marked **(recovered)**. Events from a long outage can be missing.
+
+There is nothing to switch on: Printer Events is always recorded.
 
 ---
 

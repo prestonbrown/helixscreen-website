@@ -8,7 +8,7 @@ sidebar:
 
 # FlashForge Adventurer 5X (AD5X) Support
 
-HelixScreen has a dedicated cross-compilation target for the FlashForge Adventurer 5X. The AD5X is a multi-color 3D printer with a 4-channel IFS (Intelligent Filament System). It has its own toolchain and Docker image (`Dockerfile.ad5x`), separate from the Creality K1 series.
+The FlashForge Adventurer 5X is served by the **unified MIPS32 target**: `ad5x` is an alias of `mips`, so it shares one binary, toolchain and release asset with the Creality K1 series and the Creator 5 Pro. The AD5X is a multi-color 3D printer with a 4-channel IFS (Intelligent Filament System).
 
 **Status: Active testing** — prebuilt binaries are included in releases. See [issue #203](https://github.com/prestonbrown/helixscreen/issues/203).
 
@@ -42,8 +42,8 @@ ZMOD's AD5X config defines `[gcode_macro M300]` → `RUN_SHELL_COMMAND
 CMD=audio_freq`; Forge-X's macros/base.cfg ships `[gcode_macro M300]` wrapping
 the fork's native TONE command (whose tone_player backend is being ported to
 the cmd_pwm-compatible `fx-pwm` helper for this platform). HelixScreen's
-speaker detection therefore keys on the M300 macro (`parse_objects`,
-printer_discovery.h), and sound goes out as `M300 S<Hz> P<ms>` via the M300
+speaker detection therefore keys on the M300 macro
+(`src/printer/printer_discovery_parse.cpp#parse_objects`), and sound goes out as `M300 S<Hz> P<ms>` via the M300
 backend — S0 is the backend's silence form and is a no-op on both firmwares.
 Note for rigs: Forge-X's TONE wrapper drops every tone when the printer's
 `mod_params` `sound` variable is off — that mutes HelixScreen too, and looks
@@ -65,20 +65,20 @@ The AD5X uses a FlashForge-specific layout, distinct from the Creality K1:
 | `/usr/data/config/mod_data/` | ZMOD data, logs, database |
 | `/opt/config/` | Symlink or bind-mount to `/usr/data/config/` |
 
-The presence of `/usr/prog/` is used for runtime platform detection (K1 vs AD5X).
+At run time the unified binary tells the boards apart in `helix::board::current()` (`src/system/board_identity.cpp#resolve`): the `MACHINE=` line of /usr/prog/app_startup.sh names an AD5X or a Creator 5, and a FlashForge mod tree (`/ZMOD`, or a mod's .shell/platform.sh under `/opt/config/mod` or `/usr/data/config/mod`) with no machine id still means an AD5X. A MIPS host with neither is a K1 (`src/system/platform_info.cpp`).
 
 ## Build Target
 
-The AD5X has a dedicated build target and toolchain, separate from the Creality K1:
+The AD5X builds with the unified MIPS32 target in `mk/cross.mk` (`mips`, with `k1` and `ad5x` as aliases):
 
 ```bash
-make ad5x-docker          # Build AD5X binary (dedicated MIPS32r5 glibc toolchain)
-make release-ad5x         # Package as helixscreen-ad5x.zip (AD5X release_info.json)
+make ad5x-docker          # alias of mips-docker (helixscreen/toolchain-mips image)
+make release-ad5x         # alias of release-mips; also writes helixscreen-ad5x.zip
 ```
 
-**Toolchain**: Dedicated Docker image (`Dockerfile.ad5x`) with MIPS32r5 glibc cross-compiler, distinct from the K1's musl-based toolchain.
+**Toolchain**: the shared `helixscreen/toolchain-mips` image, `mipsel-k1-linux-musl` (GCC 13.2, musl 1.2.4, `-march=mips32r2 -mnan=2008 -mfp64`). The binary is fully static, so the board's own libc does not matter.
 
-**Platform define**: `-DHELIX_PLATFORM_MIPS`. Runtime detection via `/usr/prog` presence determines platform key (`ad5x` vs `k1`) for update manager asset selection.
+**Platform define**: `-DHELIX_PLATFORM_MIPS` only, so self-update fetches the unified `mips` asset. `release-mips` also publishes the same bytes as `helixscreen-ad5x.zip` for binaries and Moonraker configs that ask by the `ad5x` name. The installer classifies a MIPS box with `/usr/data` + `/usr/prog` as `ad5x` (`scripts/lib/installer/platform.sh#detect_platform`).
 
 ## ZMOD Integration
 
@@ -86,7 +86,7 @@ The AD5X runs HelixScreen through the [ZMOD](https://github.com/ghzserg/zmod) fi
 
 - Klipper/Moonraker installation and management
 - Display initialization (fbdev, touch via tslib env vars)
-- App lifecycle (init.d service script `S80guppyscreen`)
+- App lifecycle (its own `/etc/init.d/S80helixscreen`, inside the chroot at `/usr/data/.mod/.zmod`)
 - Update management via Moonraker update manager
 - Z-offset storage — see below
 
@@ -111,6 +111,58 @@ ZMOD's own docs describe the idle reading as "for reference only". Note also tha
 the native-screen and screenless offsets are stored separately — `LOAD_ZOFFSET_NATIVE`
 copies one to the other, and HelixScreen does not call it.
 
+### Z-Mod 1.7.5: native .3mf and the print-start tool map
+
+This section applies to every Z-Mod printer (AD5M, AD5X, Creator 5 Pro), because the
+behaviour lives in Z-Mod's Moonraker fork,
+[ghzserg/zmod_moonraker](https://github.com/ghzserg/zmod_moonraker), which all three run.
+The AD5M and Creator 5 pages link here.
+
+**A .3mf prints as itself.** Z-Mod 1.7.5 (released 28.10.2026) lists "3MF support" in its
+[changelog](https://wiki.zmod.link/Changelog/). Its Moonraker parses the archive
+([components/file_manager/parse_3mf.py](https://github.com/ghzserg/zmod_moonraker/blob/main/components/file_manager/parse_3mf.py)): a plate counts as sliced when the archive holds a
+non-empty `Metadata/plate_N.gcode`, and plate numbers are that `N`. The file's metadata
+reports the list as `sliced_plates` and the plate it describes as `plate_index`
+([components/file_manager/metadata.py](https://github.com/ghzserg/zmod_moonraker/blob/main/components/file_manager/metadata.py)). HelixScreen reads `sliced_plates` as a printer that
+starts plates by number (`include/print_3mf.h#printer_reads`), offers only the plates listed
+there, and starts the chosen plate natively instead of extracting it
+(`src/print/print_3mf.cpp#classify`).
+
+**`printer.print.start` takes `plateindex` and `tools`.** The handler reads both beside
+`filename` and passes them to `klippy_apis.start_print()` ([components/klippy_apis.py](https://github.com/ghzserg/zmod_moonraker/blob/main/components/klippy_apis.py)). For
+a .3mf, a missing `plateindex`, or one that is not among `sliced_plates`, falls back to the
+metadata's `plate_index`. The start becomes `_ZSDCARD_PRINT_FILE FILENAME="..."` when
+`printer.cfg` includes `display_off.cfg` (no stock screen) and `_PRINT_FILE FILENAME="..."`
+otherwise, followed by `PLATE=<n>` when a plate is known. A non-empty `tools` appends
+`SILENT=1 AUTO_ASSIGN=0` and one `T<i>=<slot>` for each numeric entry, where the index is the
+G-code tool and the value the 1-based physical slot (`"2,,1"` gives `T0=2 T2=1`). `SILENT=1`
+suppresses Z-Mod's colour prompt, and `AUTO_ASSIGN=0` stops its auto-assign from overriding
+the map ([#2033](https://github.com/prestonbrown/helixscreen/issues/2033)). Plugins reach
+the same path through `klippy_apis.start_print(filename, tools=...)`, which is how the
+HelixPrint plugin can carry the map for a rewritten file
+([#2038](https://github.com/prestonbrown/helixscreen/issues/2038)).
+
+**`server.info` advertises `tools`.** Z-Mod's Moonraker adds `"zmod": {"features":
+["print_start_tools"]}` to `server.info` (zmod_moonraker commit
+[db13157a](https://github.com/ghzserg/zmod_moonraker/commit/db13157a13963b0ce0c427092508f4bc7f2e82b2)).
+The author notes that if the flag is present but the printer's macros are older, the `T*`
+values are not forwarded and the user sees Z-Mod's prompt, so a mismatch never prints with a
+wrong map (#2033). HelixScreen reads the flag at discovery
+(`src/printer/print_start_params.cpp#server_takes_tool_slots`) and sends a map wherever it or
+the built-in AFC emulation is present (`src/printer/print_start_params.cpp#takes_tool_slots`).
+Every print start builds its extra parameters, the plate and the map, in one place
+(`src/printer/print_start_params.cpp#start_request_params`). The Creator 5 narrows this
+further; see that page's tool changer section.
+
+**The preprocessor is G-code only.** Z-Mod's slicer post-processing script
+(the `zmod_preprocess` binaries, or the zmod-preprocess Python and shell scripts) is not needed for a .3mf: the
+[Global settings page](https://wiki.zmod.link/Global/) says scanning and colour mapping are
+instant for 3MF, and that `FORCE_MD5` "only applies when sending G-code. Not required for
+3MF."
+
+**New macros.** 1.7.5 adds `_USER_PREPARE_PRINT`, called before the file is sent to print,
+and `PLUGINS`, a plugin management menu (changelog). HelixScreen calls neither.
+
 ### Moonraker Update Manager
 
 ZMOD configures Moonraker to check for HelixScreen updates. The release_info.json file tells Moonraker which release asset to download:
@@ -131,6 +183,36 @@ The ZMOD init script sets up touch input via tslib environment variables, but He
 - Touch device: auto-detected from `/dev/input/eventN`
 - Framebuffer: `/dev/fb0` (800x480, 32bpp)
 - Backlight: `FBIOBLANK` ioctl (standard Linux fbdev)
+
+## Sound
+
+**Decision: UI sounds only.** The piezo is driven natively by
+`JzPwmSoundBackend` (behind `HELIX_HAS_JZ_PWM`, ad5x builds): theme steps
+render in-process with the full NoteEvent synthesis - chords, ADSR,
+sweeps - duty-encoded at the tuner-calibrated 385 MHz DMA rate and played
+by the long-lived `fx-pwm serve` daemon over `/tmp/fx-pwm.sock` (the
+backend spawns it on first sound; it idle-exits after 30 s so klippy's
+per-tone fx-pwm one-shots keep working between UI sounds). Audibility
+floor measured at 10 ms; buffers capped at 2.5 s.
+
+Why no music, with numbers: the driver's dma_update copies buffer words
+at ~30 µs each (measured 2026-09-01: 3,504 words = 106 ms, 14,024 =
+429 ms, linear). Upload time therefore equals playback time at the
+32 kHz ultrasonic carrier - a hard 50% duty ceiling for continuous
+audio; ~80% is reachable only by dropping the carrier into the audible
+band, which whines. The tracker phrase path
+(`jz_pwm_render_phrase`) stays in the tree, tested but unused: mods do
+not ship on ad5x. The M300 path remains for remote-UI installs. PCM
+streaming on this engine is impossible with numbers: buffer swaps are
+refused while a loop is armed and the legal chunk cycle costs a fixed
+~500 ms of silence per chunk.
+
+Daemon hardening (see SOUND_SYSTEM.md for the protocol): SIGPIPE ignored (a client close must not kill the daemon);
+per-frame release/re-request claim dance (second dma_init otherwise
+EPERMs) - and that dance can itself D-wedge pwm2_release, so never loop
+it hot; hold loops use absolute deadlines (poll timeout restarts on a
+readable socket = infinite phrase loop otherwise); the app's sender
+worker is the only socket writer (250 KB bodies block for seconds).
 
 ## Firmware Quirks and Operating Rules (verified 2026-08)
 
@@ -168,7 +250,8 @@ Two avoidance rules come out of the same host-starvation mechanism:
 - **Host work during toolhead motion is hair-trigger.** Forge-X's own regression
   harness had to stop screenshotting during motion to avoid TTC (Forge-X commit
   `46c75cb`, 2026-08-12). This is the external rationale for HelixScreen's print-time
-  IFS poll backoff (5 s → 30 s while printing) —
+  IFS poll backoff (5 s → 30 s while printing), and for the HelixPrint plugin's
+  `vendor_ad5x` push that replaces the poll where installed —
   `docs/devel/FILAMENT_BACKEND_AD5X_IFS.md` § "Polling caution". [upstream-doc,
   Forge-X repo]
 
@@ -208,7 +291,7 @@ All [rig-verified]:
 - **`/opt` is empty on AD5X ZMOD installs.** "No /opt/zmod" is not evidence of a
   failed install.
 - **Port signature:** stock = 22 + 8899; ZMOD = 22 + 80 + 7125 with 8899 closed.
-  Fluidd is served on 80; nginx does **not** proxy Moonraker — talk to `:7125`
+  Fluidd is served on 80; nginx does **not** proxy Moonraker — talk to port 7125
   directly.
 - **First boot takes ~140 s to reach port 80**, then runs calibration and input
   shaping autonomously. Do not poll the printer during that window (see TTC above).
@@ -222,7 +305,7 @@ A stock OTA update **disables** ZMOD while preserving data; re-enable afterwards
 
 The AD5X has exactly one mod: ZMOD (ghzserg). Forge-X (DrA1ex/ff5m) is AD5M/Pro-only
 and states AD5X support is unlikely ever; xblax's klipper-mod
-(`xblax/flashforge_ad5m_klipper_mod` — see `docs/devel/AD5M_KMOD_VARIANT.md`) has been
+(`xblax/flashforge_ad5m_klipper_mod` — see [FLASHFORGE_AD5M_SUPPORT.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/FLASHFORGE_AD5M_SUPPORT.md#ad5m-br-building-inside-klipper-mod)) has been
 dormant since 2025-09. The three variants are mutually incompatible at the macro and
 binary level. FlashForge stock firmware has shipped no changelogs since mid-2025, and
 there is no AD5X GPL source drop. [upstream-doc]
@@ -245,8 +328,8 @@ sleep cycle. Not reproducible on our internal hardware so there is no code
 fix in place yet.
 
 **Probable root cause:** interaction between `FBIOBLANK FB_BLANK_NORMAL` and
-the Allwinner DE/TCON pipeline — when the framebuffer source is detached
-from the display engine, the DE appears to emit whatever color is latched in
+the Ingenic X2600 display controller — when the framebuffer source is detached
+from the controller, it appears to emit whatever color is latched in
 its default-fill register rather than going fully dark. Because
 `backlight_enable_ioctl` is `false` on AD5X (PWM polarity inversion quirk,
 #95 / #235), the backlight is dimmed via `SET_BRIGHTNESS(0)` only — and on
@@ -257,19 +340,19 @@ Affected cohorts:
 
 | Cohort | Config | Sleep path |
 |--------|--------|-----------|
-| Fresh install / post-#431 preset | `hardware_blank=1`, `sleep_backlight_off=true` | FBIOBLANK + backlight off — DE may emit solid color |
-| Post-wizard (pre-fix) | `hardware_blank=0`, `sleep_backlight_off=false` | Software overlay + backlight on — last frame held |
+| Fresh install / post-#431 preset | `hardware_blank=1`, `sleep_backlight_off=true` | FBIOBLANK + backlight off — display controller may emit solid color |
+| Stale pre-#431 display config not yet migrated | `hardware_blank=0`, `sleep_backlight_off=false` | Software overlay + backlight on — last frame held |
 
 Both have produced user reports of the RGB symptom. The underlying driver
 behavior is the same — LVGL stops invalidating after the overlay draws or
-the FBIOBLANK fires, and the DE pipeline goes quiet.
+the FBIOBLANK fires, and the display controller goes quiet.
 
-**Wizard/preset disagreement (pending fix):** `ui_wizard_printer_identify.cpp`
-force-writes `hardware_blank=0`, `sleep_backlight_off=false`,
-`backlight_enable_ioctl=false` on wizard confirmation for AD5X and CC1,
-overriding the AD5X preset. The wizard should not be doing hardware
-manipulation — this block needs to be removed and a config migration added
-for users who already ran it. See prestonbrown/helixscreen#235,
+**Wizard and preset agree:** `ui_wizard_printer_identify.cpp` writes no
+display settings, so the AD5X preset's values stand. Config migrations v13 and
+v15 (`src/system/config_migrations.cpp#migrate_v12_to_v13`,
+`src/system/config_migrations.cpp#migrate_v14_to_v15`) restore
+`sleep_backlight_off=true`, `hardware_blank=1` on any AD5X config still carrying
+the stale `false` / `0` pair. See prestonbrown/helixscreen#235,
 prestonbrown/helixscreen#431, prestonbrown/helixscreen#303 for history.
 
 **User workarounds** (documented in `docs/user/TROUBLESHOOTING.md`):
@@ -280,10 +363,13 @@ prestonbrown/helixscreen#431, prestonbrown/helixscreen#303 for history.
 
 **Investigation TODO:**
 
-- Collect debug bundles from affected users to confirm cohort split
-- Try reordering in `enter_sleep()`: backlight → 0 *before* `FBIOBLANK`
-- Add `clear_framebuffer(0x00000000)` before creating the software overlay
-- Force `lv_refr_now()` after `create_sleep_overlay()` so there is no
+- Collect debug bundles from affected users to confirm cohort split (no open
+  issue tracks this symptom; reports go to a
+  [new issue](https://github.com/prestonbrown/helixscreen/issues/new) with the
+  bundle share code)
+- Try reordering in `DisplaySleepController::enter_sleep()`: backlight → 0 *before* `FBIOBLANK`
+- Clear the framebuffer to black before creating the software overlay
+- Force `lv_refr_now()` after `DisplaySleepController::create_sleep_overlay()` so there is no
   window between overlay creation and flush
 
 ### Touch Input
@@ -398,10 +484,10 @@ Zmod has an option to rename slots from 0-indexed (0,1,2,3) to 1-indexed (1,2,3,
 | Architecture | ARM (armv7l, Cortex-A7) | MIPS (Ingenic X2600 XBurst2) |
 | Display | 800x480 fbdev | 800x480 fbdev |
 | Backlight | `/dev/disp` ioctl (Allwinner sunxi) | `FBIOBLANK` (standard Linux) |
-| Config path | `/opt/helixscreen/` | `/usr/data/helixscreen/` |
+| Install root | `/opt/helixscreen/` (Forge-X, Klipper Mod), `/srv/helixscreen` (ZMOD) | `/srv/helixscreen` inside Z-Mod's chroot at `/usr/data/.mod/.zmod`, launched by Z-Mod's `/etc/init.d/S80helixscreen` |
 | Multi-material | No (single extruder) | IFS (4 spools) |
-| Build target | `PLATFORM_TARGET=ad5m` | `PLATFORM_TARGET=ad5x` |
-| Binary | ARM static (glibc sysroot) | MIPS static (glibc) |
+| Build target | `PLATFORM_TARGET=ad5m` | `PLATFORM_TARGET=ad5x` (alias of `mips`) |
+| Binary | ARM static (glibc sysroot) | MIPS32r2 static (musl), shared with the K1 |
 
 ## Known Limitations
 

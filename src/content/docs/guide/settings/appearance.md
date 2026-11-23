@@ -1,0 +1,190 @@
+---
+title: "Appearance"
+sidebar:
+  order: 3
+---
+
+
+**Settings > Appearance** changes how HelixScreen looks. Use it to switch between light and dark, pick or edit a color theme, turn motion effects on or off, and choose how your printer is drawn on screen. Nothing here changes what the printer does.
+
+On the Settings screen, the **Appearance** row shows the mode and the theme you're using, for example *Dark Mode · Nord*.
+
+![Appearance settings, top of the page](../../../../assets/images/docs/settings-appearance.png)
+
+![Appearance settings, scrolled to Printer Visuals](../../../../assets/images/docs/settings-appearance-2.png)
+
+---
+
+## Dark Mode
+
+Switches between the light and dark version of your theme. **On** (dark) by default. The switch is grayed out when your theme only comes in dark (see the Modes column in [Built-in Themes](#built-in-themes)).
+
+---
+
+## Theme Colors
+
+Opens the theme explorer, where you browse, preview and apply color themes.
+
+![The theme explorer](../../../../assets/images/docs/settings-theme.png)
+
+To change your theme:
+
+1. Tap **Theme Colors**.
+2. Open the **Theme Preset** menu and pick a theme. The preview cards, buttons and status colors update as you go.
+3. If the theme has both a light and a dark version, the **Dark Mode** switch picks which one you see.
+4. Tap **Apply**. The new theme takes effect everywhere right away. No restart needed.
+
+To back out, leave the explorer without tapping **Apply**. Your previous theme comes back, in the light or dark version it was in when you opened the explorer, even if you flipped the **Dark Mode** switch while looking around.
+
+### Built-in Themes
+
+Eighteen themes come with HelixScreen, listed alphabetically in the Theme Preset menu. Every theme has a dark version. All but the four marked **Dark only** also have a light version.
+
+| Theme | Look | Modes |
+|-------|------|-------|
+| **Ayu** | Warm gold accent with coral errors on slate | Light + dark |
+| **Catppuccin** | Soft pastels on gentle lavender | Light + dark |
+| **ChatGPT** | Understated grays with green and red status colors | Light + dark |
+| **Cupertino** | Apple-style system colors on near-black | Light + dark |
+| **Dracula** | Violet on deep slate with bright green highlights | Dark only |
+| **Everforest** | Muted forest green and clay | Light + dark |
+| **Gruvbox** | Warm retro earth tones: amber, olive, brick | Light + dark |
+| **Hazard** | Safety-vest yellow, warning orange and danger red on powder-black, with sharp corners and brass seams | Dark only |
+| **HelixScreen** | The default: balanced blue on charcoal | Light + dark |
+| **Kanagawa** | Soft wave-blue and gold on deep indigo | Light + dark |
+| **Material Design** | Material blues and greens on gray | Light + dark |
+| **Midnight** | Near-black navy, dim and low-glare | Dark only |
+| **Nord** | Arctic blues and frost tones | Light + dark |
+| **One Dark** | The Atom editor look: blue and green on charcoal | Light + dark |
+| **Rose Pine** | Muted rose, iris and pine on soft charcoal | Light + dark |
+| **Solarized** | The classic muted scheme on deep teal | Light + dark |
+| **Tokyo Night** | City-at-night blues with pastel highlights | Light + dark |
+| **Yami** | Vivid blue on deep gray, high contrast | Dark only |
+
+### Editing a Custom Theme
+
+Tap **Edit** in the theme explorer to open the theme editor. You can recolor a theme and change its corners, borders and shadows. Everything around the editor updates as you go, so you see the result straight away.
+
+![The theme explorer's preset menu and Dark Mode switch](../../../../assets/images/docs/settings-theme-actions.png)
+
+1. The Theme Preset menu picks which theme to look at.
+2. The Dark Mode switch chooses which palette the editor changes.
+
+The editor has two sections:
+
+- **Theme Colors**: 16 color bars, each labeled with what it colors (background, text, primary, success, warning and so on), beside a color picker (above it on the smallest screens). Tap a bar, then pick its color: **Grid** in the header shows a block of ready-made colors, **Sliders** shows Hue, Saturation and Brightness with a **Hex** button to type a code. The row of small chips under the picker holds the theme's own colors, so you can reuse one. The selected bar shows the color's name and hex code.
+- **Style Properties**: four sliders.
+
+| Slider | What it does |
+|--------|--------------|
+| **Border Radius** | How rounded corners are, from square to fully round |
+| **Border Width** | How thick borders are |
+| **Border Opacity** | How visible borders are (0 is invisible, 255 is solid) |
+| **Shadow Intensity** | How strong drop shadows are (0 turns them off) |
+
+### Light and Dark Palettes
+
+A theme can have a separate light and dark palette, and the editor changes one at a time. Pick which one before you tap **Edit**: turn the explorer's **Dark Mode** switch on to edit the dark palette, or off to edit the light one. The switch only appears for themes that have both. Saving keeps both palettes, including the one you didn't touch.
+
+> **Tip:** To tune both palettes, edit one and save. Then flip the Dark Mode switch, tap **Edit** again and adjust the other.
+
+### Saving Your Changes
+
+**Save** sits in the editor's header. **Reset** and **Save As New** are in the menu behind the more button (three dots) beside it:
+
+| Button | What it does |
+|--------|--------------|
+| **Save** | Saves over the current theme. Grayed out until you've changed something |
+| **Reset** (menu) | For a built-in theme, puts the original colors back. For a theme you made, goes back to its last saved state |
+| **Save As New** (menu) | Saves your changes as a new theme and leaves the original alone |
+
+**Save As New** asks for a name. It suggests "*theme name* Copy". Tap **Save** and the new theme is applied and added to the Theme Preset menu.
+
+Both **Save** and **Save As New** apply the theme right away. If you try to leave the editor with unsaved changes, HelixScreen asks **Discard Changes?** first.
+
+> **Note:** Themes you make or edit are stored on the printer in `~/helixscreen/config/themes/`. They survive updates, and you can copy them to another printer.
+
+---
+
+## Glass Effects
+
+Gives buttons and panels depth and lighting: buttons look like glass you press, and cards catch light from their top-left corner. It works with every theme and keeps your theme's colors. **Off** by default.
+
+The row only appears on screens fast enough to draw it. The first time HelixScreen starts on a new screen, or after an update, it checks that quietly in the background, so the row can take a few seconds to appear. On slower hardware, 16-bit displays and screens whose picture HelixScreen has to rotate itself, it never appears and the screen stays flat.
+
+---
+
+## Animations
+
+Turns motion effects on or off, such as screens sliding in and confetti when a print finishes. It starts on wherever the hardware handles it well, and off on slower hardware and on screens whose picture HelixScreen has to rotate itself. Turn it off if the screen feels slow, for example on a Raspberry Pi 3.
+
+---
+
+## Widget Labels
+
+Shows a text label under icon-only widgets on the home screen. **Off** by default. Turn it on while you're learning the icons, and off for a cleaner look on small screens once you know what each icon means.
+
+---
+
+## Printer Visuals
+
+The rows under **PRINTER VISUALS** change how your printer and its data are drawn. Apart from which way the Z buttons move (see [Z Movement](#z-movement)), the printer behaves exactly the same whatever you pick.
+
+![The Printer Visuals rows](../../../../assets/images/docs/settings-printer-visuals.png)
+
+1. Toolhead Style.
+2. G-code Preview.
+3. Z Movement.
+4. Bed Mesh Render.
+
+### Toolhead Style
+
+The toolhead picture on the Motion screen, the filament system screens and the Z offset controls.
+
+| Option | Picture |
+|--------|---------|
+| **Auto** (default) | HelixScreen works out your toolhead from its printer list or from the multi-filament system it finds, and uses the Default picture when it can't tell |
+| **Default** | The general-purpose toolhead picture |
+| **A4T** | Armored Turtle A4T |
+| **AntHead** | AntHead |
+| **JabberWocky** | JabberWocky |
+| **Stealthburner** | Voron Stealthburner |
+| **Creality K1** | The Creality K1 toolhead |
+| **Creality K2** | The Creality K2 toolhead |
+
+Leave it on **Auto** unless HelixScreen shows the wrong toolhead, or you've fitted an aftermarket one. Printers such as the Creality K1 and K2 get their own picture automatically. This choice is remembered separately for each printer you have set up.
+
+### G-code Preview
+
+How the print status screen draws the file that's printing.
+
+| Option | What you see |
+|--------|--------------|
+| **Auto** (default) | HelixScreen picks for your hardware: 3D where the screen can handle it, lighter views where it can't |
+| **3D View** | A 3D model of the toolpath you can turn and zoom |
+| **2D Layers** | A fixed corner view of the model, drawn layer by layer, with ledges and rims shaded so the shape reads. Lighter than 3D |
+| **Thumbnail Only** | Just the picture your slicer saved in the file. The lightest option |
+
+Pick a lighter option if the print status screen is slow on your printer.
+
+In **Auto**, a file whose preview would cost your board too much CPU shows its thumbnail instead. HelixScreen judges that from how fast it read earlier files on this board, and allows less while a print is running, so a large file never slows the printer. Pick **3D View** or **2D Layers** yourself to draw such a file anyway.
+
+### Z Movement
+
+How the Z buttons on the Motion screen are labeled, and which way they move the printer.
+
+| Option | Labels |
+|--------|--------|
+| **Auto** (default) | Chosen from your printer type (bed slinger, CoreXY or delta) |
+| **Bed Moves** | The buttons describe the bed moving |
+| **Nozzle Moves** | The buttons describe the nozzle moving |
+
+The choice also sets what each button does. With **Bed Moves**, the up button raises the bed toward the nozzle. With **Nozzle Moves**, it raises the nozzle away from the bed. Change it if the arrows point the opposite way to what you see your printer do. Like Toolhead Style, this is remembered separately for each printer.
+
+### Bed Mesh Render
+
+How bed mesh results are drawn: **Auto**, **3D View** or **2D Heatmap**. The heatmap is lighter on slow hardware and easier to read at a glance.
+
+---
+
+[Back to Settings](/guide/settings/) | [Prev: Display](/guide/settings/display/) | [Next: Touch & Input](/guide/settings/touch-input/)

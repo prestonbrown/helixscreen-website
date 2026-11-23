@@ -15,34 +15,32 @@ HelixScreen uses class-based patterns for all new code. For architectural ration
 
 ### Panel Pattern
 
-**Canonical example:** `include/ui_panel_filament.h` + `src/ui/ui_panel_filament.cpp`
+**Canonical example:** `include/ui_panel_filament.h` + `src/ui/filament/ui_panel_filament.cpp`
 
 ```cpp
-class ExamplePanel : public PanelBase {  // Use SubjectManager subjects_; member for auto cleanup
-public:
-    explicit ExamplePanel(lv_obj_t* parent);
+class ExamplePanel : public PanelBase {
+  public:
+    ExamplePanel(helix::PrinterState& printer_state, helix::IMoonrakerAPI* api);
     ~ExamplePanel() override;
 
-    void show() override;
-    void hide() override;
-    lv_obj_t* get_root() const override { return root_; }
+    void init_subjects() override;                       // BEFORE the XML is created
+    void setup(lv_obj_t* panel, lv_obj_t* parent_screen) override;  // cache widgets, wire observers
+    const char* get_name() const override { return "Example"; }
+    const char* get_xml_component_name() const override { return "example_panel"; }
 
-private:
-    void init_subjects();  // Call BEFORE lv_xml_create()
-    void setup_observers();  // Wire reactive bindings
-
-    lv_obj_t* root_ = nullptr;
-    SubjectManager subjects_;  // Owns subjects + observers, auto-cleans on destruction
-    lv_subject_t my_subject_{};
-    char buf_[128]{};  // Static storage for string subjects
+  private:
+    SubjectManager subjects_;      // registers the subjects, resets them on destruction
+    helix::Subject my_subject_;    // include/core/subject.h
+    char buf_[128]{};              // backing storage for a string subject
+    ObserverGuard temp_observer_;  // one guard per observed subject
 };
 ```
 
-**Note:** Use `PanelBase` with a `SubjectManager subjects_;` member for automatic observer cleanup on destruction.
+**Note:** `PanelBase` (`include/ui_panel_base.h`) pairs `init_subjects()` / `setup()` with a `SubjectManager subjects_;` member for subject cleanup and `ObserverGuard` members for observer cleanup.
 
 ### Manager Pattern (Backend)
 
-**Canonical example:** `include/wifi_manager.h` + `src/api/wifi_manager.cpp`
+**Canonical example:** `include/wifi_manager.h` + `src/network/wifi_manager.cpp`
 
 ```cpp
 class WiFiManager {
@@ -67,19 +65,21 @@ private:
 
 ### Modal Pattern
 
-**Canonical example:** `src/ui/ui_wizard*.cpp`
+**Canonical example:** `include/ui_info_qr_modal.h` + `src/ui/components/ui_info_qr_modal.cpp`
 
 ```cpp
 class ConfirmDialog : public Modal {
-public:
-    void show(const std::string& title, ConfirmCallback on_confirm);
-    void dismiss() override;
+  public:
+    const char* get_name() const override { return "Confirm"; }
+    const char* component_name() const override { return "confirm_dialog"; }
 
-private:
-    lv_obj_t* backdrop_ = nullptr;
-    lv_obj_t* dialog_ = nullptr;
+  protected:
+    void on_ok() override;      // primary button
+    void on_cancel() override;  // secondary button, backdrop, ESC
 };
 ```
+
+See `docs/devel/MODAL_SYSTEM.md`; a plain component modal needs no subclass (`helix::ui::ComponentModal::show_owned("component_name")`).
 
 ### Domain State Pattern
 
@@ -97,12 +97,12 @@ public:
     void set_active_extruder(const std::string& name); // Update via helix::ui::queue_update
 
 private:
-    lv_subject_t nozzle_temp_{};
+    helix::Subject nozzle_temp_;
     bool initialized_ = false;
 };
 ```
 
-**Domain classes:** `printer_*_state.h` — Temperature, Motion, Fan, Print, Calibration, Capabilities, ExcludedObjects, Network, Versions, Led, HardwareValidation, PluginStatus, CompositeVisibility
+**Domain classes:** `printer_*_state.h` — Temperature, Motion, Fan, Print, Calibration, Capabilities, ExcludedObjects, Network, Versions, Profile, HardwareValidation, PluginStatus, CompositeVisibility
 
 **For architectural rationale, see [chapter 05 — Printer state & singletons](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/architecture/05-printer-state.md).**
 
@@ -118,7 +118,7 @@ Singletons with LVGL subjects must register cleanup to avoid Static Destruction 
 // In init_subjects():
 void MySingleton::init_subjects() {
     if (initialized_) return;
-    lv_subject_init_int(&my_subject_, 0);
+    my_subject_.init_int(0);
     initialized_ = true;
 }
 
@@ -126,13 +126,17 @@ void MySingleton::init_subjects() {
 void MySingleton::deinit_subjects() {
     if (!initialized_) return;
     spdlog::debug("[MySingleton] Deinitializing subjects");
-    lv_subject_deinit(&my_subject_);  // Disconnects all observers
+    my_subject_.reset();  // frees its observers, keeps its address for the next init
     initialized_ = false;
 }
 
 // Self-registration (last line of init_subjects()) — never from SubjectInitializer
 StaticSubjectRegistry::instance().register_deinit(
     "MySingleton", []() { MySingleton::instance().deinit_subjects(); });
+
+// Subjects created once at boot, whose init a printer switch does not re-run:
+StaticSubjectRegistry::instance().register_deinit(
+    "MyComponent", deinit_my_component_subjects, StaticSubjectRegistry::Lifetime::Process);
 ```
 
 **See [chapter 11 — Startup & shutdown](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/architecture/11-startup-shutdown.md) for full pattern.**
@@ -141,47 +145,36 @@ StaticSubjectRegistry::instance().register_deinit(
 
 ## Observer Factory (CRITICAL)
 
-Use `observer_factory.h` for type-safe, auto-cleaned observers. **Never use raw `lv_subject_add_observer_*` in panels.**
+Use `core/observer_factory.h` for type-safe, auto-cleaned observers. **Never use raw `lv_subject_add_observer_*` in panels.**
 
 ```cpp
-#include "observer_factory.h"
+#include "core/observer_factory.h"
 
-// In setup_observers():
-// Integer observer with async UI update
-add_observer(observe_int_async<MyPanel>(
+// Members: ObserverGuard temp_observer_, filename_observer_;
+// In setup():
+// Integer observer; the handler runs deferred on the UI thread
+temp_observer_ = observe<int>(
     get_printer_state().temperature_state().get_active_extruder_temp_subject(),
     this,
     [](MyPanel* self, int32_t temp) {
         self->update_temp_display(temp);
-    }
-));
+    },
+    get_printer_state().get_subjects_lifetime());
 
 // String observer
-add_observer(observe_string<MyPanel>(
-    get_printer_state().get_print_filename_subject(),
+filename_observer_ = observe<const char*>(
+    get_printer_state().print_state().get_print_filename_subject(),
     this,
     [](MyPanel* self, const char* name) {
         lv_label_set_text(self->filename_label_, name);
-    }
-));
-
-// Connection state observer (special case).
-// Signature: observe_connection_state(subject, panel, on_connected);
-// on_connected is void(Panel*) — fired when the state becomes CONNECTED.
-add_observer(observe_connection_state<MyPanel>(
-    get_printer_state().get_printer_connection_state_subject(),
-    this,
-    [](MyPanel* self) {
-        self->set_controls_enabled(true);
-    }
-));
+    },
+    get_printer_state().get_subjects_lifetime());
 ```
 
 **Key patterns:**
-- `observe_int_sync<Panel>()` - Direct callback (same thread)
-- `observe_int_async<Panel>()` - Queued to LVGL thread (safe from WebSocket)
-- `observe_string<Panel>()` - String subjects
-- `observe_connection_state<Panel>()` - Connection status
+- `observe<int>()` / `observe<const char*>()` - int and string subjects; the handler is deferred through the UpdateQueue by default
+- `Dispatch::Immediate` (last argument) - handler runs inside the subject notification; only when it cannot touch observer lifecycle
+- The 4th argument is the subject owner's lifetime token (`subject_never_freed()` only for subjects that outlive the process)
 
 ---
 
@@ -291,9 +284,9 @@ Font-based MDI icons (~50KB total vs ~4.6MB for images).
 
 **C++ API:**
 ```cpp
-ui_icon_set_source(icon, "wifi_strength_4");
-ui_icon_set_size(icon, "lg");
-ui_icon_set_variant(icon, "accent");
+helix::ui::icon::set_source(icon, "wifi_strength_4");
+helix::ui::icon::set_size(icon, "lg");
+helix::ui::icon::set_variant(icon, "accent");
 ```
 
 **Adding icons:** canonical path in [DEVELOPMENT.md](/dev/onboarding/development/) § "Icon & Font Workflow" (header edit + `make regen-fonts`).
@@ -317,7 +310,7 @@ The preset tier comes from the narrow axis, `min(width, height)`, not the height
 | `medium` | 40×20px | 48×24px | 80×40px | 112×48px |
 | `large` | 48×24px | 56×28px | 88×44px | 128×56px |
 
-Only four preset tiers exist for seven breakpoints, deliberately: Tiny and Small share one preset (switches are too small to benefit from separate tiers), and Large, XLarge and XXLarge all share the widest one. See `ui_switch_init_size_presets()` in `src/ui/ui_switch.cpp`.
+Only four preset tiers exist for seven breakpoints, deliberately: Tiny and Small share one preset (switches are too small to benefit from separate tiers), and Large, XLarge and XXLarge all share the widest one. See `ui_switch_init_size_presets()` in `src/ui/components/ui_switch.cpp`.
 
 ---
 
@@ -335,26 +328,36 @@ lv_obj_t* progress = ui_step_progress_create(parent, steps, 3, false);  // false
 ui_step_progress_set_current(progress, 2);  // Advance to step 3
 ```
 
+A horizontal row centres each step's dot in its share of the width, so the dots and their
+connectors stand centred in the row for any step count, and puts a label under every step. Where the row is too narrow for that,
+`ui_step_progress_set_current_label_only(progress, true)` hides the per-step labels and
+shows one caption centred under the row, naming the step `ui_step_progress_caption_step()`
+picks: the active one, else the last completed, else the first. The caption follows
+`set_current()`, `set_completed()` and `set_label()`. The AMS operation sidebar turns it on
+for its horizontal stepper (a narrow portrait screen).
+
+Each step's state is an int subject the bar owns (0 pending, 1 active, 2 done, 3 failed),
+and its label a string subject; the step components bind them, so the setters only write
+subjects. A list XML already drives, like the guided calibration run's
+(`calibration_run_step_row`), uses the same `step_progress_step_v` row and
+`step_progress_dot` with its own subjects: no number, no connector, a ring while pending.
+
 ---
 
 ## Sensor Framework
 
-Extensible sensor system via `ISensorManager` interface (`include/sensor_registry.h`). Headers live flat in `include/` (`*_sensor_manager.h`).
+One singleton manager per sensor category, each deriving `SensorManager` (`include/sensor_manager.h`) and called directly (`Manager::instance()`). Headers live flat in `include/` (`*_sensor_manager.h`).
 
 **Available managers:**
 - `AccelSensorManager` - ADXL345, LIS2DW, LIS3DH, MPU9250, ICM20948
 - `FilamentSensorManager` - Runout detection
 - `ProbeSensorManager` - Z-probe tracking
-- `ColorSensorManager` - Filament color
 - `WidthSensorManager` - Filament diameter
 - `HumiditySensorManager` - Chamber humidity
+- `InputSensorManager` - `gcode_button` on/off inputs (doors, buttons) with Door/Other roles
 - `TemperatureSensorManager` - `temperature_sensor` / `temperature_fan` objects
 
-**Registration:**
-```cpp
-auto& registry = SensorRegistry::instance();
-registry.register_manager("accel", std::make_unique<AccelSensorManager>());
-```
+**Wiring:** discovery calls each manager's `discover()` then `load_settings()` from `src/printer/printer_discovery.cpp#init_subsystems_from_hardware`, and `rediscover_from_config()` runs `discover()` again on the managers that read config sections once `configfile.config` arrives; status frames reach every manager from `dispatch_status_frame()` (`src/printer/status_dispatch.cpp#dispatch_status_frame`). Every walk goes through `sensor_managers()`, so a new manager is one registry line. A new Klipper object of an existing kind is one row in `src/printer/hardware_object_table.cpp`. Full guide: `SENSOR_MANAGEMENT.md`.
 
 **Accessing state:** Sensors expose LVGL subjects for reactive binding.
 
@@ -386,17 +389,23 @@ const lv_font_t* font = theme_manager_get_font("font_body");
 ### Initialization (BEFORE lv_xml_create!)
 
 ```cpp
-// String
+helix::Subject subj;   // a member; &subj is the lv_subject_t* LVGL calls take
+
+// String (the buffer must outlive the Subject)
 static char buf[128];
-lv_subject_init_string(&subj, buf, NULL, sizeof(buf), "init");
+subj.init_string(buf, "init");
 lv_xml_register_subject(nullptr, "my_text", &subj);
 
 // Integer
-lv_subject_init_int(&subj, 0);
+subj.init_int(0);
 
 // Color
-lv_subject_init_color(&subj, lv_color_hex(0xFF0000));
+subj.init_color(lv_color_hex(0xFF0000));
 ```
+
+In panel code use the managed macros instead (`UI_MANAGED_SUBJECT_INT` and friends,
+`include/subject_managed_panel.h`): they init, publish to XML and register for cleanup in one
+line. Ownership rules: `docs/devel/THREADING.md` § "Subject ownership".
 
 ### XML Bindings
 
@@ -416,7 +425,7 @@ Subjects must be initialized BEFORE creating XML to ensure bindings find initial
 lv_xml_register_font(...);                    // 1. Fonts
 lv_xml_register_image(...);                   // 2. Images
 lv_xml_register_component_from_file(...);     // 3. Components (globals first!)
-lv_subject_init_*(...);                       // 4. Init subjects
+subject.init_*(...);                          // 4. Init subjects (helix::Subject)
 lv_xml_register_subject(...);                 // 5. Register subjects
 lv_xml_create(...);                           // 6. Create UI
 ```
@@ -426,6 +435,8 @@ lv_xml_create(...);                           // 6. Create UI
 ## Style Properties
 
 ⚠️ In `<styles>`: bare names (`bg_color`). On widgets: `style_` prefix (`style_bg_color`).
+
+A `<styles>` block is file-local. A style two files share goes in `ui_xml/styles.xml` and is borrowed as `<style name="styles.press_wash"/>` (see `LVGL9_XML_GUIDE.md` § "Defining Styles").
 
 ```xml
 <styles>
@@ -466,7 +477,7 @@ style_flex_cross_place="center"
 | `lv_label_set_text()` for reactive data | `bind_text` subject binding | [ch. 01 — Declarative UI](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/architecture/01-declarative-ui.md) |
 | Hardcoded colors in C++ | `theme_manager_get_color("card_bg")` | [Responsive Design Tokens](#responsive-design-tokens) |
 | `lv_subject_set_*()` from WebSocket | `helix::ui::queue_update()` | [Threading Model](#threading-model) |
-| Raw `lv_subject_add_observer_*()` | `observe_int_async<Panel>()` from factory | [Observer Factory](#observer-factory-critical) |
+| Raw `lv_subject_add_observer_*()` | `observe<int>()` from factory | [Observer Factory](#observer-factory-critical) |
 
 ---
 
@@ -515,7 +526,7 @@ Theme-aware markdown viewer registered as an XML custom widget. Wraps `lv_markdo
 - Theme-aware: colors pulled from design tokens automatically.
 - Initialize with `ui_markdown_init()` after `lv_xml_init()` and theme init.
 
-**Header:** `include/ui_markdown.h` | **Source:** `src/ui/ui_markdown.cpp`
+**Header:** `include/ui_markdown.h` | **Source:** `src/ui/components/ui_markdown.cpp`
 
 ---
 
@@ -545,10 +556,7 @@ Auto-detects screen aspect ratio and loads alternative XML layouts. Themes contr
 auto& lm = helix::LayoutManager::instance();
 lm.init(display_width, display_height);      // Auto-detect
 lm.set_override("ultrawide");                // Force layout
-
-std::string path = lm.resolve_xml_path("home_panel.xml");
-// Returns "ui_xml/ultrawide/home_panel.xml" if override exists,
-// otherwise "ui_xml/home_panel.xml"
+bool portrait = helix::is_portrait_layout(lm.type());  // what ui_is_portrait publishes
 ```
 
 | Layout | Detection | Example Screens |
@@ -570,15 +578,15 @@ CLI: `--layout ultrawide` | Config: `display.layout` in settings.json
 Versioned migration system for upgrading existing user configs on update.
 
 **Adding a migration:**
-1. Bump `CURRENT_CONFIG_VERSION` in `include/config.h`
-2. Write `migrate_vN_to_vM()` in `src/system/config.cpp` (anonymous namespace)
-3. Add `if (version < M) migrate_vN_to_vM(config);` in `run_versioned_migrations()`
+1. Bump `kCurrentConfigVersion` in `include/config.h`
+2. Write `migrate_vN_to_vM(json& config, const std::string& config_path)` in `src/system/config_migrations.cpp` (anonymous namespace)
+3. Add `{M, migrate_vN_to_vM},` to the end of `kMigrations`
 4. Update `get_default_config()` if the new key needs a default for fresh installs
 5. Write tests in `tests/unit/test_config.cpp` with tags `[config][migration][versioning]`
 
 **Rules:** Migrations are append-only, idempotent, never overwrite user data, and log what they do.
 
-**Full docs:** [CONFIG_MIGRATION.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/CONFIG_MIGRATION.md) | **Key files:** `include/config.h`, `src/system/config.cpp`
+**Full docs:** [CONFIG_MIGRATION.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/CONFIG_MIGRATION.md) | **Key files:** `include/config.h`, `src/system/config_migrations.cpp`
 
 ---
 
@@ -588,7 +596,7 @@ Unified modal system with RAII lifecycle, backdrop, stacking, and animations.
 
 ```cpp
 // Simple modal (no subclass):
-lv_obj_t* dialog = Modal::show("print_cancel_confirm_modal");
+lv_obj_t* dialog = helix::ui::ComponentModal::show_owned("print_cancel_confirm_modal");
 Modal::hide(dialog);
 
 // Confirmation dialog helper (helix::ui):
@@ -632,7 +640,7 @@ lv_subject_t* target = pts.get_active_extruder_target_subject();
 lv_subject_t* t1_temp = pts.get_extruder_temp_subject("extruder1");
 if (t1_temp) {
     int deci = lv_subject_get_int(t1_temp);   // 2053 = 205.3C
-    float degrees = helix::ui::temperature::deci_to_degrees_f(deci);
+    float degrees = helix::temperature_rules::deci_to_degrees_f(deci);
 }
 
 // Enumerate all extruders
@@ -642,9 +650,10 @@ for (const auto& [name, info] : pts.extruders()) {
 }
 
 // React to extruder list changes
-add_observer(observe_int_async<MyPanel>(
+add_observer(observe<int>(
     pts.get_extruder_version_subject(), this,
-    [](MyPanel* self, int32_t) { self->rebuild_temp_display(); }
+    [](MyPanel* self, int32_t) { self->rebuild_temp_display(); },
+    get_printer_state().get_subjects_lifetime()
 ));
 ```
 
@@ -680,39 +689,33 @@ for (const auto& tool : ts.tools()) {
 }
 
 // Observe tool changes
-add_observer(observe_int_async<MyPanel>(
+add_observer(observe<int>(
     ts.get_tools_version_subject(), this,
-    [](MyPanel* self, int32_t) { self->rebuild_tool_list(); }
+    [](MyPanel* self, int32_t) { self->rebuild_tool_list(); },
+    get_printer_state().get_subjects_lifetime()
 ));
 
 // Hide UI element on single-tool printers (XML)
 // <bind_flag_if_eq subject="tool_count" flag="hidden" ref_value="1"/>
 ```
 
-### Multi-Backend AMS Access
+### AMS Backend Access
 
 ```cpp
 #include "ams_state.h"
 
 auto& ams = AmsState::instance();
 
-// Number of filament system backends
-int count = ams.backend_count();
+// The printer's filament system, or nullptr when it has none
+AmsBackend* backend = ams.get_backend();
 
-// Access specific backend
-AmsBackend* primary = ams.get_backend(0);
-AmsBackend* secondary = ams.get_backend(1);
-
-// Per-backend slot subjects (for UI binding)
-lv_subject_t* color = ams.get_slot_color_subject(/*backend=*/1, /*slot=*/0);
-lv_subject_t* status = ams.get_slot_status_subject(/*backend=*/1, /*slot=*/0);
-
-// Switch active backend (updates all system-level subjects)
-ams.set_active_backend(1);
-
-// Observe backend count changes
-// <bind_flag_if_gt subject="backend_count" flag="hidden" ref_value="1"/>
+// Per-slot subjects; the token'd form hands out the lifetime observers must hold
+lv_subject_t* color = ams.get_slot_color_subject(/*slot=*/0);
+SubjectLifetime lt;
+lv_subject_t* status = ams.get_slot_status_subject(/*slot=*/0, lt);
 ```
+
+A printer has one filament system (FILAMENT_MANAGEMENT.md § "One Filament System per Printer").
 
 **Full docs:** [TOOL_ABSTRACTION.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/TOOL_ABSTRACTION.md), [MULTI_EXTRUDER_TEMPERATURE.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/MULTI_EXTRUDER_TEMPERATURE.md), [FILAMENT_MANAGEMENT.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/FILAMENT_MANAGEMENT.md)
 

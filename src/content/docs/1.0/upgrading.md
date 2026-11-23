@@ -1,0 +1,141 @@
+---
+title: "Upgrading"
+slug: "1.0/upgrading"
+sidebar:
+  order: 2
+---
+
+
+This guide helps you upgrade HelixScreen to a newer version.
+
+> For platform-specific upgrade commands (the two-step offline process on printers without HTTPS fetch tools, the AD5X chroot path, bundled-installer locations), see your printer's install guide; start from the [router table in the Installation Guide](/1.0/installation/#which-printer-are-you-installing-on).
+
+---
+
+## Quick Upgrade
+
+The preferred ways to update are inside the app itself (**Settings > Help & About > About > Check for Updates**) or the Mainsail/Fluidd update manager. From the command line instead, on any host with direct internet access:
+
+```bash
+curl -sSL https://releases.helixscreen.org/install.sh | sh -s -- --update
+```
+
+Your settings (`settings.json`), environment overrides (`helixscreen.env`), and custom files (custom printer images, etc.) are automatically preserved across updates.
+
+Printers without direct internet access or HTTPS fetch tools (Creality K1, Adventurer 5M, Adventurer 5X) use a two-step or chroot procedure instead; each printer's install guide has the exact commands.
+
+---
+
+## If the Setup Wizard Keeps Appearing
+
+After upgrading, if HelixScreen keeps showing the setup wizard on every boot, your configuration file format may have changed in a way that's incompatible with the new version.
+
+### Quick Fix
+
+The easiest solution is to delete your config file and let the wizard create a new one:
+
+**MainsailOS (Pi):**
+```bash
+sudo rm ~/helixscreen/config/settings.json
+sudo systemctl restart helixscreen
+```
+> If HelixScreen runs as root (the `/opt/helixscreen` install), the config is at `/opt/helixscreen/config/settings.json` instead.
+
+**Adventurer 5M (Forge-X):**
+```bash
+rm /opt/helixscreen/config/settings.json
+/etc/init.d/S90helixscreen restart
+```
+
+**Adventurer 5M (Klipper Mod):**
+```bash
+rm /root/printer_software/helixscreen/config/settings.json
+/etc/init.d/S80helixscreen restart
+```
+(Klipper Mod v00.06 and newer installs to `/opt/helixscreen`, so its settings file is `/opt/helixscreen/config/settings.json`.)
+
+**Creality K1 (Simple AF):**
+```bash
+rm /usr/data/helixscreen/config/settings.json
+/etc/init.d/S99helixscreen restart
+```
+
+After restarting, the wizard will guide you through setup again. Your printer settings (Klipper, Moonraker) are not affected; only HelixScreen's display preferences need to be reconfigured.
+
+### Alternative: Factory Reset from UI
+
+If you can access the settings panel before the wizard appears:
+
+1. Navigate to **Settings** (gear icon in sidebar)
+2. Tap **System**
+3. Scroll down to **Factory Reset**
+4. Tap **Factory Reset** and confirm
+
+This clears all HelixScreen settings and restarts the wizard.
+
+---
+
+## What's Preserved During Upgrades
+
+The installer automatically preserves:
+
+- **`settings.json`**: All your settings (printer connection, display preferences, sound, safety, etc.)
+- **`helixscreen.env`**: Any environment variable overrides you've set
+- **Custom files**: Custom printer images, user-added printer database entries, and other files in the `config/` directory
+
+You should not need to reconfigure anything after a normal upgrade. If something does go wrong, see the troubleshooting sections below.
+
+---
+
+## What Settings Are Affected by a Reset
+
+If you perform a factory reset or delete your config, you'll need to reconfigure:
+
+- WiFi connection (if not using Ethernet)
+- Moonraker connection (usually auto-detected)
+- Display preferences (brightness, theme, sleep timeout)
+- Sound settings
+- Safety preferences (E-Stop confirmation)
+
+Your Klipper configuration, Moonraker settings, print history, and G-code files are **not affected**; they're stored separately.
+
+---
+
+## Upgrade to Specific Version
+
+```bash
+curl -sSL https://releases.helixscreen.org/install.sh | sh -s -- --update --version v1.2.0
+```
+
+### Reinstall a Version with Fresh Settings
+
+The command above keeps your existing `settings.json`. To reinstall a specific version **and** reset HelixScreen's settings to defaults at the same time, use `--clean` instead of `--update`:
+
+```bash
+curl -sSL https://releases.helixscreen.org/install.sh | sh -s -- --clean --yes --version v1.2.0
+```
+
+`--yes` is required because a piped command cannot ask for confirmation; if you download the script and run it interactively over SSH, you get the confirmation prompt instead. `--clean` removes HelixScreen's settings and caches, then installs the version you specified. Your Klipper config, Moonraker settings, print history, and G-code files are **not** affected.
+
+---
+
+## Checking Your Version
+
+**On the touchscreen:** **Settings > Help & About > About** shows the current version
+
+**Via SSH:** run `<install-path>/bin/helix-screen --version`. The binary's location varies by platform; each printer's install guide lists its path.
+
+---
+
+## Getting Help
+
+If you encounter issues after upgrading:
+
+1. Ask in the [HelixScreen Discord](https://discord.gg/RZCT2StKhr) for quick help
+2. Check [TROUBLESHOOTING.md](/1.0/reference/troubleshooting/) for common problems
+3. View logs for error messages: on systemd hosts, `sudo journalctl -u helixscreen -n 50`. Log locations for the other platforms are in your printer's install guide.
+4. Open an issue on [GitHub](https://github.com/prestonbrown/helixscreen/issues) with your version and any error messages
+
+---
+
+*Back to: [Installation Guide](/1.0/installation/) | [User Guide](/1.0/guide/)*

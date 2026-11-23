@@ -9,7 +9,7 @@ sidebar:
 # HelixScreen Privacy Policy
 
 **Effective date**: July 2026
-**Last updated**: July 2026
+**Last updated**: October 2026
 
 ---
 
@@ -56,7 +56,7 @@ Recorded once per application launch.
 | `event` | string | Always `"session"` |
 | `device_id` | string | Double-hashed anonymous device identifier (64-char hex) |
 | `timestamp` | string | ISO 8601 UTC timestamp (e.g., `"2026-02-08T14:30:00Z"`) |
-| `app.version` | string | HelixScreen software version (e.g., `"1.0.0"`) |
+| `app.version` | string | HelixScreen software version (e.g., `"0.99.111"`) |
 | `app.platform` | string | Hardware platform (e.g., `"rpi4"`, `"rpi5"`, `"x86_64"`) |
 | `app.display` | string | Display resolution (e.g., `"800x480"`) |
 
@@ -193,6 +193,10 @@ Events are sent in batches of up to 20, with a minimum interval of 24 hours betw
 ### 7.3 Server-Side Storage
 
 Received events are stored with encryption at rest. Access to raw event data is restricted to authorized personnel within 356C LLC.
+
+### 7.4 Android Device Backup
+
+On Android, the system backup service can copy HelixScreen's settings to your own Google account, so a new phone can restore them. Those settings include your printer connection details, such as the Moonraker address and any API key you entered. This copy goes to Google under your account's backup settings, never to 356C LLC. The telemetry queue, the device's telemetry ID and crash files are left out of it. You can turn Android backup off in your phone's system settings.
 
 ---
 

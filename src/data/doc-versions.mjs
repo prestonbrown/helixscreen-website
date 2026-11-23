@@ -8,15 +8,14 @@
 // tag starts with `tagPrefix` (prereleases count only when `prerelease` is
 // true), or from `fallbackRef` when no such release exists yet.
 //
-// Promoting 1.1 to stable: set `current` to { slug: '1.1', label: '1.1 (stable)',
-// tagPrefix: 'v1.1.', prerelease: false } and replace `others` with
-// [{ slug: '1.0', label: '1.0', tagPrefix: 'v1.0.', prerelease: false, fallbackRef: 'v1.0.3' }].
-// The next sync then writes 1.0 under /1.0/ and 1.1 at the root.
+// Promoting a line to stable: make it `current` with a "(stable)" label and
+// prerelease: false, and move the previous stable line into `others`, where it
+// is served under /<slug>/ from then on.
 
 export const DOC_VERSIONS = {
-  current: { slug: '1.0', label: '1.0 (stable)', tagPrefix: 'v1.0.', prerelease: false, fallbackRef: 'main' },
+  current: { slug: '1.1', label: '1.1 (stable)', tagPrefix: 'v1.1.', prerelease: false, fallbackRef: 'main' },
   others: [
-    { slug: '1.1', label: '1.1 (beta)', tagPrefix: 'v1.1.', prerelease: true, fallbackRef: 'main' },
+    { slug: '1.0', label: '1.0 (previous)', tagPrefix: 'v1.0.', prerelease: false, fallbackRef: 'v1.0.11' },
   ],
 };
 

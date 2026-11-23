@@ -17,17 +17,11 @@ Flip here when stuck. Search by symptom.
 
 ### My new XML component doesn't render — the `<my_component/>` tag is just nothing.
 
-**Cause:** The component isn't registered. XML components must be registered in C++ before they can be instantiated.
+**Cause:** The engine found no XML file for the tag. Components register on first use, by file name: the tag `<my_component/>` loads `ui_xml/<my_component>.xml` or `ui_xml/components/<my_component>.xml` (resolved through the active layout variant).
 
-**Fix:** Add a line to `register_xml_components()` in `src/xml_registration.cpp`:
+**Fix:** Name the file exactly `<component>.xml` and put it in `ui_xml/` or `ui_xml/components/`. There is no registration list to edit, and no ordering between components. A C++ widget, callback or subject the XML uses still has to be registered before the XML is created.
 
-```cpp
-register_xml("my_component.xml");
-```
-
-Order matters if your component depends on a custom widget or another component — register dependencies first. The file is already grouped by category; find a similar component and put yours near it.
-
-**Why silent?** The XML parser treats an unregistered component as a no-op. No log, no error — the container just ends up empty.
+**Check the log:** A name with no file makes `lv_xml_create()` return NULL and log an error. A tag nested in a view whose file is missing leaves its container empty.
 
 ---
 
@@ -55,6 +49,41 @@ Reference: lesson **L040**.
 
 ---
 
+### My `<style name="...">` or `bind_style` has no effect inside a component, but works in the parent file.
+
+**Cause:** A `<styles>` block is file-local. A bare style name resolves in the file that declares it, then in `globals`, so a component in its own XML file cannot see the `<styles>` of the panel that embeds it. The log carries a `No style found with <name> name` warning.
+
+**Fix:** When more than one file needs the style, move it into `ui_xml/styles.xml` and reference it by dotted name everywhere, including the file that used to own it:
+
+```xml
+<!-- ui_xml/styles.xml -->
+<style name="press_wash" bg_color="#primary" bg_opa="30%" radius="#border_radius"/>
+
+<!-- ✓ any file -->
+<style name="styles.press_wash" selector="pressed"/>
+<bind_style name="styles.invisible" subject="preparing_visible" ref_value="1"/>
+```
+
+Do not move it into `globals.xml` instead: that file parses before theme init, so a style there that uses a `#token` registers empty. Details: `UI_CONTRIBUTOR_GUIDE.md` § "Shared styles".
+
+---
+
+### My `style_*:checked` (colon) state style does nothing.
+
+**Cause:** The engine reads state and part selectors only in dash form. `lv_xml_style_string_process` (`lib/helix-xml/src/xml/lv_xml_style.c`) splits every style attribute name on `-`, so `style_opa-checked` is property `style_opa` with selector `checked`. The colon form never splits: `style_opa:checked` stays one property name, matches nothing in the property table, and the attribute is dropped. The engine logs `` `style_opa:checked` is ignored: style selectors follow '-' `` and `make lint-xml` fails on it.
+
+**Fix:** Write the dash form:
+
+```xml
+<!-- ✗ Dropped: the colon form never splits -->
+<lv_obj style_opa:checked="255"/>
+
+<!-- ✓ Parsed as style_opa with a checked selector -->
+<lv_obj style_opa-checked="255"/>
+```
+
+---
+
 ### My subject binding is stuck at the default value. Updates in C++ don't show up.
 
 **Cause:** The XML `<subjects>` block declared a subject with the same name as a C++-registered subject. XML component-scoped subjects shadow global subjects — your bindings resolve to the local XML subject (default-initialized), not the C++ one that's actually getting updates.
@@ -72,7 +101,7 @@ Reference: lesson **L046**.
 **Fix:** Register in one of two places:
 
 - **Global / reusable callbacks:** `register_xml_components()` in `src/xml_registration.cpp`.
-- **Panel / modal-specific callbacks:** In the class's `register_callbacks()` method or constructor. Example: `src/ui/ui_panel_macros.cpp#register_callbacks`.
+- **Panel / modal-specific callbacks:** In the class's `register_callbacks()` method or constructor. Example: `src/ui/controls/ui_panel_macros.cpp#register_callbacks`.
 
 ```cpp
 lv_xml_register_event_cb(nullptr, "on_my_button_clicked", on_my_button_clicked);
@@ -82,17 +111,24 @@ lv_xml_register_event_cb(nullptr, "on_my_button_clicked", on_my_button_clicked);
 
 ---
 
+### A hold also fires the tap: the hold opens its action, then the lift runs the tap behind it.
+
+**Cause:** The hold handler acted but left the press running. LVGL sends `clicked` on every release, including the one that ends a long press, so the tap fires behind the hold. The same happens across elements when the hold sits on a child and the tap on an ancestor its events bubble to, which every home-panel widget does.
+
+**Fix:** Keep the tap on `clicked`, and have the hold handler call `helix::ui::end_press(e)` when it acts. The release then sends `press_lost` instead of `clicked`. A hold the handler declines must not call it, so a slow tap still works. Do not move the tap to `short_clicked` (a slow tap then does nothing), and do not swallow it with a flag. The rule and its exceptions: `docs/devel/LVGL9_XML_GUIDE.md` § "Tap and hold".
+
+**Check:** `scripts/check_hold_ends_press.py` fails a `long_pressed` handler that neither calls `end_press()` nor carries `HOLD_DECLINES_OK: <reason>`.
+
+---
+
 ### My icon renders as tofu (□) or as a blank placeholder.
 
 **Cause:** You added a codepoint to `include/ui_icon_codepoints.h` but didn't regenerate the icon fonts.
 
-**Fix:** Three steps, all required:
-
-1. Add the icon name + codepoint to `include/ui_icon_codepoints.h`.
-2. Add the icon to `scripts/regen_mdi_fonts.sh` (one line in the codepoints list).
-3. Run `make regen-fonts`, then rebuild.
-
-Skipping step 2 is the most common mistake — the codepoint is defined but the font file doesn't contain the glyph.
+**Fix:** Run `make regen-fonts`, then rebuild. The fonts' glyph list is computed from
+`include/ui_icon_codepoints.h` and the `ICON_*` macros in `include/ui_fonts.h`
+(`scripts/mdi_icon_codepoints.py`), so adding the entry there is the only edit; the
+regeneration is the step that gets skipped.
 
 Reference: lesson **L009**.
 
@@ -130,6 +166,14 @@ Full mechanism and the one-line `dots` alternative: `LVGL9_XML_GUIDE.md`, "Text 
 
 ---
 
+### My `long_mode="dots"` label wraps onto two lines, or runs off the edge with no ellipsis.
+
+**Cause:** LVGL ellipsizes only when the wrapped text is taller than the label. A bare `<lv_label>` at content height grows to fit and wraps instead. A label with no width bound (no `width`, or `width="content"` without `style_max_width`) never wraps at all, so it runs past its parent and is clipped.
+
+**Fix:** Use a `text_*` widget (or `ui_button`), which holds a dotted content-height label to one line of its font, and give it a width bound: `width="100%"`, or `width="1" flex_grow="1"` in a row. In C++, call `lv_label_set_max_lines(label, 1)` with `LV_LABEL_LONG_MODE_DOTS`. An explicit px/% `height` or `style_max_height` opts out, for a deliberately multi-line dotted label. Text that should wrap must not use `dots`. Details: `LVGL9_XML_GUIDE.md`, "One-line labels: `long_mode="dots"`".
+
+---
+
 ### Chevron scroll buttons are drawn on top of my widget's content.
 
 **Cause:** A container in your XML is scrollable when you did not intend it to be, so `PageScrollAutoInject` treated it as a scroll region and attached the page-scroll gutter over it. In XML an `<lv_obj>` keeps LVGL's `LV_OBJ_FLAG_SCROLLABLE` default, which is **on**, unless you write `scrollable="false"`. Our theme overrides width, height, border, background, and padding on `lv_obj` - it does **not** override scrollable, so "our theme makes `lv_obj` a pure layout container" is only true of appearance.
@@ -146,7 +190,7 @@ Full mechanism and the one-line `dots` alternative: `LVGL9_XML_GUIDE.md`, "Text 
 
 That is exactly what happened in `ui_xml/components/panel_widget_print_status.xml` - `print_card_idle` and `print_card_idle_compact` were the only two containers in the file missing the attribute (the other nine had it), and the chevrons landed on top of the thumbnail on an 800x480 panel.
 
-Page scroll is a *page-level* affordance, so home panel widget tiles are now excluded outright: the auto-inject walk stops at any tile (`src/ui/page_scroll_auto_inject.cpp#walk_and_attach`, flag set in `src/ui/panel_widget_manager.cpp#populate_widgets`). A tile is sized by the home grid and scrolled by dragging it, and the gutter is 172px tall at the medium tier - most of a tile at 800x480. If you are seeing chevrons *inside* a home widget, that is a bug in the walk, not something to work around in XML. Full picture: `PAGE_SCROLL_BUTTONS.md`.
+Page scroll is a *page-level* affordance, so home panel widget tiles are now excluded outright: the auto-inject walk stops at any tile (`src/ui/home/page_scroll_auto_inject.cpp#walk_and_attach`, flag set in `src/ui/home/panel_widget_manager.cpp#populate_widgets`). A tile is sized by the home grid and scrolled by dragging it, and the gutter is 172px tall at the medium tier - most of a tile at 800x480. If you are seeing chevrons *inside* a home widget, that is a bug in the walk, not something to work around in XML. Full picture: `PAGE_SCROLL_BUTTONS.md`.
 
 **Why silent?** Nothing is wrong from LVGL's point of view. The container is scrollable, the gutter is doing its job, and neither logs anything. You only find out by looking at the screen.
 
@@ -248,11 +292,34 @@ Reference: lesson **L008**.
 
 ### My `#token` resolves to nothing / the widget comes out 0px.
 
-**Cause:** The `_small`/`_medium`/`_large` declarations sit in a `ui_xml/` subdirectory — `ui_xml/components/`, `ui_xml/portrait/`, `ui_xml/micro/`. Token discovery is top-level-only: `theme_manager_find_xml_files()` skips directory entries, so only `ui_xml/*.xml` is ever scanned for `<px>` and `<string>` tokens. A suffixed token declared below the top level is never registered, and the `#reference` to it silently resolves to nothing. Neither side warns.
+**Cause:** The `_small`/`_medium`/`_large` declarations sit in a `ui_xml/` subdirectory such as `ui_xml/components/`. Token discovery is top-level-only: `theme_manager_find_xml_files()` skips directory entries, so only `ui_xml/*.xml` is ever scanned for `<px>` and `<string>` tokens. A suffixed token declared below the top level is never registered, and the `#reference` to it silently resolves to nothing. Neither side warns.
 
-**Fix:** Move the declarations to `ui_xml/globals.xml` (or another top-level token file) and keep the `#reference` where it was — referencing a global token from a variant file is exactly what variants are for. Recursing into subdirectories is not the fix: discovery is alphabetical last-wins, so a portrait-only `nav_width_small` would shadow the base token globally instead of only while the portrait variant is active.
+**Fix:** Move the declarations to `ui_xml/globals.xml` (or another top-level token file) and keep the `#reference` where it was. Recursing into subdirectories is not the fix: discovery is alphabetical last-wins, so a component's `nav_width_small` would shadow the top-level token globally.
 
 Gate: `scripts/check_responsive_token_scope.py` (prestonbrown/helixscreen#1211).
+
+---
+
+### An attribute like `y="-#space_md"` does nothing.
+
+**Cause:** The const resolver substitutes only values that start with `#`, so there is no way to negate a token in place. `resolve_consts` (`lib/helix-xml/src/xml/lv_xml.c`) drops a `-#` value with a warning (`` `-#space_md` ... negates a const, which is not supported ``) and the widget keeps its default; a style property takes the same path in `lv_xml_style.c`. `make lint-xml` fails on it.
+
+**Fix:** Give the token the negative value and reference it bare. `ui_xml/globals.xml` carries negated spacing ladders (`space_md_neg`, `space_xxs_neg`, `space_2xl_neg`), so an inward offset reads `y="#space_md_neg"`. Add a ladder there when a tier you need has none:
+
+```xml
+<px name="space_md_neg_large" value="-12"/>
+```
+
+### With Glass Effects on, my panel stays flat, or my color chip gets shaded.
+
+Glass picks a widget's look from the shared theme style it carries: a `ui_card` or dialog is
+lit as a surface, a solid `ui_button` is raised. A container that paints its own background
+(`style_bg_color="#card_bg"` on a plain `lv_obj`) carries neither, so it stays flat. The
+opposite case is a widget whose color *means* something, such as a filament or LED color:
+glass would shade it like any button. Mark both from the owning C++ with
+`helix::ui::glass_mark(obj, GlassFamily::Surface)` or `glass_mark(obj, GlassFamily::None)`.
+Swatches drawn through `ui_swatch.h` are already exempt. To check a screen, run with
+`HELIX_GLASS=1` (forces the hardware check to pass) and turn the setting on. `THEME_SYSTEM.md` § "Glass appearance" has the rules.
 
 ---
 
@@ -267,7 +334,7 @@ Gate: `scripts/check_responsive_token_scope.py` (prestonbrown/helixscreen#1211).
 - **Product names:** HelixScreen, Klipper, Moonraker, Spoolman, Mainsail, Fluidd, OrcaSlicer.
 - **URLs / domains:** `https://helixscreen.org`, `github.com/prestonbrown/helixscreen`.
 - **Technical abbreviations as standalone labels:** AMS, QGL, ADXL, PID, IFS, CFS.
-- **Material codes:** PLA, PETG, ABS, TPU, PA. (Also: no `translation_tag` on these in XML.)
+- **Material codes:** PLA, PETG, ABS, TPU, PA. (In XML a literal is looked up anyway and renders as itself when the catalog has no key for it.)
 - **Universal terms:** OK, WiFi.
 
 Add a comment when you skip translation: `// i18n: do not translate (product name)`.
@@ -282,7 +349,7 @@ Reference: lesson **L070**.
 
 **Cause:** Translation artifacts weren't regenerated or weren't committed.
 
-**Fix:** After editing YAML translation files, rebuild — the build regenerates `ui_xml/translations/translations.xml`. It is **tracked in git** (not gitignored), so you must `git add` it explicitly before committing. (The legacy `src/generated/lv_i18n_translations.{c,h}` files are no longer generated by default — only under `--emit-lv-i18n`; see TRANSLATION_SYSTEM.md.)
+**Fix:** After editing YAML translation files, rebuild — the build regenerates `ui_xml/translations/translations.xml`. It is **tracked in git** (not gitignored), so you must `git add` it explicitly before committing.
 
 Reference: lesson **L064**.
 
@@ -292,7 +359,7 @@ Reference: lesson **L064**.
 
 ### The app crashes on reconnect, or on panel rebuild, in an observer callback.
 
-**Cause:** You're observing a **dynamic** subject (per-fan, per-sensor, per-extruder) and its `SubjectLifetime` token never reached the `observe_*` factory. The factory's `lifetime` parameter defaults to `{}`, so fetching a token and forgetting to pass it compiles silently — and then the guard has no way to learn the subject was freed, so `reset()` calls `lv_observer_remove()` on freed memory.
+**Cause:** You're observing a **dynamic** subject (per-fan, per-sensor, per-extruder) and its `SubjectLifetime` token never reached the `observe_*` factory. The factory's `lifetime` parameter is required, but nothing stops you passing `{}` (or `subject_never_freed()`) instead of the token you fetched, and then the guard has no way to learn the subject was freed, so `reset()` calls `lv_observer_delete()` on freed memory.
 
 **Fix:**
 
@@ -307,10 +374,10 @@ ObserverGuard   temp_observer_;
 
 // Rebind
 auto* s = tsm.get_temp_subject(name, temp_lifetime_);
-temp_observer_ = observe_int_sync<Panel>(s, this, handler, temp_lifetime_);  // <- token, not omitted
+temp_observer_ = observe<int>(s, this, handler, temp_lifetime_);  // <- token, not omitted
 ```
 
-Reference: lessons **L077**, **L084**, `include/ui_observer_guard.h`, and `docs/devel/THREADING.md` § 5 (which explains why the older "local lifetime = UAF" phrasing was wrong).
+Reference: lessons **L077**, **L084**, `include/core/observer_guard.h`, and `docs/devel/THREADING.md` § 5 (which explains why the older "local lifetime = UAF" phrasing was wrong).
 
 ---
 
@@ -336,7 +403,7 @@ auto tok = lifetime_.token();
 api->fetch([this, tok]() {
     if (tok.expired()) return;
     tok.defer([this]() { update_ui(); });   // Safe
-    // NOT: lifetime_.defer([this]() {...}); // TOCTOU race from BG thread
+    // NOT: lifetime_.defer([this]() {...}); // TOCTOU race from kBg thread
 });
 ```
 
@@ -378,14 +445,14 @@ Run through this before opening a PR:
 
 - [ ] **XML-only change?** Confirm hot reload or plain relaunch shows your changes. No rebuild needed.
 - [ ] **Added an icon?** Ran `make regen-fonts` and rebuilt.
-- [ ] **Added a new XML component?** Registered in `src/xml_registration.cpp`.
+- [ ] **Added a new XML component?** File is `ui_xml/<name>.xml` or `ui_xml/components/<name>.xml`, named for the component.
 - [ ] **Added an event callback?** Registered with `lv_xml_register_event_cb()`.
 - [ ] **Any hardcoded colors or pixel values?** Swap for design tokens.
-- [ ] **Any new user-visible strings?** Wrapped for translation — `lv_tr()` in C++, or `translation_tag` in XML (the path most first contributions use) — *except* product names, URLs, material codes.
+- [ ] **Any new user-visible strings?** Wrapped for translation — `lv_tr()` in C++, or a literal `text=` in XML, which is its own translation key (the path most first contributions use) — *except* product names, URLs, material codes.
 - [ ] **Modified translation YAML?** Rebuild, then `git add` the regenerated `ui_xml/translations/translations.xml`.
-- [ ] **Added an observer on a dynamic subject?** The `SubjectLifetime` you fetched is passed to the `observe_*` factory, not left at its `{}` default.
+- [ ] **Added an observer on a dynamic subject?** The `SubjectLifetime` you fetched is passed to the `observe<V>` factory, not swapped for `{}` or `subject_never_freed()`.
 - [ ] **Tested at multiple sizes?** At minimum: `480x320`, `800x480`, `1024x600`. See `docs/devel/UI_CONTRIBUTOR_GUIDE.md` § Screen Breakpoints.
-- [ ] **`make test-run` passes.**
+- [ ] **`make full-test-run` passes.**
 
 ---
 

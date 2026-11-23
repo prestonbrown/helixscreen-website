@@ -5,108 +5,147 @@ sidebar:
 ---
 
 
-The Safety & Notifications category covers emergency controls and print alert preferences.
+**Settings > Safety & Alerts** decides how careful HelixScreen is and how loudly it tells you things. Use it to add a confirmation to the emergency stop or to macros, to set a safety net for cancels that hang, to control camera failure detection, to hold slicer prints that don't fit the printer, and to choose how finished prints and other messages are announced.
+
+Rows for hardware your printer doesn't have are hidden, so your list may be shorter than the one pictured.
+
+![Safety & Alerts settings, top of the page](../../../../assets/images/docs/settings-safety.png)
 
 ---
 
 ## E-Stop Confirmation
 
-| State | Behavior |
-|-------|----------|
-| **Off** (default) | Tapping E-Stop fires immediately — fastest emergency response |
-| **On** | Shows a confirmation dialog requiring a tap-and-hold before triggering |
+| Setting | What happens |
+|---------|--------------|
+| **On** (default) | E-Stop asks you to confirm first |
+| **Off** | Tapping E-Stop stops the printer immediately |
 
-Enable this if you find yourself accidentally hitting the E-Stop button. Disable it if you need the fastest possible emergency response.
+The confirmation guards against stopping a print by accident. Turn it off if you want the fastest possible emergency stop.
 
 ---
 
 ## Cancel Escalation
 
-When a print cancel is sent, some printers take a long time to finish their cancel routine (parking tools, cooling down, running CANCEL_PRINT macros). Cancel Escalation adds a safety net: if the cancel doesn't complete within a timeout, HelixScreen automatically escalates to an emergency stop (M112).
+Some printers take a long time to finish canceling a print: parking tools, cooling down, running a long cancel macro. Cancel Escalation is a safety net. If a cancel hasn't finished after a set time, HelixScreen sends an emergency stop (`M112`).
 
-| Setting | Options |
-|---------|---------|
-| **Cancel Escalation** | On/Off toggle. **Off by default.** |
-| **Escalation Timeout** | 15, 30, 60, or 120 seconds. Only shown when escalation is enabled. Default: 30 seconds. |
+**Off** by default.
 
-**When to leave this off:**
-- Toolchangers that need to park tools during cancel
-- Printers with long CANCEL_PRINT macros
-- Any printer where the cancel routine is expected to take more than a few seconds
+**Leave it off** on tool changers that park tools when canceling, on printers with long cancel macros, and on any printer whose cancel is expected to take more than a few seconds.
 
-**When to turn this on:**
-- Simple printers where cancel should complete quickly
-- If you've experienced "stuck" cancels where the printer never returns to idle
+**Turn it on** on simple printers where a cancel should be quick, or if you've had cancels that got stuck and never returned to idle.
+
+### Escalation Timeout
+
+> Only shown while Cancel Escalation is on.
+
+How long to wait before the emergency stop: **15**, **30** (default), **60** or **120 seconds**.
 
 ---
 
 ## Confirm before running macros
 
-| State | Behavior |
-|-------|----------|
-| **Off** (default) | Tapping a macro button runs it immediately |
-| **On** | Shows a confirmation dialog before running any macro |
+| Setting | What happens |
+|---------|--------------|
+| **On** (default) | HelixScreen asks before running a macro |
+| **Off** | Tapping a macro button runs it straight away |
 
-Enable this if you have macros that move the toolhead, heat the printer, or perform other actions you don't want triggered by an accidental tap.
-
----
-
-## Allow cold load/unload
-
-| State | Behavior |
-|-------|----------|
-| **Off** (default) | Filament load/unload is blocked when the nozzle is below the minimum extrude temperature |
-| **On** | Allows load/unload to run even when the nozzle is cold |
-
-By default, HelixScreen won't run a filament load or unload while the nozzle is too cold to extrude, matching Klipper's cold-extrude safety check. Turn this on if your load/unload macros heat the nozzle themselves before extruding, so the operation isn't blocked before your macro gets a chance to warm up.
+Keep it on if you have macros that move the toolhead, heat the printer or do anything else you wouldn't want set off by a stray tap. Turn it off if you run macros often and trust your fingers. Macros that take parameters always open a form first, whatever this says.
 
 ---
 
-## Cool nozzle after filament ops
+## Spaghetti Detection
 
-| State | Behavior |
-|-------|----------|
-| **On** (default) | The extruder heater is turned off a couple of minutes after a load or unload finishes |
-| **Off** | The nozzle stays at whatever temperature the operation left it |
+> Only shown on printers with camera failure detection: Creality K2, K2 Plus and K2 Pro on stock firmware, and the Snapmaker U1 with its own defect detection.
 
-A filament change heats the nozzle to material temperature. Left alone, it would sit there indefinitely — burning power and slowly cooking the filament in the melt zone. So HelixScreen turns the heater off once you're done. The delay (two minutes by default) is there so you can run several loads and unloads back to back without the nozzle cooling between them; each new operation restarts the clock. Nothing happens while a print is running — an active job manages its own heat.
+While a print runs, the printer's camera watches for "spaghetti": a print that has come loose or is piling up as a tangle of plastic.
 
-**Turn this off if your filament system already does it.** [AFC](/guide/filament/) has its own post-operation cooldown, and other multi-material firmware is adding the same. Two independent timers driving one heater is confusing at best. Leave whichever one you prefer in charge, and switch the other off.
+| Setting | What happens |
+|---------|--------------|
+| **On** (default) | The camera is checked for failures during every print |
+| **Off** | Nothing is watched and no detection alerts appear |
 
-The setting is per printer, so an AFC machine can opt out while your other printers keep the built-in behavior. To change the two-minute delay, see [`cooldown_delay_seconds`](../../CONFIGURATION.md#cooldown_delay_seconds).
+**Where the setting starts.** HelixScreen copies the printer's own choice once, so detection doesn't switch back on if you had turned it off before:
+
+- **Creality K2 family:** the first time HelixScreen runs, it copies the printer's own AI detection switch and its pause choice.
+- **Snapmaker U1:** the first time HelixScreen connects, it reads the printer's own detection switch and takes that value.
+
+After that, the switches in this page are the ones that count.
+
+**On a Snapmaker U1, the switch controls the printer itself.** The U1 detects spaghetti in its own firmware and pauses the print on its own. Turning Spaghetti Detection off here turns the printer's detection off, so the U1 stops pausing prints for spaghetti. Turning it on turns the printer's detection back on. HelixScreen also sets the printer to match this switch every time it connects, so a change made on the printer's own screen is undone at the next connection. Only the spaghetti check follows this switch; the [Bed Clear Check](#bed-clear-check) below has its own.
+
+### Pause on Detection
+
+| Setting | What happens |
+|---------|--------------|
+| **On** (default) | A detected failure pauses the print and opens a dialog where you can resume, cancel, or turn detection off |
+| **Off** | A detected failure only shows a warning. The print keeps going |
+
+Grayed out while Spaghetti Detection is off. Hidden on the Snapmaker U1, whose firmware always pauses the print on its own and whose detection dialog always opens.
+
+See [Print Monitoring](/guide/print-monitoring/#print-failure-detection) for what the detection dialog offers.
+
+---
+
+## Bed Clear Check
+
+> Only shown on the Snapmaker U1.
+
+Before each print, the U1's camera checks that the bed is empty. The row's description reads "Camera checks the bed is empty before each print".
+
+| Setting | What happens |
+|---------|--------------|
+| **On** | The printer looks over the bed before each print and stops if it sees something on it |
+| **Off** | The printer starts without the check |
+
+The switch shows and sets the printer's own setting. It is grayed out while the printer's detection module is switched off as a whole, because the check cannot run then. If the printer refuses the change, the switch goes back to where it was and a message says "The printer did not change its bed check". See [Print Monitoring](/guide/print-monitoring/#bed-clear-check-snapmaker-u1) for the dialog a failed check opens.
+
+---
+
+## Hold slicer prints that do not fit
+
+When your slicer uploads a file and asks the printer to print it, the printer starts it without HelixScreen ever seeing it. This switch lets the [HelixPrint plugin](/guide/helixprint-plugin/) on your printer check the file first. If the file would move past the printer's travel, heat the nozzle or bed past their limits, or use a tool the printer doesn't have, the file is still uploaded but the print isn't started. Start it from the screen once you have re-sliced it, or ignore it.
+
+| Setting | What happens |
+|---------|--------------|
+| **On** | A slicer's upload-and-print waits for the check, and a file that doesn't fit stays in the file list unstarted |
+| **Off** (default) | The slicer's print starts as soon as the upload finishes |
+
+Only an upload that asks for the print in the same request is held: a slicer set up with an OctoPrint-style host upload and its **Upload and Print** (or **Print**) button, such as PrusaSlicer, SuperSlicer and OrcaSlicer's host upload. A print started separately after the upload (OrcaSlicer's own Moonraker connection, Mainsail, Fluidd, or the next job in the job queue) is not held, because the plugin never sees a request to print it.
+
+Without the plugin the row is grayed out with **Requires the HelixPrint plugin** and an **Install** button. Prints you start from the screen are checked either way; see [Does the file fit this printer?](/guide/printing/#does-the-file-fit-this-printer). The [HelixPrint plugin page](/guide/helixprint-plugin/) lists the rest of the details, such as the 45-second wait and what happens while the printer is already printing.
 
 ---
 
 ## Print Completion Alert
 
-Controls how HelixScreen notifies you when a print finishes, is cancelled, or fails — when you're not already on the print status screen.
+How HelixScreen tells you a print has finished, been canceled or failed, when you're not already looking at the print status screen.
 
-| Mode | Behavior |
-|------|----------|
-| **Off** | No visual notification (sound still plays if enabled) |
-| **Notification** | Brief toast message at the top of the screen |
-| **Alert** (default) | Full-screen modal showing print stats — duration, layers, filament used — with confetti for successful prints |
+| Setting | What you get |
+|---------|--------------|
+| **Off** | Nothing on screen. The sound still plays if sounds are on |
+| **Notification** | A short message at the top of the screen |
+| **Alert** (default) | A full-screen summary of the print (time, layers, filament used), with confetti when it succeeded |
 
-To change: **Settings > Safety & Notifications > Print Completion Alert** dropdown.
+A failed print always gets the full alert, whatever you choose and whatever screen is open, because errors need your attention. If the print status screen is already open when a print finishes or is canceled, there's no extra alert: that screen shows the result.
 
-> **Note:** Print errors always show the full alert modal regardless of this setting, since errors need immediate visibility. If you're already on the print status screen when a print ends, no notification is shown (the panel itself shows the result).
+With **Notification** or **Alert**, the end of a print also wakes a dimmed or sleeping screen, including when the print status screen is the one open, so the screen never goes on showing a finished print as running. A failed print wakes it with every choice. With **Off**, a finished or canceled print leaves the screen as it is.
 
-Sound always plays for terminal print states (complete, cancelled, error) regardless of alert mode, as long as the master Sounds toggle is on.
+The end-of-print sound plays for every finished, canceled or failed print as long as the master Sounds switch is on.
 
 ---
 
 ## On-screen Alerts
 
-Toasts are the brief banners that slide in at the top of the screen — "Filament loaded", "Saved", "Update available". If the informational ones feel chatty, **Settings > Safety & Notifications > On-screen Alerts** sets the lowest level that is allowed to interrupt you:
+Toasts are the short messages that slide in at the top of the screen, like "Filament loaded", "Saved" or "Update available". If the informational ones feel chatty, choose the least important kind that's still allowed to interrupt you:
 
-| Level | What still toasts |
-|-------|-------------------|
-| **All** (default) | Everything — info, success, warnings and errors |
+| Setting | What still shows |
+|---------|------------------|
+| **All** (default) | Everything: info, success, warnings and errors |
 | **Warnings & errors** | Info and success messages are held back |
-| **Errors only** | Only error toasts appear |
+| **Errors only** | Only errors |
 
-Held-back notifications are not lost — they still land in the notification history (open it from the Notifications widget on the Home panel). The filter never silences a full-screen error dialog, and it never silences the [Print Completion Alert](#print-completion-alert) above; both bypass it on purpose.
+Held-back messages aren't lost. They still go into the notification history, which you open from the Notifications widget on the Home screen. This setting never hides a full-screen error, and never hides the [Print Completion Alert](#print-completion-alert).
 
 ---
 
-[Back to Settings](/guide/settings/) | [Prev: Hardware & Devices](/guide/settings/hardware/) | [Next: System](/guide/settings/system/)
+[Back to Settings](/guide/settings/) | [Prev: Devices](/guide/settings/devices/) | [Next: Connection](/guide/settings/connection/)

@@ -12,7 +12,7 @@ const MANIFEST_URL = '/flash/esp32/ktouch/manifest.json';
 const manifestFile = join(process.cwd(), 'public', MANIFEST_URL);
 const firmware = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null;
 
-// The ESP32 install guide first ships in the 1.1 docs, wherever 1.1 is served.
+// The ESP32 install guide exists from 1.1 on, and 1.0 has none, so link the 1.1 docs wherever they are served.
 const GUIDE = `${docsPrefix('1.1')}/guide/install-esp32/`;
 const link = 'text-secondary underline underline-offset-2';
 ---
@@ -29,7 +29,7 @@ const link = 'text-secondary underline underline-offset-2';
       Nothing is installed on the printer.
     </p>
     <p class="ui text-sm text-ink-muted mb-10 max-w-[62ch]">
-      The ESP32 build is an alpha: expect rough edges and missing features. It replaces the
+      The ESP32 build is a beta: expect rough edges and missing features. It replaces the
       K-Touch's stock firmware.
     </p>
 
@@ -73,8 +73,8 @@ const link = 'text-secondary underline underline-offset-2';
       </div>
     ) : (
       <p class="ui text-sm text-ink mb-10 max-w-[62ch]">
-        No ESP32 build is published yet. It arrives with the 1.1 releases; until then, see the
-        <a href={GUIDE} class={link}>install guide</a>.
+        No ESP32 build is published yet. See the{' '}
+        <a href={GUIDE} class={link}>install guide</a> for where to find one.
       </p>
     )}
 

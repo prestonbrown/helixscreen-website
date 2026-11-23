@@ -13,10 +13,12 @@ const repo = Object.values(
 
 const [major, minor] = whatsnew.version.split('.').map(Number);
 
-// A website-only deploy syncs whatever helixscreen main is at, which trails the
-// release tag. Gating the milestone on the built version keeps the page from
-// announcing 1.0 while the badge beside it still reads 0.99.
-const isLaunch = major === 1 && minor === 0;
+// The announcement shows only while the built docs are the line it announces,
+// so a deploy that trails the release tag never announces a version the badge
+// beside it does not yet read.
+const ANNOUNCED_SERIES = '1.1';
+const isLaunch = `${major}.${minor}` === ANNOUNCED_SERIES;
+const RELEASE_URL = 'https://github.com/prestonbrown/helixscreen/releases/tag/v1.1.0';
 const series = Number.isFinite(major) && Number.isFinite(minor) ? `${major}.${minor}` : null;
 
 const stats = [
@@ -47,16 +49,24 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
       A modern Klipper touchscreen, built around filament and multi-material.
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
-      Seven AMS and MMU systems run natively, among them Happy Hare, AFC, ACE, CFS and
-      IFS, and every spool is tracked with or without Spoolman. It detects your printer
+      It runs {backends.count} filament systems natively, among them Happy Hare, AFC, ACE, CFS
+      and IFS, and tracks every spool with or without Spoolman. It detects your printer
       and lays out a home screen for your display, which you can then rearrange however
       you like. It replaces KlipperScreen or the factory screen in about 15 MB of RAM.
     </p>
 
     {isLaunch && (
       <p class="text-base leading-relaxed text-ink-muted max-w-[56ch] mb-8 border-l-2 border-l-warn pl-4">
-        <strong class="font-semibold text-ink">1.0</strong> is the first stable release.
-        Upgrading from 0.99 keeps your settings, layout and printer list.
+        <strong class="font-semibold text-ink">HelixScreen 1.1 is out.</strong>{' '}
+        The home screen is now a grid you arrange yourself, with layouts for ultrawide and
+        portrait panels. Filament handling is rebuilt around a new spool editor, calibration
+        moves to guided screens, and Lua plugins and a beta K-Touch firmware join the line-up.
+        Upgrading from 1.0 keeps your settings and converts your home layout.
+        <span class="block mt-2">
+          <a href="/whats-new/" class="text-secondary underline underline-offset-2">What's new</a>
+          <span class="mx-2" aria-hidden="true">·</span>
+          <a href={RELEASE_URL} class="text-secondary underline underline-offset-2">Release notes on GitHub</a>
+        </span>
       </p>
     )}
   </div>

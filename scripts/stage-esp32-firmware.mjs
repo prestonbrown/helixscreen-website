@@ -50,8 +50,8 @@ export function buildManifest(version, parts) {
 
 /**
  * The newest non-draft release, prereleases included, that carries the K-Touch
- * zip. `releases/latest` cannot answer this: it points at the 1.0.x line, which
- * ships no ESP32 build. Returns { tag, asset } or null.
+ * zip. `releases/latest` cannot answer this: it skips prereleases, and a release
+ * whose beta firmware build failed ships without the zip. Returns { tag, asset } or null.
  */
 export function pickRelease(releases) {
   for (const r of publishedNewestFirst(releases)) {

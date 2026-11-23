@@ -49,7 +49,7 @@ targets, cross-compilation): → [BUILD_SYSTEM.md](/dev/onboarding/build-system/
 | `--test` | Enable test mode (required for mocks) |
 | `--real-wifi` | Use real WiFi instead of mock |
 | `--real-ethernet` | Use real Ethernet instead of mock |
-| `--real-moonraker` | Connect to real printer |
+| `--real-moonraker` | Connect to real printer. Implies `--real-ams`. Without `--real-files`, database and Spoolman calls still reach the printer |
 | `--real-files` | Use real printer files |
 | `--real-ams` | Use a real AMS backend instead of mock |
 | `--real-sensors` | Use real sensor data instead of mock |
@@ -66,7 +66,7 @@ F=filament-runout simulation.
 | Flag | Effect |
 |------|--------|
 | `-w`, `--wizard` | Force the first-run configuration wizard |
-| `--wizard-step <step>` | Jump to a specific wizard step (0-12) for testing |
+| `--wizard-step <step>` | Jump to a specific wizard step (0-15) for testing |
 
 `--wizard` is **destructive to wizard-managed config** — it is meant to fully re-run setup, not just re-open it. On startup with `--wizard`, the app clears all wizard-managed state in `settings.json` so a stale or wrong install-time seed is recoverable:
 
@@ -189,20 +189,35 @@ cp config/settings.json.template config/settings.json  # First-time setup
 
 ## DPI & Hardware Profiles
 
-LVGL scales UI based on DPI. Default: 160 (reference, no scaling).
+`--dpi <n>` declares the **panel's physical DPI**. `DisplayMetrics` turns it into a UI
+scale factor that multiplies every px token, the grid cell, and the font ladder; LVGL's
+own DPI is then set to `LV_DPI_DEF * scale`, never to `n` directly. UI constants are
+authored against a 160 DPI reference.
+
+The scale is flat at exactly **1.0 up to 225 DPI**, which covers every shipping printer,
+so passing a printer's real DPI is a no-op. It only does something on phone-class panels:
 
 ```bash
-./build/bin/helix-screen --dpi 170  # 7" @ 1024x600 (BTT Pad 7)
-./build/bin/helix-screen --dpi 187  # 5" @ 800x480
-./build/bin/helix-screen --dpi 201  # 4.3" @ 720x480 (AD5M)
+./build/bin/helix-screen --test -s 1080x2400 --dpi 405   # ~1.578x — a 405 DPI handset
 ```
 
-| Hardware | Resolution | DPI |
-|----------|------------|-----|
-| Reference | — | 160 |
-| 7" LCD | 1024×600 | 170 |
-| 5" LCD | 800×480 | 187 |
-| AD5M | 720×480 | 201 |
+Measured true DPI of the test fleet (over `FBIOGET_VSCREENINFO`, corrected against the
+panels' real diagonals — **not** the values the kernel reports, which are wrong or absent
+on 6 of the 8):
+
+| Hardware | Resolution | True DPI | Scale |
+|----------|------------|----------|-------|
+| Reference (authoring) | — | 160 | 1.0 |
+| CC1 | 480×272 | 131 | 1.0 |
+| SonicPad | 1024×600 | 170 | 1.0 |
+| CB1 + BTT HDMI5 | 800×480 | 187 | 1.0 |
+| Raspberry Pi rig | 800×480 | 206 | 1.0 |
+| K1C, K2 Plus | 480×800 | 218 | 1.0 |
+| AD5M | 800×480 | 221 | 1.0 |
+| Phone (Android), 2x logical surface | 540×1200 logical | ~203 per logical pixel | 1.0 |
+
+Do not read a panel's DPI off the kernel to fill this in. See
+[THEME_SYSTEM.md § The high-DPI UI scale factor](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/THEME_SYSTEM.md#the-high-dpi-ui-scale-factor).
 
 ## Multi-Display (macOS)
 
@@ -264,7 +279,7 @@ make compile_commands  # Generates compile_commands.json (requires bear)
 |-------------|----------|----------|-------------|
 | Layout, styling, colors | `ui_xml/*.xml` | **No** | **Yes** — ON by default for native builds |
 | Logic, bindings, handlers | `src/*.cpp`, `include/*.h` | Yes (`make -j`) | No |
-| Theme colors | `config/themes/*.json` | No — just restart | No |
+| Theme colors | `assets/config/themes/defaults/*.json` | No — just restart | No |
 | Translations | `translations/*.yml` (e.g. `translations/en.yml`) | Yes (code generation step) | No |
 
 ### XML Hot Reload
@@ -311,11 +326,10 @@ Key points for UI contributors:
 
 | Path | Contents |
 |------|----------|
-| `ui_xml/` | All XML layouts (230+ files) |
+| `ui_xml/` | All top-level XML layouts |
 | `ui_xml/components/` | Reusable XML components |
-| `ui_xml/ultrawide/` | Ultrawide layout overrides |
 | `ui_xml/globals.xml` | Design tokens and global variables (shared, never override) |
-| `config/themes/` | Theme JSON files (color palettes) |
+| `assets/config/themes/defaults/` | Shipped theme JSON files (color palettes). `config/themes/` is the user layer and holds nothing in the repo |
 
 ---
 
@@ -387,20 +401,52 @@ void ui_panel_motion_init(lv_obj_t* parent);
 
 **Naming conventions:**
 - Functions/variables: `snake_case` (`ui_panel_home_init`, `temp_target`)
-- XML files: `snake_case` (`bed_temp_panel.xml`)
-- Constants: `UPPER_SNAKE_CASE` (`MAX_TEMP`) — including `constexpr`, file-scope
-  `static const`, and enum enumerators. **Not** Google's `kCamelCase`: the tree
-  drifted into it for a while and was swept back, so a `kFoo` you find in a diff
-  is a mistake to fix, not a precedent to follow. The exceptions are names that
-  mirror a third-party API verbatim (Apple's `kCWSecurityWPA2Personal`) — match
-  the foreign spelling there rather than inventing a local one.
+- XML files: `snake_case` (`history_dashboard_panel.xml`)
+- Constants: `kCamelCase` (`kMaxTemp`): `constexpr`, `const` at any scope, static
+  members. `UPPER_SNAKE_CASE` is reserved for preprocessor macros, because a macro
+  ignores scope and silently rewrites any constant spelled the same way. Every word
+  after the `k` is capitalised once, acronyms included (`kHttpRetryMs`, not
+  `kHTTPRetryMs`). `scripts/check_constant_naming.py` fails a new `UPPER_SNAKE`
+  declaration on added lines (`// CONST_NAME_OK: <reason>` opts one out), and
+  `scripts/rename_constants.py --apply --git-range main..HEAD` converts a branch's
+  own. Enumerators keep `UPPER_SNAKE_CASE` for now. Names that mirror a third-party
+  API verbatim (Apple's `kCWSecurityWPA2Personal`) match the foreign spelling.
 
 **Namespace organization:** all HelixScreen code lives under `helix::` (UI
 helpers in `helix::ui::`, sensor managers in `helix::sensors`):
 - No `using` declarations in headers — always fully-qualified names in `.h`
   files; `using namespace helix;` is acceptable in `.cpp` files only
+- Counted by `scripts/check_namespace_compliance.py`, whose new sites the namespace
+  design ratchet (`scripts/design_ratchets.py`) names at commit and at the gate. It
+  counts declarations outside `helix::`, not files, and
+  never counts `extern "C"`, file-local statics in `.cpp`, or forward declarations
+  of third-party types. A genuinely-global site takes `// NAMESPACE_OK: <reason>`.
+  The baseline may fall, never rise — see prestonbrown/helixscreen#1370
 - Enums are `enum class` within `helix::` (e.g., `helix::PanelId`, `helix::PrintState`)
 - JSON forward declarations come from `#include "json_fwd.h"`
+
+**Comments** (prestonbrown/helixscreen#1363): a comment earns its place when the code
+alone would leave a competent reader short of something they need. Keep:
+- the non-obvious *why*: ordering constraints, thread affinity, LVGL / Klipper /
+  Moonraker quirks, workarounds for upstream bugs
+- contracts the signature cannot show: ownership, nullability, units, lifetime,
+  which thread may call it
+- copyright/SPDX headers and tool directives (`clang-format off`, `NOLINT`,
+  `fallthrough`, the gates' `*_OK:` markers)
+
+Do not write:
+- Doxygen ceremony. Nothing builds documentation from it, so `@brief`, `@param`,
+  `@return` and `@file` are not used in new code. Write a plain `//` line when the
+  name does not already say it, and nothing when it does
+- prose that restates the signature, or a convention (decidegrees, ownership)
+  repeated on every function instead of stated once for the header or namespace
+- `// ===== Section =====` banners. Declarations and namespaces carry the structure
+- commented-out code. Git has it
+- history: what the code used to do and which bug changed it belong in the commit
+  message (CLAUDE.md § Code Standards, "Comment archaeology")
+
+Existing `@brief`/`@param` blocks are trimmed per subsystem when that code is next
+being reworked, not in a tree-wide sweep.
 
 **Critical patterns:**
 ```cpp
@@ -463,7 +509,7 @@ docs(readme): update build instructions
 ## Installer Scripts
 
 The installation system is modular POSIX shell (`scripts/lib/installer/`, 17
-modules) bundled into the one-line `scripts/install.sh` for BusyBox-compatible
+modules) bundled by `make installer` into the one-line `install.sh` for BusyBox-compatible
 `curl | sh` distribution. Module structure, BusyBox rules, bundle regeneration,
 and installer testing: → **[INSTALLER.md](/dev/process/installer/)**.
 

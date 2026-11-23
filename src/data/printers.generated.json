@@ -1,20 +1,24 @@
 {
-  "count": 93,
+  "count": 105,
   "manufacturers": [
     {
       "name": "Creality",
-      "count": 17
+      "count": 22
     },
     {
       "name": "Anycubic",
-      "count": 12
+      "count": 13
+    },
+    {
+      "name": "Qidi",
+      "count": 8
     },
     {
       "name": "Sovol",
       "count": 8
     },
     {
-      "name": "Qidi",
+      "name": "FlashForge",
       "count": 7
     },
     {
@@ -26,7 +30,7 @@
       "count": 5
     },
     {
-      "name": "FlashForge",
+      "name": "FLSUN",
       "count": 5
     },
     {
@@ -43,10 +47,6 @@
     },
     {
       "name": "Artillery",
-      "count": 3
-    },
-    {
-      "name": "FLSUN",
       "count": 3
     },
     {
@@ -95,6 +95,10 @@
     },
     {
       "name": "Venture",
+      "count": 1
+    },
+    {
+      "name": "VzBot",
       "count": 1
     }
   ],
@@ -179,6 +183,13 @@
     {
       "id": "anycubic_kobra_s1_max",
       "name": "Anycubic Kobra S1 Max",
+      "manufacturer": "Anycubic",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "anycubic_kobra_x",
+      "name": "Anycubic Kobra X",
       "manufacturer": "Anycubic",
       "aliases": [],
       "notes": null
@@ -317,6 +328,13 @@
       "notes": null
     },
     {
+      "id": "creality_k2",
+      "name": "Creality K2",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
       "id": "creality_k2_plus",
       "name": "Creality K2 Plus",
       "manufacturer": "Creality",
@@ -324,8 +342,36 @@
       "notes": null
     },
     {
+      "id": "creality_k2_plus_jacobean",
+      "name": "Creality K2 Plus (Jacobean firmware)",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k2_plus_k2improvements",
+      "name": "Creality K2 Plus (k2-improvements)",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
       "id": "creality_k2_pro",
       "name": "Creality K2 Pro",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k2_pro_jacobean",
+      "name": "Creality K2 Pro (Jacobean firmware)",
+      "manufacturer": "Creality",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "creality_k2_pro_k2improvements",
+      "name": "Creality K2 Pro (k2-improvements)",
       "manufacturer": "Creality",
       "aliases": [],
       "notes": null
@@ -410,6 +456,20 @@
       "notes": null
     },
     {
+      "id": "flashforge_creator_5",
+      "name": "FlashForge Creator 5",
+      "manufacturer": "FlashForge",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flashforge_creator_5_pro",
+      "name": "FlashForge Creator 5 Pro",
+      "manufacturer": "FlashForge",
+      "aliases": [],
+      "notes": null
+    },
+    {
       "id": "flsun_delta",
       "name": "FLSUN Delta",
       "manufacturer": "FLSUN",
@@ -417,8 +477,22 @@
       "notes": null
     },
     {
+      "id": "flsun_s1",
+      "name": "FLSUN S1 / S1 Pro",
+      "manufacturer": "FLSUN",
+      "aliases": [],
+      "notes": null
+    },
+    {
       "id": "flsun_sr",
       "name": "FLSUN Super Racer",
+      "manufacturer": "FLSUN",
+      "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "flsun_t1_pro",
+      "name": "FLSUN T1 Pro",
       "manufacturer": "FLSUN",
       "aliases": [],
       "notes": null
@@ -477,7 +551,7 @@
       "name": "Duender (MedusaHC)",
       "manufacturer": "Irbis3D",
       "aliases": [],
-      "notes": "Duender CoreXY (Irbis3D) fitted with the MedusaHC hotend changer. Two config shapes exist. The reference one is klipper-toolchanger plus MedusaHC's own pin_watch extra, both alongside [medusahc]; a single fork folds the dock sensing into [medusahc] + [medusahc_tool N] and ships neither pin_watch nor toolchanger. Both are scored here, the fork as compatibility rather than as a second mainline. Everything else (toolchanger/tool_count/corexy) describes any multi-tool CoreXY and would claim machines that are not this one. The bare-Duender hostname deliberately does NOT appear here, or the 'duender' entry could never outscore this one; a DuCR10 hostname is excluded instead, since the MedusaHC signals alone cannot tell the two frames apart."
+      "notes": "Duender CoreXY (Irbis3D) fitted with the MedusaHC hotend changer. MedusaHC's own pin_watch extra and its Python controller's [medusahc] are scored here, with or without klipper-toolchanger beside them. Everything else (toolchanger/tool_count/corexy) describes any multi-tool CoreXY and would claim machines that are not this one. The bare-Duender hostname deliberately does NOT appear here, or the 'duender' entry could never outscore this one; a DuCR10 hostname is excluded instead, since the MedusaHC signals alone cannot tell the two frames apart."
     },
     {
       "id": "kingroon_klp1",
@@ -534,6 +608,13 @@
       "manufacturer": "Qidi",
       "aliases": [],
       "notes": "Stock display is a TJC HMI on serial bus. Not supported without screen replacement (HDMI/DSI touchscreen required). Compatible with the QIDI Box filament changer (4-slot hub-style, chainable to 16)."
+    },
+    {
+      "id": "qidi_plus_5",
+      "name": "Qidi Plus 5",
+      "manufacturer": "Qidi",
+      "aliases": [],
+      "notes": "New-generation QIDI board (RK3308 host, STM32F407 main MCU) with a 480x800 Linux framebuffer display, so HelixScreen runs on-device. Same generation as the Q2 and Max 4. Compatible with the QIDI Box filament changer (4-slot hub-style, chainable to 16). The panel is a portrait 480x800 mounted sideways; HelixScreen's rotation is set by the preset."
     },
     {
       "id": "qidi_q1_pro",
@@ -631,7 +712,7 @@
       "name": "Sovol SV06 ACE",
       "manufacturer": "Sovol",
       "aliases": [],
-      "notes": null
+      "notes": "smart_effector is weighted as keystone hardware (90) because hostname-free ACE identification rests on it clearing the separator bar. Mainline Klipper also ships smart_effector for Duet3D probe boards, so a rare Duet3D rig reporting it with a 200-240mm bed and no hostname is an accepted collision - it is misidentified as an ACE rather than declined, because a lower weight would leave the load-cell stack below the separator bar and hostname-free ACEs would go ambiguous."
     },
     {
       "id": "sovol_sv06_plus",
@@ -645,7 +726,7 @@
       "name": "Sovol SV06 Plus ACE",
       "manufacturer": "Sovol",
       "aliases": [],
-      "notes": null
+      "notes": "smart_effector is weighted as keystone hardware (90) because hostname-free ACE identification rests on it clearing the separator bar. Mainline Klipper also ships smart_effector for Duet3D probe boards, so a rare Duet3D rig reporting it with a 280-320mm bed and no hostname is an accepted collision - it is misidentified as an ACE rather than declined, because a lower weight would leave the load-cell stack below the separator bar and hostname-free ACEs would go ambiguous."
     },
     {
       "id": "sovol_sv07",
@@ -710,6 +791,16 @@
       "name": "Voron Trident",
       "manufacturer": "Voron",
       "aliases": [],
+      "notes": null
+    },
+    {
+      "id": "vzbot",
+      "name": "VzBot",
+      "manufacturer": "VzBot",
+      "aliases": [
+        "VzBot 330",
+        "VzBot 235"
+      ],
       "notes": null
     },
     {

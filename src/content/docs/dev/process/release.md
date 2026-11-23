@@ -33,32 +33,63 @@ MAJOR.MINOR.PATCH[-PRERELEASE]
 | **MAJOR** | Breaking changes (config format, API, incompatible UI changes) |
 | **MINOR** | New features, backwards-compatible |
 | **PATCH** | Bug fixes, documentation, minor improvements |
-| **PRERELEASE** | **Do not use.** See below. |
+| **PRERELEASE** | Trunk builds heading for the next MINOR: `-beta.N` |
 
-> ### Never ship a prerelease suffix
+> ### A prerelease sorts below its release, and the whole scheme rests on that
 >
-> `helix::version::Version` **discards** the prerelease suffix when parsing
-> (`include/version.h`). `v1.0.0-rc.1`, `v1.0.0-beta` and `v1.0.0` all parse to
-> `1.0.0` and compare **equal**.
+> `helix::version::Version` implements Semantic Versioning 2.0.0 precedence
+> (`src/util/version.cpp`), so `1.1.0-beta.1 < 1.1.0-beta.2 < 1.1.0-rc.1 < 1.1.0`.
+> That ordering is what lets the trunk ship `1.1.0-beta.N` while `release/1.0`
+> still ships `1.0.x`: a beta outranks every 1.0 hotfix and is still superseded by
+> the real `1.1.0` when it publishes.
 >
-> So a user who installs `v1.0.0-rc.1` has an app that believes it is already on
-> `1.0.0`. When the real `1.0.0` publishes, the updater sees no newer version and
-> **never offers it**. Your testers are stranded on the release candidate.
+> The same question gets asked in three languages, so three implementations exist:
+> the app (`src/util/version.cpp`), CI's pre-upload channel guard
+> (`scripts/version-compare.sh`), and the Android versionCode
+> (`scripts/android-version-code.sh`). They share one set of cases in
+> `tests/fixtures/version_precedence.txt`, and adding a version there fails every
+> suite that disagrees with it. Change one comparator and you change all three.
 >
-> Use a plain monotonic version instead, and pick the audience with the branch's
-> `RELEASE_CHANNEL` file rather than with the tag string. That is exactly why
-> `RELEASE_CHANNEL` exists - read its header comment. A release candidate that
-> everyone should test is just the next `PATCH` on the line they are already on
-> (v0.99.114 was the 1.0 RC, shipped on the stable 0.99.x line).
+> `sort -V` is not one of them and must not be used: GNU version sort orders
+> `1.1.0` **before** `1.1.0-beta.1`, the opposite of semver.
+
+### Suffixes the tooling accepts
+
+`-alpha.N`, `-beta.N`, `-rc.N`, with N from 1 to 29. The Android versionCode packs
+the suffix into a 100-wide lane and errors on anything it does not recognise rather
+than guess an ordinal, so a novel suffix fails the release build instead of
+shipping an unpublishable APK. Build metadata (`+sha`) does not affect precedence
+and is not used.
 
 ### Examples
 
 - `v1.0.0` - First stable release
-- `v1.1.0` - New features added
-- `v1.1.1` - Bug fix
+- `v1.1.0-beta.1` - First beta of the 1.1 line, from `main`
+- `v1.1.0-rc.1` - Release candidate, same line, higher precedence than any beta
+- `v1.1.0` - The 1.1 stable release, from `release/1.1`
+- `v1.1.1` - Bug fix on the 1.1 line
 - `v2.0.0` - Breaking changes
-- `v0.99.114` - a release candidate: a plain PATCH bump, audience chosen by
-  `RELEASE_CHANNEL`, **not** by a `-rc` suffix
+
+### The trunk's beta line
+
+Each minor's betas start on `main` and finish on that minor's own branch. The 1.1
+betas began on the trunk; from `1.1.0-beta.14` on, `release/1.1` carries them, and
+the trunk has moved on to 1.2:
+
+| Branch | Versions | Channel |
+|--------|----------|---------|
+| `release/1.0` | `1.0.0`, `1.0.1`, `1.0.2` ... | stable |
+| `release/1.1` | `1.1.0-beta.N`, `1.1.0-rc.N`, then `1.1.0`, `1.1.1` ... | beta + dev, then stable |
+| `main` | `1.2.0-beta.1` ... (untagged until `1.1.0` ships) | dev, then beta + dev |
+
+The trunk names the release it is heading for, so a beta install says which minor
+it belongs to and `1.1.0` stays free for the stable cut. A beta at `1.1.0-beta.7`
+is offered `1.1.0` the moment it publishes, and a `1.0.2` hotfix on the stable line
+never looks like an upgrade to it.
+
+While a release branch is still shipping betas, the trunk says `dev` and is not
+tagged: the downgrade guard would refuse the next `1.1.0-beta.N` on dev once dev
+served a `1.2.0-beta.N`. See `BRANCHING.md`.
 
 ---
 
@@ -75,6 +106,25 @@ git tag v1.2.0
 git push origin v1.2.0
 ```
 
+### Dry run
+
+Only a `v*` tag push publishes. `workflow_dispatch` is always a dry run of the whole pipeline, on any ref:
+
+```bash
+gh workflow run release.yml --ref <branch> -f platforms=x86   # platforms empty = full matrix
+```
+
+A dry run creates no GitHub release and sends nothing to Play, Discord or the website. Its R2 uploads go under `dry-run/<run_id>/` with version `0.0.0-dryrun.<run_id>`, and the would-be release assets go to the `dry-run-release-assets` workflow artifact. The `dry-run-verify` job then runs `scripts/verify-dry-run-release.sh` against both and deletes the prefix. `tests/shell/test_release_dry_run.bats` fails any publishing step that is not gated on `RELEASE_MODE == 'publish'` and does not write through `R2_PREFIX`.
+
+### Signed channel manifests
+
+Every channel's `manifest.json` is published with a prehashed minisign signature beside it, `<channel>/manifest.json.minisig` in R2 (#1834). The easy installer and HelixScreen's own update checker check it against the release key compiled into them before they trust any hash in the manifest, and refuse a missing or failing signature. The `upload-r2` job's "Generate and sign channel manifests" step runs `scripts/sign-release-manifest.sh` before anything uploads; the upload puts each signature up before its manifest and checks that R2 serves it unchanged.
+
+- **A release** waits for a reviewer to approve the `release-signing` environment, which holds the `HELIX_RELEASE_MINISIGN_KEY` secret (the text of the minisign `.key` file; its password in `HELIX_RELEASE_MINISIGN_PASSWORD`). It verifies the result against `.github/release-minisign.pub`, the same public key the clients compile in. A missing secret, a placeholder `.pub` or a secret that is not that key's pair fails the release before any manifest goes live.
+- **A dry run** uses no environment and never reads the secret. It signs with a key generated in the job, so the whole signing path runs on any ref, and nothing a dry run leaves in R2 verifies against the release key. `dry-run-verify` checks that each channel's signature reached R2.
+
+Setup (the environment, the exact `gh secret set` commands), what each client checks, the ESP32 and `install.sh` status and the rollout order: [RELEASE_SIGNING.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/RELEASE_SIGNING.md).
+
 ### Pipeline Stages
 
 ```text
@@ -88,13 +138,14 @@ git push origin v1.2.0
 └──────────────────────────────┬──────────────────────────────┘
                                │
                                ▼
-  validate-shell gate → build-platforms matrix (9):
-    pi · pi32 · ad5m · cc1 · k1 · ad5x · k2 · x86 · snapmaker-u1
-  plus build-android → publish-android
-    `release` needs build-android too, not just build-platforms — otherwise it
+  validate-shell gate → plan → build-platforms matrix (9):
+    pi · pi32 · ad5m · cc1 · mips (K1 series + AD5X) · k2 · x86 · x86-desktop · snapmaker-u1
+  plus build-android → publish-android, and build-esp32 (K-Touch firmware, via
+    esp32-build.yml; skipped for v1.0.* tags and release/1.0)
+    `release` needs build-android too, not just build-platforms, otherwise it
     could publish before Android finished and ship with no APKs, silently.
     build-android FAILS the whole release if ANDROID_KEYSTORE_BASE64 is unset;
-    it no longer falls back to the debug keystore. See ANDROID_PLAY_STORE.md.
+    there is no debug-keystore fallback. See ANDROID_PLAY_STORE.md.
 
   Each platform job: Docker cross-toolchain → target arch → package .zip
                                │
@@ -118,14 +169,16 @@ git push origin v1.2.0
 | Raspberry Pi (32-bit) | `helixscreen-pi32.zip` | armhf binary, assets, configs |
 | AD5M | `helixscreen-ad5m.zip` | armv7l binary (static), assets, configs |
 | CC1 | `helixscreen-cc1.zip` | ARM binary, assets, configs |
-| K1 | `helixscreen-k1.zip` | MIPS32 binary (static, musl), assets, configs |
-| AD5X | `helixscreen-ad5x.zip` | MIPS binary (ZMOD), assets, configs |
+| K1 series | `helixscreen-k1.zip` | MIPS32 binary (static, musl), assets, configs |
+| AD5X | `helixscreen-ad5x.zip` | The same unified MIPS build, published under the AD5X name |
 | K2 | `helixscreen-k2.zip` | ARM binary (static, musl), assets, configs |
 | x86 | `helixscreen-x86.zip` | x86 binary, assets, configs |
+| x86 desktop | `helixscreen-x86-desktop.zip` | x86_64 Linux desktop build |
 | Snapmaker U1 | `helixscreen-snapmaker-u1.zip` | ARM binary, assets, configs |
-| Android | Play Store bundle | via `build-android` / `publish-android` |
+| ESP32 K-Touch | `helixscreen-esp32-ktouch-<version>.zip` | Firmware image and `README.txt` |
+| Android | APK and AAB; Play Store upload via `publish-android` | |
 
-> **Bridge release note:** Starting with v1.0.0 (the version you're currently preparing), the primary release asset is `helixscreen-{platform}.zip` (unversioned filename). The legacy `helixscreen-{platform}-v{version}.tar.gz` is still published during this bridge release for backwards compatibility with older installed versions; it will be removed in the following release.
+Each platform ships as `helixscreen-{platform}.zip` (unversioned filename) and nothing else. `helixscreen-ad5m.zip` must stay the alphabetically first asset of the release, which the release job checks: an old Moonraker's `zip_deploy` installs `assets[0]` (helixscreen#993, #2147).
 
 ---
 
@@ -137,11 +190,11 @@ git push origin v1.2.0
    ```bash
    git checkout main
    git pull origin main
-   make test-run  # Run tests
+   make land-gate  # Run tests
    ```
 
 2. **Bump `VERSION.txt` and add the CHANGELOG entry, in one `chore(release):` commit.**
-   `VERSION.txt` is the source of truth for the built binary (`Makefile:195`,
+   `VERSION.txt` is the source of truth for the built binary (`Makefile#HELIX_VERSION`,
    `mk/cross.mk`) - the version does **not** come from the git tag. Tagging
    without bumping the file ships a binary that reports the previous version.
    - `echo "X.Y.Z" > VERSION.txt`
@@ -194,12 +247,12 @@ The workflow auto-generates basic release notes if no annotation is provided.
 
 1. Go to **Actions** tab on GitHub
 2. Watch the "Release" workflow
-3. Build takes ~15-20 minutes typically
+3. Build time varies: most platforms finish in 35-50 minutes, and a cold Pi cross-compile is the long pole (up to a couple of hours)
 
 ### Step 4: Verify the Release
 
 1. Go to **Releases** on GitHub
-2. Check both platform archives are attached
+2. Check every platform zip, the APK/AAB files and `install.sh` are attached
 3. Verify checksums in release notes
 4. Test installation:
    ```bash
@@ -212,44 +265,34 @@ The workflow auto-generates basic release notes if no annotation is provided.
 
 ### Before Tagging
 
-- [ ] All tests pass (`make test-run`)
+- [ ] All tests pass (`make land-gate`)
 - [ ] No critical bugs in issue tracker
 - [ ] Documentation updated for new features
 - [ ] Tested on real hardware (Pi and/or AD5M)
 
+`scripts/release-gate.sh fast` also runs `scripts/release-health.sh`, which compares the newest beta of `VERSION.txt`'s release against the current stable release in telemetry (releases endpoint, 14 days): crash-free devices, crash rate, update failure rate, print success rate, and p95 frame time and memory. It prints a table and a `WARN` line per metric that trails stable, and notes a candidate seen on fewer than 10 devices. It is informational and never fails the gate; with no admin key, no network or no beta in telemetry it prints one line saying so. The table is in `build/release-gate/release-health.log`; `RELEASE_HEALTH=0` skips the step. The thresholds are `RELEASE_WARN` in `server/telemetry-worker/scripts/releaseHealth.ts`.
+
 ### After Release
 
 - [ ] Release workflow completed successfully
-- [ ] Both platform artifacts attached
+- [ ] Every platform artifact attached
 - [ ] Release notes accurate
 - [ ] Installation tested via curl|sh
 - [ ] Update any external references (Discord, documentation sites)
+- [ ] After every release: Review all user docs for accuracy
 
 ---
 
 ## Hotfix Releases
 
-For urgent bug fixes:
+A fix for an already-released line lands on that line's branch (`release/1.0`, `release/1.1`) and is cherry-picked to or from `main`, never merged between lines; see [BRANCHING.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/BRANCHING.md) for which way it flows. Then, on the release branch:
 
-1. **Create hotfix branch** from the release tag:
+1. Verify the fix and check for regressions (`make land-gate`).
+2. Bump `VERSION.txt` and add the CHANGELOG entry in one `chore(release):` commit (Step 1).
+3. Tag and push:
    ```bash
-   git checkout -b hotfix/v1.2.1 v1.2.0
-   ```
-
-2. **Apply minimal fix** - only the necessary changes
-
-3. **Test thoroughly** - verify the fix, check for regressions
-
-4. **Merge to main** (via PR if time permits):
-   ```bash
-   git checkout main
-   git merge hotfix/v1.2.1
-   ```
-
-5. **Tag and release:**
-   ```bash
-   git tag -a v1.2.1 -m "Fix: [description of fix]"
-   git push origin v1.2.1
+   git tag -a v1.0.3 -m "Fix: [description of fix]"
+   git push origin release/1.0 v1.0.3
    ```
 
 ---
@@ -260,14 +303,12 @@ For testing new features before stable release:
 
 ### Creating a Pre-release
 
-```bash
-# Beta version
-git tag -a v1.3.0-beta -m "Beta release for testing new AMS features"
-git push origin v1.3.0-beta
+Tag the branch whose `RELEASE_CHANNEL` already routes where you want it to go. The
+suffix expresses precedence; the branch chooses the audience:
 
-# Release candidate
-git tag -a v1.3.0-rc.1 -m "Release candidate 1"
-git push origin v1.3.0-rc.1
+```bash
+git tag -a v1.1.0-beta.2 -m "Beta: new AMS features"
+git push origin v1.1.0-beta.2
 ```
 
 ### Pre-release Behavior
@@ -281,24 +322,35 @@ Channels" for the full table and the reason.
 - `RELEASE_CHANNEL=beta` or `dev` -> marked **prerelease**, not shown as "latest"
 - Users must explicitly choose to install a prerelease:
   ```bash
-  curl -sSL .../install.sh | sh -s -- --version v1.3.0-beta
+  curl -sSL .../install.sh | sh -s -- --version v1.1.0-beta.2
   ```
 
-**Do not use a `-suffix` to mean "devel build".** `helix::version::Version`
-discards prerelease suffixes, so `v1.1.0-dev1` and `v1.1.0-dev2` compare equal and
-the in-app updater stops offering builds. Devel-track releases use plain
-incrementing versions and rely on `RELEASE_CHANNEL` for routing. A suffixed tag on
-a `stable` branch is rejected by `scripts/release-channel.sh`.
+**The suffix is not the routing.** A `-beta.N` suffix says where the version sits
+in the ordering, not who receives it: the dev channel cannot be spelled in a
+version string at all, and a plain `v1.1.0` tag pushed from the trunk would reach
+the stable fleet if the tag decided. `RELEASE_CHANNEL` keeps that decision a
+property of the branch, which is why `scripts/release-channel.sh` rejects a
+suffixed tag on a `stable` branch: a prerelease has no business on the stable
+channel regardless of which branch it was cut from.
 
-### Graduating Pre-releases
+### Graduating the beta line
 
-After testing:
+A stable release is not a re-tag of the last beta. On the release branch, edit its
+`RELEASE_CHANNEL` to `stable`, drop the suffix from `VERSION.txt`, and tag there:
 
 ```bash
-# When beta is ready for stable
-git tag -a v1.3.0 -m "Stable release"
-git push origin v1.3.0
+git switch release/1.1
+$EDITOR RELEASE_CHANNEL          # beta -> stable
+printf '1.1.0\n' > VERSION.txt   # was 1.1.0-beta.N
+git commit -m "chore(release): v1.1.0" RELEASE_CHANNEL VERSION.txt CHANGELOG.md
+git tag -a v1.1.0 -m "1.1.0"
+git push origin release/1.1 v1.1.0
 ```
+
+Dropping the suffix is itself the promotion: `1.1.0` outranks every
+`1.1.0-beta.N`, so the beta fleet is offered it as an ordinary forward step.
+`main`, already at `1.2.0-beta.1`, then switches its `RELEASE_CHANNEL` from `dev`
+back to `beta` and may tag again.
 
 ---
 
@@ -321,7 +373,7 @@ make PLATFORM_TARGET=ad5m clean release-ad5m
 1. Go to GitHub **Releases** → **Draft a new release**
 2. Choose the tag
 3. Write release notes
-4. Upload the `.zip` files from `releases/` (plus the legacy `.tar.gz` files if the bridge release still ships them)
+4. Upload the `.zip` files from `releases/`
 5. Publish
 
 ---
@@ -330,8 +382,9 @@ make PLATFORM_TARGET=ad5m clean release-ad5m
 
 `CHANGELOG.md` is the changelog. It is written by hand in the release commit (Step 1);
 nothing generates it. The annotated tag's message becomes the GitHub release body
-(Step 2), and `scripts/generate-whatsnew.sh` distills the finished CHANGELOG section
-into the Play Store "What's New" - both consume what was already written.
+(Step 2). The Play Store "What's New" is not taken from it: a stable release writes that
+text by hand in `android/whatsnew/<version>.txt`, which `scripts/generate-whatsnew.sh`
+uses verbatim (`android/whatsnew/README.md`).
 
 Prose style - user-facing voice, separator, issue-link form, and the daily vs milestone
 entry shapes - is specified in [CHANGELOG_STYLE.md](https://github.com/prestonbrown/helixscreen/blob/main/docs/devel/CHANGELOG_STYLE.md). Read it before

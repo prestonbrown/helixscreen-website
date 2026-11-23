@@ -5,122 +5,119 @@ sidebar:
 ---
 
 
-The System category covers security, network configuration, privacy settings, and maintenance actions.
+**Settings > System** looks after HelixScreen itself: the screen lock, the printer's storage, anonymous usage data, how much it logs, and restarting or resetting it. Network and printer connections are in [Connection](/guide/settings/connection/), and touch settings are in [Touch & Input](/guide/settings/touch-input/).
+
+![System settings, top of the page](../../../../assets/images/docs/settings-system.png)
+
+![System settings, scrolled to the bottom](../../../../assets/images/docs/settings-system-2.png)
 
 ---
 
 ## Security
 
-Set up a screen lock with a PIN code to prevent unauthorized access to your printer controls. Tap to open the Security overlay.
+Locks the screen with a PIN, so nobody can use your printer's controls without it. Tap **Security** to set it up.
 
-**When no PIN is set:**
+**With no PIN set:**
 
-- **Set PIN** — Create a 4–6 digit numeric PIN. You'll be asked to enter it twice to confirm.
+- **Set PIN**: choose a 4 to 6 digit PIN and enter it twice.
 
-**When a PIN is set:**
+**With a PIN set:**
 
-- **Change PIN** — Update your PIN. You must enter the current PIN first, then enter and confirm the new one.
-- **Remove PIN** — Disable the PIN entirely. Requires entering the current PIN for confirmation.
-- **Auto-lock** — Toggle automatic screen locking. When enabled, the screen locks after the display sleep timeout. You'll need to enter your PIN to unlock.
+- **Change PIN**: enter your current PIN, then the new one twice.
+- **Remove PIN**: turn the lock off. You'll need to enter your current PIN.
+- **Auto-lock**: off until you turn it on. When on, the keypad comes up as soon as the screen wakes from sleep or from dimming (see [Display Sleep](/guide/settings/display/#display-sleep)). There is no separate timer. Previewing a screensaver from settings never locks the screen.
 
-When the screen is locked, a full-screen lock overlay appears with a numeric keypad. Enter your PIN and tap the checkmark to unlock. If you enter the wrong PIN, an error message appears briefly. An **Emergency Stop** button remains accessible in the top-right corner of the lock screen while a print is running, so you can always halt the printer in an emergency without unlocking.
+When the screen is locked, a keypad covers it. Enter your PIN and tap the check mark. A wrong PIN shows a short error (*Wrong PIN*). While a print is running, an **Emergency Stop** button stays in the top-right corner of the lock screen, so you can always stop the printer without unlocking.
 
-The PIN is stored securely as a one-way hash in your settings — the actual digits are never saved in plain text. A factory reset clears all security settings.
-
----
-
-## Network Settings
-
-> Hidden on Android (the OS manages networking).
-
-Tap to open the Network Settings overlay with a two-column layout:
-
-**Left column — Status:**
-- **WiFi** — Toggle on/off, view connection status (SSID, IP address, MAC address, signal strength). Shows a 2.4GHz indicator if your hardware only supports that band.
-- **Ethernet** — View connection status (IP address, MAC address) — read-only, no toggle.
-- **Test Network** — Verify internet connectivity. Disabled when no network is connected.
-
-**Right column — Available Networks:**
-- Scans and lists available WiFi networks with signal strength indicators
-- Tap a network to connect (enter password if needed)
-- **Add Hidden Network** — Connect to a network that doesn't broadcast its SSID
-- **Refresh** button to re-scan (shows a spinner while scanning)
+HelixScreen never saves your PIN itself, only a scrambled version of it that can't be turned back into the digits. A factory reset removes the PIN. See [Security](/guide/security/) for more.
 
 ---
 
-## Host
+## Storage
 
-Shows the current Moonraker host address (e.g., `localhost:7125`). Tap to open the **Change Host** dialog where you can enter a new IP address and port to connect to a different printer.
+Shows what fills your printer's storage, and lets you clear out what is safe to delete. Tap **Storage** to open it.
 
-After changing the host, HelixScreen disconnects from the current printer and reconnects to the new one.
+The top of the page shows how much space is free, with a bar for how full the storage is. Below it, one line per kind of file, with how much space it takes:
 
----
+| Line | What it is | Clean up |
+|------|------------|----------|
+| **Print copies** | Changed copies of your files, made when a print starts with options that change the file | With the HelixPrint plugin. It keeps copies made in the last 10 minutes, the one printing now, and the one a power-loss resume would need |
+| **3MF conversions** | G-code unpacked from `.3mf` uploads, so they can print | No |
+| **File analysis** | Indexes that make print previews faster | With the HelixPrint plugin. Previews then read each file in full until it is analyzed again |
+| **Print photos** | Camera photos kept with your print history | With the HelixPrint plugin. The photos also leave the print history |
+| **Timelapse videos** | Finished timelapse videos | Yes. Only video and preview files older than 5 minutes |
+| **Old logs** | Older Klipper and Moonraker logs. The logs in use are kept | With the HelixPrint plugin. Only older log files, not other files in the logs folder |
+| **Thumbnails** | The preview pictures of your files | No |
+| **Your files** | Everything you uploaded | No, delete them from the file list |
+| **Power-loss recovery** | The saved print position and bed mesh for resuming after a power cut | No |
 
-## Touch & Input
+**Clean up** appears on lines that can be cleaned and hold something. HelixScreen asks you to confirm, then deletes those files and says how much space it freed. If some files could not be deleted, it says so; if none could, it shows "Could not free space". Nothing you uploaded is ever deleted from here.
 
-Opens a sub-page that groups all touch-related settings: calibration, debug visualization, jitter filtering, and scroll feel. See [Touch & Input](/guide/settings/touch-input/) for the full reference.
+**Automatic cleanup**: once a day, while nothing is printing, deletes print copies older than a week and old logs older than a month. Photos, timelapse videos and your files are never deleted automatically. **Off** until you turn it on.
 
----
+**With the [HelixPrint plugin](/guide/helixprint-plugin/)** the printer measures its own storage, so every line is shown, and Automatic cleanup is available. **Without it**, HelixScreen measures by listing the printer's folders, which takes longer on a printer with many files. 3MF conversions and Power-loss recovery are not shown then, conversions count under Your files, only Timelapse videos can be cleaned, and only when the timelapse folder is a folder of its own rather than your files or config folder (HelixScreen cannot tell on its own which print copy or index a power-loss resume still needs, and the printer does not let it delete logs). If the plugin is installed but refuses to clean up because a folder is set up unsafely, nothing can be cleaned from this page until that is fixed, and Automatic cleanup is not shown. Without the plugin, Automatic cleanup shows "Requires the HelixPrint plugin" with an **Install** button. This works the same whether HelixScreen runs on the printer's own screen or on a tablet or another computer.
 
-## Plugins
-
-> Only shown when beta features are enabled (tap Current Version 7 times in About).
-
-View installed plugins and their status. Plugins extend HelixScreen with additional capabilities like custom LED effects, overlays, and integrations.
+HelixScreen also checks for space before it uploads a file to the printer, a print copy or a file from a USB stick: if the upload would leave less than 100 MB free, it does not start and says so.
 
 ---
 
 ## Performance
 
-> Only shown when performance data is available.
+> Only shown once HelixScreen has performance readings.
 
-The row description shows a live summary of host load. Tap to open the Performance overlay, which shows real-time host CPU and memory usage along with per-MCU load for each connected controller board. Useful for spotting an overloaded host or a struggling MCU when prints stutter or the UI feels sluggish.
+The row shows how busy things are right now, for example *95% CPU · 13% MCU*. Tap it for live processor and memory use on the computer running HelixScreen, plus the load on each of your printer's controller boards. Check it when prints stutter or the screen feels slow, to see whether the host or a board is overloaded.
+
+The same readings can sit on the home screen as the [Host Health widget](/guide/home-panel/#host-health-widget), which opens this screen when tapped.
 
 ---
 
-## Share Usage Data (Telemetry)
+## Share Usage Data
 
-Toggle anonymous usage telemetry that helps improve HelixScreen. Data collection is completely anonymous — no personal information, printer names, or file names are ever sent.
+Sends anonymous usage data that helps improve HelixScreen. **Off** until you turn it on; turning it on shows a thank-you message. Nothing personal is sent: no names, printer names or file names. See [Telemetry & Privacy](/legal/telemetry/) for exactly what is and isn't collected.
 
-When enabled, a **View Telemetry Data** row appears below the toggle. Tap it to see exactly what data will be sent. See the [Telemetry & Privacy](/legal/telemetry/) documentation for full details on what is and isn't collected.
+### View Telemetry Data
+
+> Only shown while Share Usage Data is on. Not shown on the ESP32 firmware (the BigTreeTech K-Touch), which keeps no queue of data to show.
+
+Shows exactly what would be sent, before it's sent.
 
 ---
 
 ## Log Level
 
-Control how much detail HelixScreen writes to its logs. This is useful when troubleshooting issues or gathering diagnostic information for a bug report.
+How much detail HelixScreen writes to its log. Raise it when you're chasing a problem or preparing a bug report.
 
-| Level | What it captures |
+| Level | What it records |
 |-------|-----------------|
-| **Warn** | Errors and warnings only (quiet) |
-| **Info** | Connection events, panel changes, milestones (default) |
-| **Debug** | State changes, API calls, component init (use this for bug reports) |
-| **Trace** | Everything including LVGL internals (very verbose, rarely needed) |
+| **Warn** | Only errors and warnings |
+| **Info** (default on a normal install) | Connections, screen changes and other milestones |
+| **Debug** | Changes of state and messages to and from the printer. Use this for bug reports |
+| **Trace** | Everything, including screen drawing. Very long and rarely needed |
 
-Changes take effect immediately, with no restart required. Set to **Debug** before reproducing a problem, then set back to **Info** when done.
+The change takes effect straight away. Set **Debug**, reproduce the problem, send a [debug bundle](/guide/settings/help-about/#upload-debug-bundle), then set it back to **Info**.
 
-> **Tip:** Debug and Trace levels increase CPU usage and log volume. Don't leave them enabled long-term.
+> **Tip:** Debug and Trace use more processor time and fill the log faster. Don't leave them on.
 
 ---
 
 ## Restart HelixScreen
 
-Restart the display application. Useful after changing settings that require a restart (like theme changes) or if the UI becomes unresponsive. Shows a brief "Restarting..." toast before the app restarts.
+Restarts the screen app (not the printer). A short "Restarting HelixScreen..." message appears first, with no confirmation question. Use it after changing a setting that needs a restart, such as [UI Scale](/guide/settings/display/#ui-scale), or if the screen stops responding properly.
 
 ---
 
 ## Factory Reset
 
-Clears **all** HelixScreen settings and restarts the Setup Wizard. This resets:
+Erases **all** HelixScreen settings and starts the setup wizard again. HelixScreen asks you to confirm first ("This will reset all settings to defaults. This action cannot be undone.", with **Reset** and **Cancel**). After **Reset**, a message reads "Settings reset to defaults. Restarting..." and HelixScreen restarts into the setup wizard. A factory reset clears:
 
-- All appearance, display, and sound settings
-- LED configuration
-- Printer connection details
-- Sensor roles and hardware expectations
-- All other preferences
+- Display, appearance, sound and all other preferences
+- LED setup
+- Your printers and how to connect to them
+- Sensor roles and the Hardware Health expected list
+- The screen lock PIN
 
-**Does not affect** your Klipper configuration, Moonraker, or any files on the printer itself.
+It also deletes the backup copies of those settings, so they cannot come back by themselves. It **doesn't touch** your Klipper config, Moonraker or any files on the printer.
 
 ---
 
-[Back to Settings](/guide/settings/) | [Prev: Safety & Notifications](/guide/settings/safety/) | [Next: Help & About](/guide/settings/help-about/)
+[Back to Settings](/guide/settings/) | [Prev: Language & Time](/guide/settings/language-time/) | [Next: Updates](/guide/settings/updates/)
