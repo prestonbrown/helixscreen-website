@@ -51,6 +51,7 @@ The guide follows how you use a printer day to day: your home screen, starting a
 
 - **[Getting Started](/guide/getting-started/)**: navigation, touch gestures, connection status, the first-run setup wizard, WiFi, and the on-screen keyboard.
 - **[Supported Printers](/guide/supported-printers/)**: which printers get model-specific integration and what works on each.
+- **[HelixScreen 1.1 release notes](/guide/release-notes-1-1/)**: everything new and changed since 1.0, and what to check after upgrading.
 - **[Installation](/installation/)**: installing HelixScreen on your printer or a Klipper host. To try it without touching the printer, [run it in a window on a Linux desktop](/guide/install-linux-desktop/).
 
 ![Setup Wizard](../../../assets/images/docs/wizard-wifi.png)

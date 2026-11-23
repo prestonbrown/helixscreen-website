@@ -62,6 +62,7 @@ FILES=(
   "INSTALL.md|installation.md|Installation|1|0"
   "UPGRADING.md|upgrading.md|Upgrading|2|0"
   "guide/getting-started.md|guide/getting-started.md|Getting Started|1|1"
+  "guide/release-notes-1-1.md|guide/release-notes-1-1.md|1.1 Release Notes|1.5|1"
   "guide/home-panel.md|guide/home-panel.md|Home Panel|2|1"
   # Home Panel sub-pages (1.1 and later), nested under the hub in the sidebar.
   "guide/home-widgets.md|guide/home-widgets.md|Widget Catalog|2.1|1"

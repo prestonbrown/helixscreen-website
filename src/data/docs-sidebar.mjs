@@ -44,6 +44,7 @@ export const SIDEBAR = [
     label: 'Getting Started',
     items: [
       { label: 'User Guide Overview', slug: 'guide' },
+      { label: '1.1 release notes', slug: 'guide/release-notes-1-1' },
       { label: 'Getting Started', slug: 'guide/getting-started' },
     ],
   },
