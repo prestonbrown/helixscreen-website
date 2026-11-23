@@ -5,9 +5,7 @@
       "version": "1.1.0",
       "date": "2026-11-23",
       "lead": "HelixScreen 1.1 is a big update.",
-      "body": [
-        "Your home layout is converted automatically."
-      ],
+      "body": [],
       "bullets": [
         "Rearrange the home screen on a new grid, with new widgets",
         "Layouts for ultrawide and portrait screens",
@@ -15,6 +13,9 @@
         "Guided calibration and tuning",
         "Lua plugins",
         "Many crash and printer fixes"
+      ],
+      "closing": [
+        "Your home layout is converted automatically."
       ]
     },
     {
@@ -28,7 +29,8 @@
         "Snapmaker U1, K2 Plus CFS, ACE and AFC fixes: resume, tool changes, box readings",
         "Runout recovery heats the nozzle first; Cool Down turns off every toolhead",
         "Updates and installs that failed on K1 and systemd printers now work, and say why"
-      ]
+      ],
+      "closing": []
     },
     {
       "version": "1.0.5",
@@ -41,7 +43,8 @@
         "Creality CFS auto-refill shows and sets the right state",
         "Update failures say why, before downloading",
         "Fix for repeated 3D G-code viewer crashes on some GPUs"
-      ]
+      ],
+      "closing": []
     },
     {
       "version": "1.0.4",
@@ -55,7 +58,8 @@
         "Spoolman temperature, spool weight and active-spool fixes",
         "Fixes for crashes at boot with a labeled USB stick and when closing the macro wizard",
         "Saved brightness and screen rotation apply at startup"
-      ]
+      ],
+      "closing": []
     },
     {
       "version": "1.0.2",
@@ -64,7 +68,8 @@
       "body": [
         "Display sleep is fixed: panels that wedged, glowed or showed a test pattern on AD5X, U1, K1, K2 and Pi DSI now sleep by turning the backlight off, and the screen comes back properly on wake. Several crashes are gone, including the K1 blank-screen crash and crashes after a printer switch. QIDI printers get their .3mf thumbnails back."
       ],
-      "bullets": []
+      "bullets": [],
+      "closing": []
     }
   ],
   "history": [

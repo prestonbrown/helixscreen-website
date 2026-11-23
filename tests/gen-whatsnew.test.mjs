@@ -243,7 +243,8 @@ test('a release with no whatsnew block falls back to its Play Store text', () =>
   assert.equal(f.version, '1.1.0');
   assert.equal(f.lead, 'HelixScreen 1.1 is a big update.');
   assert.deepEqual(f.bullets, ['New grid', 'Lua plugins']);
-  assert.deepEqual(f.body, ['Your layout is converted.']);
+  assert.deepEqual(f.body, []);
+  assert.deepEqual(f.closing, ['Your layout is converted.']);
 });
 
 test('a whatsnew block wins over the Play Store text', () => {

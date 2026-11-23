@@ -21,9 +21,11 @@ import { fileURLToPath } from 'node:url';
 export function parseSummary(raw) {
   const bullets = [];
   const prose = [];
+  const closing = [];
   let para = [];
+  // Prose after the first bullet is a closing note and renders after the list.
   const flush = () => {
-    if (para.length) { prose.push(para.join(' ')); para = []; }
+    if (para.length) { (bullets.length ? closing : prose).push(para.join(' ')); para = []; }
   };
   for (const line of raw.split('\n')) {
     const l = line.trim();
@@ -32,7 +34,7 @@ export function parseSummary(raw) {
     para.push(l);
   }
   flush();
-  return { lead: prose[0] ?? null, body: prose.slice(1), bullets };
+  return { lead: prose[0] ?? null, body: prose.slice(1), bullets, closing };
 }
 
 export function parseChangelog(md) {
@@ -96,6 +98,7 @@ export function buildWhatsNew(md, version, historyLimit = 12, featuredLimit = 5,
         lead: r.summary.lead,
         body: r.summary.body,
         bullets: r.summary.bullets,
+        closing: r.summary.closing,
       }))
       .slice(0, featuredLimit),
     history: releases.slice(0, historyLimit).map((r) => ({

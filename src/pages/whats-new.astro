@@ -51,6 +51,9 @@ const current = data.history.find((h) => h.version === data.version);
             ))}
           </ul>
         )}
+        {r.closing?.map((para) => (
+          <p class="text-base leading-relaxed text-ink-muted mt-4 max-w-[62ch]">{para}</p>
+        ))}
       </article>
     ))}
 
