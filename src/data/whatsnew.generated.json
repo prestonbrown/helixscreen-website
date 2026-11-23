@@ -4,11 +4,18 @@
     {
       "version": "1.1.0",
       "date": "2026-11-23",
-      "lead": "1.1 is the first release since 1.0 that changes how HelixScreen looks and what it can drive.",
+      "lead": "HelixScreen 1.1 is a big update.",
       "body": [
-        "The home screen becomes a grid you arrange yourself, with new widgets and screens built for ultrawide and portrait panels; filament handling is rebuilt around a new spool editor and works across AFC, Happy Hare, ACE, CFS, the Snapmaker U1 and more; calibration and tuning move to guided screens; and Lua plugins, the HelixPrint companion plugin and a beta BTT K-Touch firmware join the line-up. It also fixes a long list of crashes, hangs and printer-specific problems found since 1.0."
+        "Your home layout is converted automatically."
       ],
-      "bullets": []
+      "bullets": [
+        "Rearrange the home screen on a new grid, with new widgets",
+        "Layouts for ultrawide and portrait screens",
+        "New spool editor, one color picker, and better AFC, Happy Hare, ACE, CFS and Snapmaker U1 support",
+        "Guided calibration and tuning",
+        "Lua plugins",
+        "Many crash and printer fixes"
+      ]
     },
     {
       "version": "1.0.6",

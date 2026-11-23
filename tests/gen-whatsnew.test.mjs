@@ -233,3 +233,26 @@ test('featured entries carry the body through to the page', () => {
   const out = buildWhatsNew(md, '1.0.0');
   assert.deepEqual(out.featured[0].body, ['A second paragraph that must survive.']);
 });
+
+const ANDROID = 'HelixScreen 1.1 is a big update.\n\n- New grid\n- Lua plugins\n\nYour layout is converted.\n';
+
+test('a release with no whatsnew block falls back to its Play Store text', () => {
+  const md = `# Changelog\n\n## [1.1.0] - 2026-11-23\n\n### Added\n\n- Things.\n`;
+  const out = buildWhatsNew(md, '1.1.0', 12, 5, (v) => (v === '1.1.0' ? ANDROID : null));
+  const f = out.featured[0];
+  assert.equal(f.version, '1.1.0');
+  assert.equal(f.lead, 'HelixScreen 1.1 is a big update.');
+  assert.deepEqual(f.bullets, ['New grid', 'Lua plugins']);
+  assert.deepEqual(f.body, ['Your layout is converted.']);
+});
+
+test('a whatsnew block wins over the Play Store text', () => {
+  const md = `## [1.0.0] - 2026-09-09\n\n<!-- whatsnew\nFrom the block.\n-->\n`;
+  const out = buildWhatsNew(md, '1.0.0', 12, 5, () => ANDROID);
+  assert.equal(out.featured[0].lead, 'From the block.');
+});
+
+test('a release with neither block nor Play Store text is not featured', () => {
+  const md = `## [1.0.1] - 2026-09-10\n\n- Fix.\n`;
+  assert.deepEqual(buildWhatsNew(md, '1.0.1').featured, []);
+});

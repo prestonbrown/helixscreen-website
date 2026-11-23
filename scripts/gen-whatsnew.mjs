@@ -69,8 +69,17 @@ export function parseChangelog(md) {
     .filter(Boolean);
 }
 
-export function buildWhatsNew(md, version, historyLimit = 12, featuredLimit = 5) {
-  const releases = parseChangelog(md);
+/**
+ * `androidText(version)` returns the Play Store text for a release (a plain
+ * intro line, `- ` bullets, a closing line) or null. A release whose changelog
+ * entry has no whatsnew block uses it, parsed like a block.
+ */
+export function buildWhatsNew(md, version, historyLimit = 12, featuredLimit = 5, androidText = () => null) {
+  const releases = parseChangelog(md).map((r) => {
+    if (r.summary) return r;
+    const text = androidText(r.version);
+    return text ? { ...r, summary: parseSummary(text) } : r;
+  });
   return {
     version,
     // A withdrawn release is one we asked people not to run, and a prerelease is
@@ -106,7 +115,10 @@ if (isMain) {
   let md, built;
   try {
     md = readFileSync(join(src, 'CHANGELOG.md'), 'utf8');
-    built = buildWhatsNew(md, readFileSync(join(src, 'VERSION.txt'), 'utf8').trim());
+    const androidText = (v) => {
+      try { return readFileSync(join(src, 'android', 'whatsnew', `${v}.txt`), 'utf8'); } catch { return null; }
+    };
+    built = buildWhatsNew(md, readFileSync(join(src, 'VERSION.txt'), 'utf8').trim(), 12, 5, androidText);
   } catch (err) {
     // Committed output means a checkout without the sibling repo still builds.
     console.warn(`[gen-whatsnew] ${src} unavailable (${err.code ?? err.message}); keeping committed output.`);
