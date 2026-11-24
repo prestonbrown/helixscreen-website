@@ -44,14 +44,14 @@ const spec = [
 const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
+  <p class="ui text-xs uppercase tracking-[0.16em] text-warn mb-5">
+    Klipper touch interface{series && ` · ${series}`}
+  </p>
+  <h1 class="text-4xl md:text-5xl leading-[1.1] mb-6">
+    The Klipper touchscreen for multi-material printers
+  </h1>
   <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-10 lg:items-start">
   <div class="max-w-3xl">
-    <p class="ui text-xs uppercase tracking-[0.16em] text-warn mb-5">
-      Klipper touch interface{series && ` · ${series}`}
-    </p>
-    <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[20ch] mb-5">
-      The Klipper touchscreen for multi-material printers
-    </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
       HelixScreen replaces KlipperScreen or your printer's factory screen, in about 15 MB of
       RAM and with no X11. It has screens for {backends.count} <a href="/guide/filament/#supported-filament-systems" class="text-secondary underline underline-offset-2">filament systems</a>, among them
@@ -82,7 +82,7 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
       </p>
     )}
   </div>
-  <div class="plinth mb-10 lg:mb-0 lg:mt-10">
+  <div class="plinth mb-10 lg:mb-8 lg:mt-1">
     <Image
       src={heroShot}
       alt="Print Status on an 800 by 480 screen: the model preview and progress on the left, a picture of the printer with a chip on each heater and fan, the loaded spools, and the Pause, Tune and Cancel buttons"
