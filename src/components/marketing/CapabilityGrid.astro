@@ -9,7 +9,7 @@ import beltTension from '../../assets/images/screenshots/belt-tension.png';
 import paTuning from '../../assets/images/screenshots/pa-tuning.png';
 import printSelect from '../../assets/images/screenshots/print-select.png';
 import history from '../../assets/images/screenshots/print-history.png';
-import shaper from '../../assets/images/docs/advanced-shaper.png';
+import shaper from '../../assets/images/screenshots/input-shaper-sweep.png';
 
 const printing = [
   { img: printSelect, alt: 'File browser showing a grid of print files, each with its slicer thumbnail, estimated time and filament use', t: 'G-code preview and file browser', b: 'HelixScreen draws its own 3D preview of the G-code. Rotate it with a finger, pinch to zoom, and switch between the colors of the filament that is loaded and the colors the file was sliced with. A board that cannot run the 3D renderer gets a 2D layer view. Open a file to see which tools it uses and which slot feeds each one, then skip the bed mesh, QGL or Z tilt for that print if you want. A USB stick gets its own tab, and the file list stays fast with hundreds of files.' },
@@ -22,7 +22,7 @@ const filament = [
 ];
 
 const calibration = [
-  { img: shaper,      alt: 'Input Shaper results for the X axis: the frequency response chart with a chip for each shaper, and the comparison table below', t: 'Input shaper with live graphs', b: 'Pick X or Y and run the resonance test. The chart draws the vibration as the sweep climbs, then shows what each shaper would leave behind so you can compare them. Save writes your choice to the Klipper config and restarts the firmware. It needs an accelerometer, and the live chart works when HelixScreen runs on the printer\'s own computer.' },
+  { img: shaper,      alt: 'Input Shaper calibrating the X axis at 48 percent, with a Stop button and a live chart of vibration against frequency showing a peak near 55 Hz', t: 'Input shaper with live graphs', b: 'Pick X or Y and run the resonance test. The chart draws the vibration as the sweep climbs, then shows what each shaper would leave behind so you can compare them. Save writes your choice to the Klipper config and restarts the firmware. It needs an accelerometer, and the live chart works when HelixScreen runs on the printer\'s own computer.' },
   { img: beltTension, alt: 'Belt Tension screen showing the two diagonal belt paths of a CoreXY printer and a Start Check button', t: 'Belt tension', b: 'On a CoreXY printer with an accelerometer, one chart overlays the response of both belt paths. It can buzz each motor to show which belt is which, and Tune Belts walks you through the adjustment one belt at a time.' },
   { img: paTuning,    alt: 'Pressure advance tuning screen with material and extruder choices and a Print Test Tower button', t: 'Pressure advance test tower', b: 'Pick the material and extruder type and the printer prints a small tower. You watch it and choose the band that looks best. Printers that can measure pressure advance themselves, like the Snapmaker U1, run that measurement from the screen instead.' },
 ];
