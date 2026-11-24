@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import backends from '../../data/backends.generated.json';
+import GuideLinks from './GuideLinks.astro';
 import ams from '../../assets/images/screenshots/ams-overview.png';
 import ercf from '../../assets/images/ams/ercf.svg';
 import boxTurtle from '../../assets/images/ams/box_turtle.svg';
@@ -44,6 +45,11 @@ const url = (s: any) => (typeof s === 'string' ? s : s.src);
         I didn't set out to support this many. People kept asking, and the ones who
         owned the hardware sent patches.
       </p>
+      <GuideLinks class="mb-6" links={[
+        { href: '/guide/filament/#supported-filament-systems', label: 'Supported Filament Systems' },
+        { href: '/guide/filament-ams-panel/', label: 'Multi-Filament Panel' },
+        { href: '/guide/filament-drying/', label: 'Filament Drying' },
+      ]} />
       <p class="ui text-xs text-ink-muted mb-3">
         Some of the hardware these backends support. Several units work with more than one.
       </p>

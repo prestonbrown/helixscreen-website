@@ -1,33 +1,34 @@
 ---
 import backends from '../../data/backends.generated.json';
+import GuideLinks from './GuideLinks.astro';
 
 const rows = [
-  { group: 'Project' },
+  { group: 'Project', guide: [{ href: '/guide/release-notes-1-1/', label: '1.1 Release Notes' }] },
   { k: 'Latest release', me: '1.1.0, Nov 2026', ks: '0.4.8, Oct 2026', gs: '0.0.26-beta, Apr 2024', gsTone: 'no' },
-  { group: 'Footprint' },
+  { group: 'Footprint', guide: [{ href: '/installation/#display-backends-drm-vs-framebuffer', label: 'Display Backends' }, { href: '/installation/#low-memory-systems-pi-3-pi-zero-2-w', label: 'Low Memory Systems' }] },
   { k: 'RAM, armv7',                 me: '~15 MB',                    ks: '~50 MB',       gs: '~15-20 MB' },
   { k: 'Needs a display server (X11 or Wayland)', me: 'no', meTone: 'ok',          ks: 'yes', ksTone: 'no', gs: 'no', gsTone: 'ok' },
-  { group: 'Filament' },
+  { group: 'Filament', guide: [{ href: '/guide/filament/#supported-filament-systems', label: 'Supported Filament Systems' }, { href: '/guide/filament/#spoolman-integration', label: 'Spoolman Integration' }] },
   { k: 'Multi-material backends',    me: String(backends.count),      ks: 'none', ksTone: 'no', gs: 'none', gsTone: 'no' },
   { k: 'Spoolman',                   me: 'yes', meTone: 'ok',         ks: 'yes', ksTone: 'ok', gs: 'yes', gsTone: 'ok' },
-  { group: 'Printing' },
+  { group: 'Printing', guide: [{ href: '/guide/printing/#file-preview', label: 'File Preview' }, { href: '/guide/printing/#exclude-object', label: 'Exclude Object' }, { href: '/guide/printing/#queueing-a-print', label: 'Queueing a Print' }, { href: '/guide/printing/#pausing-at-a-layer', label: 'Pausing at a Layer' }] },
   { k: 'Rotatable 3D G-code preview', me: 'yes', meTone: 'ok',        ks: 'thumbnails only', ksTone: 'no', gs: '?' },
   { k: 'Cancel one object mid-print', me: 'yes', meTone: 'ok',        ks: 'yes', ksTone: 'ok', gs: 'no', gsTone: 'no' },
   { k: 'Print queue',                me: 'yes', meTone: 'ok',         ks: 'not found', ksTone: 'no', gs: 'not found', gsTone: 'no' },
   { k: 'Pause at a chosen layer',    me: 'yes', meTone: 'ok',         ks: 'not found', ksTone: 'no', gs: 'not found', gsTone: 'no' },
-  { group: 'Calibration' },
+  { group: 'Calibration', guide: [{ href: '/guide/calibration/', label: 'Calibration' }] },
   { k: 'Bed mesh in 3D, rotatable',  me: 'yes', meTone: 'ok',         ks: 'flat map', ksTone: 'no', gs: 'flat grid', gsTone: 'no' },
   { k: 'Input shaper graphs on-device', me: 'yes', meTone: 'ok',      ks: 'no', ksTone: 'no', gs: 'yes', gsTone: 'ok' },
   { k: 'Belt tension tuning',        me: 'yes, guided', meTone: 'ok', ks: 'no', ksTone: 'no', gs: 'yes', gsTone: 'ok' },
   { k: 'Pressure advance test tower', me: 'yes', meTone: 'ok',        ks: 'sets a value', gs: 'sets a value' },
   { k: 'PID and MPC calibration',    me: 'yes', meTone: 'ok',         ks: 'yes', ksTone: 'ok', gs: '?' },
-  { group: 'Interface' },
+  { group: 'Interface', guide: [{ href: '/guide/settings/language-time/#language', label: 'Language' }, { href: '/guide/settings/appearance/#built-in-themes', label: 'Built-in Themes' }, { href: '/guide/home-panel/', label: 'Home Panel' }, { href: '/dev/contributing/plugins/', label: 'Plugins' }] },
   { k: 'Languages',                  me: '10',                        ks: '32', ksTone: 'ok', gs: 'none found', gsTone: 'no' },
   { k: 'Themes',                     me: '18, dark and light', meTone: 'ok', ks: '5, plus custom', gs: 'Material in 6 colors, Z-Bolt' },
   { k: 'Home screen you arrange',    me: 'widget grid', meTone: 'ok', ks: 'menu items', gs: '?' },
   { k: 'Ultrawide and portrait layouts', me: 'yes', meTone: 'ok',     ks: '?', gs: '?' },
   { k: 'Plugins',                    me: 'Lua, sandboxed', meTone: 'ok', ks: 'Python addons', gs: '?' },
-  { group: 'Remote' },
+  { group: 'Remote', guide: [{ href: '/guide/settings/updates/', label: 'Updates' }, { href: '/guide/install-esp32/', label: 'K-Touch' }, { href: '/guide/screen-sharing/', label: 'Screen Sharing' }, { href: '/installation/#android-app-experimental', label: 'Android App' }] },
   { k: 'In-app updates',             me: 'signed, stable and beta channels', meTone: 'ok', ks: 'Moonraker update manager (git)', gs: 'SSH script; stable and nightly builds' },
   { k: 'Portable Wi-Fi screen, no Linux computer (ESP32)', me: 'BTT K-Touch, beta', meTone: 'ok', ks: 'no, needs Linux', ksTone: 'no', gs: 'no, needs Linux', gsTone: 'no' },
   { k: 'Screen in a browser',        me: 'yes', meTone: 'ok',         ks: 'via VNC', gs: '?' },
@@ -58,7 +59,10 @@ const tone = (t: string | undefined, fallback: string) =>
       <tbody>
         {rows.map((r) => r.group ? (
           <tr>
-            <th scope="colgroup" colspan="4" class="text-left ui text-xs uppercase tracking-[0.13em] text-ink-muted font-normal pt-6 pb-2 border-b border-hairline">{r.group}</th>
+            <th scope="colgroup" colspan="4" class="text-left ui text-xs text-ink-muted font-normal pt-6 pb-2 border-b border-hairline">
+              <span class="uppercase tracking-[0.13em] mr-4">{r.group}</span>
+              {r.guide && <GuideLinks class="inline" links={r.guide} />}
+            </th>
           </tr>
         ) : (
           <tr>
