@@ -54,9 +54,9 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
       HelixScreen replaces KlipperScreen or your printer's factory screen, in about 15 MB of
-      RAM and with no X11. It has screens for {backends.count} filament systems, among them
-      Happy Hare, AFC, ACE, CFS and IFS. Input shaper with live graphs, belt tension and
-      pressure advance towers run from the touchscreen. Setup finds your printer and picks a layout for
+      RAM and with no X11. It has screens for {backends.count} <a href="/guide/filament/#supported-filament-systems" class="text-secondary underline underline-offset-2">filament systems</a>, among them
+      Happy Hare, AFC, ACE, CFS and IFS. <a href="/guide/calibration/#input-shaper" class="text-secondary underline underline-offset-2">Input shaper</a> with live graphs, belt tension and
+      <a href="/guide/calibration/#pressure-advance-tuning-test-tower" class="text-secondary underline underline-offset-2">pressure advance</a> towers run from the touchscreen. Setup finds your printer and picks a layout for
       your display, and the home screen is a grid of widgets you can rearrange.
     </p>
     <GuideLinks class="-mt-5 mb-8" links={[
@@ -69,9 +69,9 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
       <p class="text-base leading-relaxed text-ink-muted max-w-[56ch] mb-8 border-l-2 border-l-warn pl-4">
         <strong class="font-semibold text-ink">HelixScreen 1.1 is out.</strong>{' '}
         It adds a Print Status screen built around a picture of your printer, a finer home screen
-        grid with widgets that show more as you make them bigger, layouts for portrait and ultrawide panels, guided belt
-        tuning, pressure advance test towers, OpenAMS and multi-unit ACE support, and Lua
-        plugins. Upgrading from 1.0 keeps your settings and converts your home layout as closely as it can; a few widgets may need moving back.
+        grid with widgets that show more as you make them bigger, layouts for portrait and ultrawide panels, <a href="/guide/calibration/#tuning-your-belts" class="text-secondary underline underline-offset-2">guided belt
+        tuning</a>, pressure advance test towers, OpenAMS and multi-unit ACE support, and <a href="/dev/contributing/plugins/" class="text-secondary underline underline-offset-2">Lua
+        plugins</a>. Upgrading from 1.0 keeps your settings and converts your home layout as closely as it can; a few widgets may need moving back.
         <span class="block mt-2">
           <a href="/guide/release-notes-1-1/" class="text-secondary underline underline-offset-2">1.1 release notes</a>
           <span class="mx-2" aria-hidden="true">·</span>

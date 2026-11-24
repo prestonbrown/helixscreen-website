@@ -32,14 +32,14 @@ const url = (s: any) => (typeof s === 'string' ? s : s.src);
       <h2 class="text-3xl leading-tight mb-4">{backends.count} multi-material systems</h2>
       <p class="text-base leading-relaxed text-ink-muted mb-4">
         Happy Hare (ERCF, 3MS, Tradrack, MMU2), AFC (Box Turtle, ViViD), OpenAMS, Anycubic ACE
-        Pro with several units, AD5X IFS, Creality CFS, the Snapmaker U1 with RFID spool
-        recognition, QIDI Box, Bondtech INDX in early support, and tool changers.
+        Pro with several units, AD5X IFS, <a href="/guide/filament-cfs/" class="text-secondary underline underline-offset-2">Creality CFS</a>, the <a href="/guide/filament-tool-changers/#snapmaker-u1-snapswap" class="text-secondary underline underline-offset-2">Snapmaker U1</a> with RFID spool
+        recognition, QIDI Box, Bondtech INDX in early support, and <a href="/guide/filament-tool-changers/" class="text-secondary underline underline-offset-2">tool changers</a>.
       </p>
       <p class="text-base leading-relaxed text-ink-muted mb-4">
         Each unit is drawn as itself, and the filament path shows where the filament is right
         now. Load, unload, tool changes, endless spool and runout recovery all run from the
         screen. Boxes with a dryer show humidity and drying controls. Lanes are written to
-        Moonraker's lane_data, so Mainsail, Fluidd and OrcaSlicer see them too.
+        Moonraker's <a href="/guide/filament-ams-panel/#where-lane-information-comes-from" class="text-secondary underline underline-offset-2">lane_data</a>, so Mainsail, Fluidd and OrcaSlicer see them too.
       </p>
       <p class="text-base leading-relaxed text-ink-muted mb-6">
         I didn't set out to support this many. People kept asking, and the ones who
