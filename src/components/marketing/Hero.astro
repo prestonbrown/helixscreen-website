@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import heroShot from '../../assets/images/screenshots/hero-print-status.png';
 import StatRow from './StatRow.astro';
 import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
@@ -41,11 +43,12 @@ const spec = [
 const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
+  <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-10 lg:items-start">
   <div class="max-w-3xl">
     <p class="ui text-xs uppercase tracking-[0.16em] text-warn mb-5">
       Klipper touch interface{series && ` · ${series}`}
     </p>
-    <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[28ch] mb-5">
+    <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[20ch] mb-5">
       The Klipper touchscreen for multi-material printers
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
@@ -72,6 +75,16 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
         </span>
       </p>
     )}
+  </div>
+  <div class="plinth mb-10 lg:mb-0 lg:mt-10">
+    <Image
+      src={heroShot}
+      alt="Print Status on an 800 by 480 screen: the model preview and progress on the left, a picture of the printer with a chip on each heater and fan, the loaded spools, and the Pause, Tune and Cancel buttons"
+      widths={[480, 800, 1200]}
+      sizes="(max-width: 1024px) 92vw, 44vw"
+      loading="eager"
+    />
+  </div>
   </div>
 
   <SpecGrid rows={spec} />
