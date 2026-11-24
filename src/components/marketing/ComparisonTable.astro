@@ -12,26 +12,26 @@ const rows = [
   { k: 'Multi-material backends',    me: String(backends.count),      ks: 'none', ksTone: 'no', gs: 'none', gsTone: 'no' },
   { k: 'Spoolman',                   me: 'yes', meTone: 'ok',         ks: 'yes', ksTone: 'ok', gs: 'yes', gsTone: 'ok' },
   { group: 'Printing', guide: [{ href: '/guide/printing/#file-preview', label: 'File Preview' }, { href: '/guide/printing/#exclude-object', label: 'Exclude Object' }, { href: '/guide/printing/#queueing-a-print', label: 'Queueing a Print' }, { href: '/guide/printing/#pausing-at-a-layer', label: 'Pausing at a Layer' }] },
-  { k: 'Rotatable 3D G-code preview', me: 'yes', meTone: 'ok',        ks: 'thumbnails only', ksTone: 'no', gs: '?' },
+  { k: 'Rotatable 3D G-code preview', me: 'yes', meTone: 'ok',        ks: 'thumbnails only', ksTone: 'no', gs: 'thumbnails only', gsTone: 'no' },
   { k: 'Cancel one object mid-print', me: 'yes', meTone: 'ok',        ks: 'yes', ksTone: 'ok', gs: 'no', gsTone: 'no' },
-  { k: 'Print queue',                me: 'yes', meTone: 'ok',         ks: 'not found', ksTone: 'no', gs: 'not found', gsTone: 'no' },
-  { k: 'Pause at a chosen layer',    me: 'yes', meTone: 'ok',         ks: 'not found', ksTone: 'no', gs: 'not found', gsTone: 'no' },
+  { k: 'Print queue',                me: 'yes', meTone: 'ok',         ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
+  { k: 'Pause at a chosen layer',    me: 'yes', meTone: 'ok',         ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
   { group: 'Calibration', guide: [{ href: '/guide/calibration/', label: 'Calibration' }] },
   { k: 'Bed mesh in 3D, rotatable',  me: 'yes', meTone: 'ok',         ks: 'flat map', ksTone: 'no', gs: 'flat grid', gsTone: 'no' },
   { k: 'Input shaper graphs on-device', me: 'yes', meTone: 'ok',      ks: 'no', ksTone: 'no', gs: 'yes', gsTone: 'ok' },
   { k: 'Belt tension tuning',        me: 'yes, guided', meTone: 'ok', ks: 'no', ksTone: 'no', gs: 'yes', gsTone: 'ok' },
   { k: 'Pressure advance test tower', me: 'yes', meTone: 'ok',        ks: 'sets a value', gs: 'sets a value' },
-  { k: 'PID and MPC calibration',    me: 'yes', meTone: 'ok',         ks: 'yes', ksTone: 'ok', gs: '?' },
+  { k: 'PID and MPC calibration',    me: 'yes', meTone: 'ok',         ks: 'yes', ksTone: 'ok', gs: 'no', gsTone: 'no' },
   { group: 'Interface', guide: [{ href: '/guide/settings/language-time/#language', label: 'Language' }, { href: '/guide/settings/appearance/#built-in-themes', label: 'Built-in Themes' }, { href: '/guide/home-panel/', label: 'Home Panel' }, { href: '/dev/contributing/plugins/', label: 'Plugins' }] },
-  { k: 'Languages',                  me: '10',                        ks: '32', ksTone: 'ok', gs: 'none found', gsTone: 'no' },
-  { k: 'Themes',                     me: '18, dark and light', meTone: 'ok', ks: '5, plus custom', gs: 'Material in 6 colors, Z-Bolt' },
-  { k: 'Home screen you arrange',    me: 'widget grid', meTone: 'ok', ks: 'menu items', gs: '?' },
-  { k: 'Ultrawide and portrait layouts', me: 'yes', meTone: 'ok',     ks: '?', gs: '?' },
-  { k: 'Plugins',                    me: 'Lua, sandboxed', meTone: 'ok', ks: 'Python addons', gs: '?' },
+  { k: 'Languages',                  me: '10',                        ks: '32', ksTone: 'ok', gs: 'English only', gsTone: 'no' },
+  { k: 'Themes',                     me: '18, plus custom themes you edit on the screen', meTone: 'ok', ks: '5, plus custom', gs: 'Material in 6 colors, Z-Bolt' },
+  { k: 'Home screen you arrange',    me: 'widget grid', meTone: 'ok', ks: 'menu items', gs: 'fixed layout', gsTone: 'no' },
+  { k: 'Ultrawide and portrait layouts', me: 'yes', meTone: 'ok',     ks: 'portrait only', ksTone: 'no', gs: 'rotation only', gsTone: 'no' },
+  { k: 'Plugins',                    me: 'Lua, sandboxed', meTone: 'ok', ks: 'Python addons', gs: 'no', gsTone: 'no' },
   { group: 'Remote', guide: [{ href: '/guide/settings/updates/', label: 'Updates' }, { href: '/guide/install-esp32/', label: 'K-Touch' }, { href: '/guide/screen-sharing/', label: 'Screen Sharing' }, { href: '/installation/#android-app-experimental', label: 'Android App' }] },
   { k: 'In-app updates',             me: 'signed, stable and beta channels', meTone: 'ok', ks: 'Moonraker update manager (git)', gs: 'SSH script; stable and nightly builds' },
   { k: 'Portable Wi-Fi screen, no Linux computer (ESP32)', me: 'BTT K-Touch, beta', meTone: 'ok', ks: 'no, needs Linux', ksTone: 'no', gs: 'no, needs Linux', gsTone: 'no' },
-  { k: 'Screen in a browser',        me: 'yes', meTone: 'ok',         ks: 'via VNC', gs: '?' },
+  { k: 'Screen in a browser',        me: 'yes', meTone: 'ok',         ks: 'via VNC', gs: 'no', gsTone: 'no' },
   { k: 'Android app',                me: 'yes', meTone: 'ok',         ks: 'via XServer-XSDL', gs: 'yes', gsTone: 'ok' },
 ];
 // 'ok' -> green; 'no' -> muted (a value that isn't a clean win); otherwise the
@@ -43,8 +43,7 @@ const tone = (t: string | undefined, fallback: string) =>
   <h2 class="text-2xl mb-2">HelixScreen, KlipperScreen and GuppyScreen compared</h2>
   <p class="ui text-sm text-ink-muted mb-6">
     RAM figures are resident set size, measured on a FlashForge Adventurer 5M Pro, not install size.
-    Competitor cells come from each project's public repository and docs as of November 2026;
-    a ? means we could not confirm it.
+    Competitor cells come from each project's public repository and docs as of November 2026.
   </p>
   <div class="overflow-x-auto">
     <table class="w-full border-collapse font-mono text-sm min-w-[560px]">
