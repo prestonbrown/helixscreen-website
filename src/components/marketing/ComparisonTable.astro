@@ -2,12 +2,26 @@
 import backends from '../../data/backends.generated.json';
 
 const rows = [
-  { k: 'Multi-material backends',    me: String(backends.count),      ks: '1',            gs: '1' },
+  { group: 'Project' },
+  { k: 'Latest release', me: '1.1.0, Nov 2026', ks: '0.4.8, Oct 2026', gs: '0.0.26-beta, Apr 2024', gsTone: 'no' },
+  { group: 'Footprint' },
   { k: 'RAM, armv7',                 me: '~15 MB',                    ks: '~50 MB',       gs: '~15-20 MB' },
   { k: 'Needs X11 or a browser',     me: 'no', meTone: 'ok',          ks: 'yes', ksTone: 'no', gs: 'no', gsTone: 'ok' },
-  { k: 'Bed mesh in 3D, rotatable',  me: 'yes', meTone: 'ok',         ks: 'flat heatmap', ksTone: 'no', gs: 'flat heatmap', gsTone: 'no' },
-  { k: 'Input shaper graphs on-device', me: 'yes', meTone: 'ok',      ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
-  { k: 'Ultrawide and portrait screens', me: 'supported', ks: 'no', ksTone: 'no', gs: 'no', gsTone: 'no' },
+  { group: 'Filament' },
+  { k: 'Multi-material backends',    me: String(backends.count),      ks: 'none', ksTone: 'no', gs: 'none', gsTone: 'no' },
+  { k: 'Spoolman',                   me: 'yes', meTone: 'ok',         ks: 'yes', ksTone: 'ok', gs: 'yes', gsTone: 'ok' },
+  { group: 'Calibration' },
+  { k: 'Bed mesh in 3D, rotatable',  me: 'yes', meTone: 'ok',         ks: 'flat map', ksTone: 'no', gs: 'flat grid', gsTone: 'no' },
+  { k: 'Input shaper graphs on-device', me: 'yes', meTone: 'ok',      ks: 'no', ksTone: 'no', gs: 'yes', gsTone: 'ok' },
+  { k: 'Belt tension tuning',        me: 'yes, guided', meTone: 'ok', ks: 'no', ksTone: 'no', gs: 'yes', gsTone: 'ok' },
+  { group: 'Interface' },
+  { k: 'Languages',                  me: '10',                        ks: '32', ksTone: 'ok', gs: 'none found', gsTone: 'no' },
+  { k: 'Themes',                     me: '18, dark and light', meTone: 'ok', ks: '5, plus custom', gs: 'Material in 6 colors, Z-Bolt' },
+  { k: 'Home screen you arrange',    me: 'widget grid', meTone: 'ok', ks: 'menu items', gs: '?' },
+  { k: 'Ultrawide and portrait layouts', me: 'yes', meTone: 'ok',     ks: '?', gs: '?' },
+  { group: 'Remote' },
+  { k: 'Screen in a browser',        me: 'yes', meTone: 'ok',         ks: 'via VNC', gs: '?' },
+  { k: 'Android app',                me: 'yes', meTone: 'ok',         ks: 'via XServer-XSDL', gs: 'yes', gsTone: 'ok' },
 ];
 // 'ok' -> green; 'no' -> muted (a value that isn't a clean win); otherwise the
 // column's own default (bright ink for HelixScreen, muted for the others).
@@ -18,6 +32,8 @@ const tone = (t: string | undefined, fallback: string) =>
   <h2 class="text-2xl mb-2">HelixScreen, KlipperScreen and GuppyScreen compared</h2>
   <p class="ui text-sm text-ink-muted mb-6">
     RAM figures are resident set size, measured on a FlashForge Adventurer 5M Pro, not install size.
+    Competitor cells come from each project's public repository and docs as of November 2026;
+    a ? means we could not confirm it.
   </p>
   <div class="overflow-x-auto">
     <table class="w-full border-collapse font-mono text-sm min-w-[560px]">
@@ -30,7 +46,11 @@ const tone = (t: string | undefined, fallback: string) =>
         </tr>
       </thead>
       <tbody>
-        {rows.map((r) => (
+        {rows.map((r) => r.group ? (
+          <tr>
+            <th scope="colgroup" colspan="4" class="text-left ui text-xs uppercase tracking-[0.13em] text-ink-muted font-normal pt-6 pb-2 border-b border-hairline">{r.group}</th>
+          </tr>
+        ) : (
           <tr>
             <th scope="row" class="text-left ui text-sm font-normal text-ink py-3 pr-4 border-b border-hairline/40">{r.k}</th>
             <td class:list={['py-3 px-4 border-b border-hairline/40 tabular', tone(r.meTone, 'text-ink')]}>{r.me}</td>
