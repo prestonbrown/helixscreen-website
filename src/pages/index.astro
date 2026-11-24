@@ -11,6 +11,7 @@ import PlatformTable from '../components/marketing/PlatformTable.astro';
 import ThemeDemo from '../components/marketing/ThemeDemo.astro';
 import GetInTouch from '../components/marketing/GetInTouch.astro';
 import Colophon from '../components/marketing/Colophon.astro';
+import GuideLinks from '../components/marketing/GuideLinks.astro';
 import bedMesh from '../assets/images/screenshots/bed-mesh.png';
 ---
 <MarketingLayout
@@ -35,6 +36,11 @@ import bedMesh from '../assets/images/screenshots/bed-mesh.png';
         alt="Bed mesh rendered as a rotatable 3D surface"
         caption="Bed mesh, 7×7. Rotate it with a finger and pinch to zoom."
       />
+      <GuideLinks class="mt-4" links={[
+        { href: '/guide/calibration/#bed-mesh', label: 'Bed Mesh' },
+        { href: '/guide/calibration/#profile-management', label: 'Profile Management' },
+        { href: '/guide/settings/appearance/#bed-mesh-render', label: 'Bed Mesh Render' },
+      ]} />
     </section>
 
     <ComparisonTable />

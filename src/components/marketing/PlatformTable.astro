@@ -1,5 +1,6 @@
 ---
 import printers from '../../data/printers.generated.json';
+import GuideLinks from './GuideLinks.astro';
 
 const platforms = [
   { name: 'Raspberry Pi 3 / 4 / 5',       arch: 'armhf, aarch64' },
@@ -21,9 +22,14 @@ const platforms = [
     they run Klipper and Moonraker; the setup wizard detects their hardware.
   </p>
   <p class="ui text-xs text-ink-muted mb-6 max-w-[62ch]">
-    800×480 and 1024×600 are the best-tested landscape sizes. 480×320 works with a tighter layout.
+    800×480 and 1024×600 are the best-tested landscape sizes. 480×320 works with a tighter layout.{' '}
     <a href="/printers/" class="text-secondary underline underline-offset-2">See the full list</a>.
   </p>
+  <GuideLinks class="-mt-3 mb-6" links={[
+    { href: '/guide/supported-printers/', label: 'Supported Printers' },
+    { href: '/installation/#which-printer-are-you-installing-on', label: 'Which Printer Are You Installing On?' },
+    { href: '/guide/settings/display/', label: 'Display Settings' },
+  ]} />
   <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {platforms.map((p) => (
       <dl class="border border-hairline rounded-[var(--hx-radius)] bg-card px-4 py-3">

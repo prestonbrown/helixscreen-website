@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import GuideLinks from './GuideLinks.astro';
 import homeEdit from '../../assets/images/screenshots/home-grid-edit.png';
 import homePortrait from '../../assets/images/screenshots/home-portrait.png';
 import statusUltrawide from '../../assets/images/screenshots/print-status-ultrawide.png';
@@ -10,41 +11,114 @@ import paTuning from '../../assets/images/screenshots/pa-tuning.png';
 import printSelect from '../../assets/images/screenshots/print-select.png';
 import history from '../../assets/images/screenshots/print-history.png';
 import shaper from '../../assets/images/screenshots/input-shaper-sweep.png';
+import wBedMesh from '../../assets/images/screenshots/home-widget-bed-mesh.png';
+import wExclude from '../../assets/images/screenshots/home-widget-exclude-map.png';
+import wSpeedFlow from '../../assets/images/screenshots/home-widget-speed-flow.png';
+import wZOffset from '../../assets/images/screenshots/home-widget-z-offset.png';
+import wHostHealth from '../../assets/images/screenshots/home-widget-host-health.png';
+import wPreparing from '../../assets/images/screenshots/home-widget-preparing.png';
+import wJobQueue from '../../assets/images/screenshots/home-job-queue-tile.png';
+import wBuffer from '../../assets/images/screenshots/home-filament-buffer.png';
+
+const link = 'text-secondary underline underline-offset-2';
+
+// Each crop is shown no wider than it was captured, so none is scaled up.
+const widgets = [
+  { img: wBedMesh, name: 'Bed Mesh', href: '/guide/home-widgets-controls/#bed-mesh-widget',
+    alt: 'Bed Mesh widget: a red and blue heatmap of the bed, a color scale from -0.30 to 0.29, the profile name "default", a flatness of 0.588 mm in red and "2 profiles"',
+    rest: ' at 2x2: the heatmap with its color scale, the profile name and how far the bed is from flat.' },
+  { img: wExclude, name: 'Exclude Objects', href: '/guide/home-widgets-print/#exclude-objects-widget',
+    alt: 'Exclude Objects widget: a map of six objects with one hatched, "Now printing Benchy_id_0_copy_0", "5 of 6 printing", "1 skipped" and a Skip objects button',
+    rest: ' at 2x2 during a six-object print with one object skipped.' },
+  { img: wSpeedFlow, name: 'Speed / Flow', href: '/guide/home-widgets-print/#speed--flow-widget',
+    alt: 'Speed / Flow widget: speed at 95 percent with 134 mm/s live, flow at 104 percent with 12.5 cubic mm/s live, each with minus and plus buttons',
+    rest: ' at 2x2 during a print, with the live speed and flow beside each override and buttons that step them.' },
+  { img: wZOffset, name: 'Z-Offset', href: '/guide/home-widgets-print/#z-offset-widget',
+    alt: 'Z-Offset widget: an offset of -0.020 marked unsaved, a scale beside a nozzle, down and up buttons around a 0.01 step, and a Save button',
+    rest: ' at 2x2 with an unsaved change, showing the baby-step buttons and Save.' },
+  { img: wHostHealth, name: 'Host Health', href: '/guide/home-widgets-controls/#host-health-widget',
+    alt: 'Host Health widget: CPU load, free memory and free disk space for the host, and a load trace for each of two controller boards',
+    rest: ' at 2x2: load and free space on the host, and a row for each controller board.' },
+  { img: wPreparing, name: 'Print Status', href: '/guide/home-widgets/#print--status',
+    alt: 'Print Status widget while a print prepares: the model thumbnail, "Preparing Print", a progress bar, "Probing Bed Mesh..." and about two and a half minutes left',
+    rest: ' while a print prepares, with the current step and the time left.' },
+  { img: wJobQueue, name: 'Job Queue', href: '/guide/home-widgets-print/#job-queue-widget',
+    alt: 'Job Queue widget: the next job, 3DBenchy, taking 36 minutes with two more behind it, and a "Bed clear, Start next" button',
+    rest: ' at 2x1: the next job and how many wait behind it, with a button that starts it.' },
+  { img: wBuffer, name: 'Filament Buffer', href: '/guide/home-widgets-filament/#filament-buffer-widget',
+    alt: 'Filament Buffer widget: an upright slider beside "32% target 50%", a one-minute trace and "Running tight"',
+    rest: ' at 2x1 while the filament runs tight, with the last minute drawn as a trace.' },
+];
 
 const printing = [
-  { img: printSelect, alt: 'File browser showing a grid of print files, each with its slicer thumbnail, estimated time and filament use', t: 'G-code preview and file browser', b: 'HelixScreen draws its own 3D preview of the G-code. Rotate it with a finger, pinch to zoom, and switch between the colors of the filament that is loaded and the colors the file was sliced with. A board that cannot run the 3D renderer gets a 2D layer view. Open a file to see which tools it uses and which slot feeds each one, then skip the bed mesh, QGL or Z tilt for that print if you want. A USB stick gets its own tab, and the file list stays fast with hundreds of files.' },
-  { img: history,     alt: 'Print history panel showing total prints, success rate, print time, and filament used', t: 'Print history and timelapse', b: 'Total prints, success rate, print time and filament used. Moonraker-Timelapse capture and playback are built in, and the list loads older jobs as you scroll.' },
+  { img: printSelect, alt: 'File browser showing a grid of print files, each with its slicer thumbnail, estimated time and filament use', t: 'G-code preview and file browser', b: 'HelixScreen draws its own 3D preview of the G-code. Rotate it with a finger, pinch to zoom, and switch between the colors of the filament that is loaded and the colors the file was sliced with. A board that cannot run the 3D renderer gets a 2D layer view. Open a file to see which tools it uses and which slot feeds each one, then skip the bed mesh, QGL or Z tilt for that print if you want. A USB stick gets its own tab, and the file list stays fast with hundreds of files.',
+    guide: [{ href: '/guide/printing/#file-preview', label: 'File Preview' }, { href: '/guide/printing/#pre-print-options', label: 'Pre-Print Options' }] },
+  { img: history,     alt: 'Print history panel showing total prints, success rate, print time, and filament used', t: 'Print history and timelapse', b: 'Total prints, success rate, print time and filament used. Moonraker-Timelapse capture and playback are built in, and the list loads older jobs as you scroll.',
+    guide: [{ href: '/guide/print-history/', label: 'Print History' }, { href: '/guide/advanced/#timelapse', label: 'Timelapse' }] },
 ];
 
 const filament = [
-  { img: spoolEditor, alt: 'Spool editor for one lane, showing the spool, its remaining weight, the lane settings and Save and Clear Lane buttons', t: 'Edit spools on the screen', b: 'Tap a lane to set its material, color and remaining weight, link a Spoolman spool, or start a new spool from your favorite filaments. What you save goes to the printer\'s own filament system (AFC, Happy Hare, ACE, CFS, QIDI Box, the AD5X and the Snapmaker U1) and to Moonraker\'s lane_data, so Mainsail, Fluidd and OrcaSlicer show the same spool in each lane. Every save offers Undo, and Print Label when a label printer is set up.' },
-  { img: spoolman,    alt: 'Spoolman panel listing spools with material, color, and remaining weight', t: 'Spoolman', b: 'Connect Spoolman and each lane can point at a spool in your inventory. On a multi-tool printer, every tool change makes that tool\'s spool the active one in Spoolman, so each spool is charged for its own filament. Spoolman is optional: remaining weight is also tracked from what each print extrudes. 66 material profiles carry drying settings.' },
+  { img: spoolEditor, alt: 'Spool editor for one lane, showing the spool, its remaining weight, the lane settings and Save and Clear Lane buttons', t: 'Edit spools on the screen', b: 'Tap a lane to set its material, color and remaining weight, link a Spoolman spool, or start a new spool from your favorite filaments. What you save goes to the printer\'s own filament system (AFC, Happy Hare, ACE, CFS, QIDI Box, the AD5X and the Snapmaker U1) and to Moonraker\'s lane_data, so Mainsail, Fluidd and OrcaSlicer show the same spool in each lane. Every save offers Undo, and Print Label when a label printer is set up.',
+    guide: [{ href: '/guide/filament-ams-panel/#editing-filament-properties', label: 'Editing Filament Properties' }] },
+  { img: spoolman,    alt: 'Spoolman panel listing spools with material, color, and remaining weight', t: 'Spoolman', b: 'Connect Spoolman and each lane can point at a spool in your inventory. On a multi-tool printer, every tool change makes that tool\'s spool the active one in Spoolman, so each spool is charged for its own filament. Spoolman is optional: remaining weight is also tracked from what each print extrudes. 66 material profiles carry drying settings.',
+    guide: [{ href: '/guide/filament-tracking/#tracking-with-spoolman', label: 'Tracking With Spoolman' }, { href: '/guide/filament-tracking/#tracking-without-spoolman', label: 'Tracking Without Spoolman' }] },
 ];
 
 const calibration = [
-  { img: shaper,      alt: 'Input Shaper calibrating the X axis at 48 percent, with a Stop button and a live chart of vibration against frequency showing a peak near 55 Hz', t: 'Input shaper with live graphs', b: 'Pick X or Y and run the resonance test. The chart draws the vibration as the sweep climbs, then shows what each shaper would leave behind so you can compare them. Save writes your choice to the Klipper config and restarts the firmware. It needs an accelerometer, and the live chart works when HelixScreen runs on the printer\'s own computer.' },
-  { img: beltTension, alt: 'Belt Tension screen showing the two diagonal belt paths of a CoreXY printer and a Start Check button', t: 'Belt tension', b: 'On a CoreXY printer with an accelerometer, one chart overlays the response of both belt paths. It can buzz each motor to show which belt is which, and Tune Belts walks you through the adjustment one belt at a time.' },
-  { img: paTuning,    alt: 'Pressure advance tuning screen with material and extruder choices and a Print Test Tower button', t: 'Pressure advance test tower', b: 'Pick the material and extruder type and the printer prints a small tower. You watch it and choose the band that looks best. Printers that can measure pressure advance themselves, like the Snapmaker U1, run that measurement from the screen instead.' },
+  { img: shaper,      alt: 'Input Shaper calibrating the X axis at 48 percent, with a Stop button and a live chart of vibration against frequency showing a peak near 55 Hz', t: 'Input shaper with live graphs', b: 'Pick X or Y and run the resonance test. The chart draws the vibration as the sweep climbs, then shows what each shaper would leave behind so you can compare them. Save writes your choice to the Klipper config and restarts the firmware. It needs an accelerometer, and the live chart works when HelixScreen runs on the printer\'s own computer.',
+    guide: [{ href: '/guide/calibration/#input-shaper', label: 'Input Shaper' }] },
+  { img: beltTension, alt: 'Belt Tension screen showing the two diagonal belt paths of a CoreXY printer and a Start Check button', t: 'Belt tension', b: 'On a CoreXY printer with an accelerometer, one chart overlays the response of both belt paths. It can buzz each motor to show which belt is which, and Tune Belts walks you through the adjustment one belt at a time.',
+    guide: [{ href: '/guide/calibration/#belt-tension', label: 'Belt Tension' }] },
+  { img: paTuning,    alt: 'Pressure advance tuning screen with material and extruder choices and a Print Test Tower button', t: 'Pressure advance test tower', b: 'Pick the material and extruder type and the printer prints a small tower. You watch it and choose the band that looks best. Printers that can measure pressure advance themselves, like the Snapmaker U1, run that measurement from the screen instead.',
+    guide: [{ href: '/guide/calibration/#pressure-advance-tuning-test-tower', label: 'Pressure Advance Tuning' }] },
 ];
 ---
 <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-hairline">
-  <article class="grid md:grid-cols-[280px_1fr] gap-6 items-center pb-10 mb-10 border-b border-hairline">
-    <div class="plinth">
-      <Image
-        src={homeEdit}
-        alt="Home screen in edit mode, with one widget selected showing its settings and delete handles"
-        widths={[320, 480, 640]}
-        sizes="(max-width: 768px) 92vw, 280px"
-      />
+  <div class="pb-10 mb-10 border-b border-hairline">
+    <article class="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-8 items-center mb-10">
+      <div>
+        <h2 class="text-2xl mb-3">Home screen widgets</h2>
+        <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-3">The home screen is a grid of widgets. Drag them around, resize them in half-cell steps, and put more on extra pages. Drop one widget on another to swap them, and Undo brings back one you removed. A new install starts with the widgets your printer can use, and adds filament or chamber widgets when you add that hardware.</p>
+        <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-4">Each widget shows more as you make it bigger. At its smallest, Bed Mesh is a grid icon over the flatness number. At 2x2 it draws the heatmap with a color scale and names the profile, and from 3x3 it shows the bed in 3D on screens that can draw it.</p>
+        <GuideLinks links={[
+          { href: '/guide/home-panel/', label: 'Home Panel' },
+          { href: '/guide/home-edit-mode/', label: 'Edit Mode' },
+          { href: '/guide/home-widgets/', label: 'Widget Catalog' },
+        ]} />
+      </div>
+      <figure>
+        <div class="plinth">
+          <Image
+            src={homeEdit}
+            alt="Home screen in edit mode, with one widget selected showing its settings and delete handles"
+            widths={[480, 640, 800]}
+            sizes="(max-width: 768px) 92vw, 46vw"
+          />
+        </div>
+        <figcaption class="ui text-xs text-ink-muted mt-2">The home screen in edit mode, with the printer picture selected.</figcaption>
+      </figure>
+    </article>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8 items-start">
+      {widgets.map((w) => (
+        <figure>
+          <div class="plinth">
+            <Image src={w.img} alt={w.alt} class="mx-auto" style={`max-width:${w.img.width}px`} />
+          </div>
+          <figcaption class="ui text-xs leading-relaxed text-ink-muted mt-2"><a href={w.href} class={link}>{w.name}</a>{w.rest}</figcaption>
+        </figure>
+      ))}
     </div>
-    <div>
-      <h2 class="text-xl mb-1.5">Home screen widgets</h2>
-      <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch]">The home screen is a grid of widgets. Drag them around, resize them in half-cell steps, and put more on extra pages. A small widget shows the essentials, and a bigger one adds graphs, details and controls. Drop one widget on another to swap them, and Undo brings back one you removed. A new install starts with the widgets your printer can use, and adds filament or chamber widgets when you add that hardware.</p>
-    </div>
-  </article>
+  </div>
+
   <article class="pb-10 mb-10 border-b border-hairline">
     <h2 class="text-xl mb-1.5">Print Status</h2>
-    <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-6">Print Status shows a picture of your printer with a chip on each heater, fan and light. A heater chip turns red while it heats, green at its target and amber if it drifts during the print. Tap a chip for its graph or controls. While the print warms up, homes and meshes, a checklist shows each step with how long it took and counts down the current one. If a print stops, the screen says why, for example a quad gantry level that never converged.</p>
+    <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-3">Print Status shows a picture of your printer with a chip on each heater, fan and light. A heater chip turns red while it heats, green at its target and amber if it drifts during the print. Tap a chip for its graph or controls. While the print warms up, homes and meshes, a checklist shows each step with how long it took and counts down the current one. If a print stops, the screen says why, for example a quad gantry level that never converged.</p>
+    <GuideLinks class="mb-6" links={[
+      { href: '/guide/printer-manager/#status-chips-on-the-printer-image', label: 'Status Chips on the Printer Image' },
+      { href: '/guide/printing/#before-the-print-actually-begins', label: 'Before the Print Begins' },
+      { href: '/guide/printing/#during-a-print', label: 'During a Print' },
+    ]} />
     <div class="plinth">
       <Image
         src={statusUltrawide}
@@ -65,7 +139,12 @@ const calibration = [
     </div>
     <div>
       <h2 class="text-xl mb-1.5">Portrait and ultrawide screens</h2>
-      <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch]">Tall portrait panels and wide bars from 1480x320 up to 1920x440 each get their own layout for Print Status, the filament screens and Controls. Settings has a UI Scale from 100 to 200 percent, and every scale keeps its own home layout. The screen can be rotated in hardware, and touch follows the rotation.</p>
+      <p class="text-sm leading-relaxed text-ink-muted max-w-[62ch] mb-3">Tall portrait panels and wide bars from 1480x320 up to 1920x440 each get their own layout for Print Status, the filament screens and Controls. Settings has a UI Scale from 100 to 200 percent, and every scale keeps its own home layout. The screen can be rotated in hardware, and touch follows the rotation.</p>
+      <GuideLinks links={[
+        { href: '/guide/home-panel/#ultrawide-and-portrait-screens', label: 'Ultrawide and Portrait Screens' },
+        { href: '/guide/settings/display/#ui-scale', label: 'UI Scale' },
+        { href: '/guide/settings/display/#screen-rotation', label: 'Screen Rotation' },
+      ]} />
     </div>
   </article>
 
@@ -77,7 +156,8 @@ const calibration = [
           <Image src={c.img} alt={c.alt} widths={[320, 480, 640]} sizes="(max-width: 640px) 92vw, 46vw" />
         </div>
         <h3 class="text-lg mb-1.5">{c.t}</h3>
-        <p class="text-sm leading-relaxed text-ink-muted">{c.b}</p>
+        <p class="text-sm leading-relaxed text-ink-muted mb-3">{c.b}</p>
+        <GuideLinks links={c.guide} />
       </article>
     ))}
   </div>
@@ -90,7 +170,8 @@ const calibration = [
           <Image src={c.img} alt={c.alt} widths={[320, 480, 640]} sizes="(max-width: 640px) 92vw, 46vw" />
         </div>
         <h3 class="text-lg mb-1.5">{c.t}</h3>
-        <p class="text-sm leading-relaxed text-ink-muted">{c.b}</p>
+        <p class="text-sm leading-relaxed text-ink-muted mb-3">{c.b}</p>
+        <GuideLinks links={c.guide} />
       </article>
     ))}
   </div>
@@ -103,30 +184,31 @@ const calibration = [
           <Image src={c.img} alt={c.alt} widths={[320, 480]} sizes="(max-width: 640px) 92vw, 30vw" />
         </div>
         <h3 class="text-lg mb-1.5">{c.t}</h3>
-        <p class="text-sm leading-relaxed text-ink-muted">{c.b}</p>
+        <p class="text-sm leading-relaxed text-ink-muted mb-3">{c.b}</p>
+        <GuideLinks links={c.guide} />
       </article>
     ))}
   </div>
   <ul class="grid md:grid-cols-2 gap-x-10 gap-y-3 max-w-4xl">
-    <li class="text-sm leading-relaxed text-ink-muted">The bed mesh is a 3D surface you rotate and pinch to zoom, with named profiles.</li>
-    <li class="text-sm leading-relaxed text-ink-muted">Bed screw adjustment shades the bed by height and highlights the screw that is furthest off.</li>
-    <li class="text-sm leading-relaxed text-ink-muted">Z offset calibration saves where your printer needs it, to the probe or to the Z endstop.</li>
-    <li class="text-sm leading-relaxed text-ink-muted">Eddy, Beacon and Cartographer probes calibrate from the probe screen.</li>
-    <li class="text-sm leading-relaxed text-ink-muted">Heater calibration runs PID, or MPC on Kalico, and can tune any tool on a tool changer.</li>
-    <li class="text-sm leading-relaxed text-ink-muted">Tool changers get a Tool Offsets screen with a one-tap calibration that runs your printer's own routine.</li>
-    <li class="text-sm leading-relaxed text-ink-muted">FlashForge printers with a motor resonance tester can run Vertical Artifact Compensation, which removes the fine vertical lines a motor leaves on walls.</li>
+    <li class="text-sm leading-relaxed text-ink-muted">The <a href="/guide/calibration/#bed-mesh" class={link}>bed mesh</a> is a 3D surface you rotate and pinch to zoom, with named profiles.</li>
+    <li class="text-sm leading-relaxed text-ink-muted"><a href="/guide/calibration/#screws-tilt-adjust" class={link}>Bed screw adjustment</a> shades the bed by height and highlights the screw that is furthest off.</li>
+    <li class="text-sm leading-relaxed text-ink-muted"><a href="/guide/calibration/#z-offset-calibration" class={link}>Z offset calibration</a> saves where your printer needs it, to the probe or to the Z endstop.</li>
+    <li class="text-sm leading-relaxed text-ink-muted">Eddy, Beacon and Cartographer probes calibrate from the <a href="/guide/calibration/#probe-management" class={link}>probe screen</a>.</li>
+    <li class="text-sm leading-relaxed text-ink-muted"><a href="/guide/calibration/#heater-calibration-pid--mpc" class={link}>Heater calibration</a> runs PID, or MPC on Kalico, and can tune any tool on a tool changer.</li>
+    <li class="text-sm leading-relaxed text-ink-muted">Tool changers get a <a href="/guide/calibration/#tool-offsets" class={link}>Tool Offsets screen</a> with a one-tap calibration that runs your printer's own routine.</li>
+    <li class="text-sm leading-relaxed text-ink-muted">FlashForge printers with a motor resonance tester can run <a href="/guide/calibration/#vertical-artifact-compensation" class={link}>Vertical Artifact Compensation</a>, which removes the fine vertical lines a motor leaves on walls.</li>
     <li class="text-sm leading-relaxed text-ink-muted">Calibrations keep running behind the screensaver and save their results when they finish.</li>
   </ul>
 
   <div class="mt-14 pt-10 border-t border-hairline">
     <h2 class="text-xl mb-4">Also new in 1.1</h2>
     <ul class="grid md:grid-cols-2 gap-x-10 gap-y-3 max-w-4xl">
-      <li class="text-sm leading-relaxed text-ink-muted">A Motion screen with Jog and Move tabs, named bed positions, and tap-to-move on a map of the plate.</li>
-      <li class="text-sm leading-relaxed text-ink-muted">IDEX printers get multi-tool screens.</li>
-      <li class="text-sm leading-relaxed text-ink-muted">OpenAMS, several daisy-chained ACE units and, in early support, Bondtech INDX join the filament systems.</li>
-      <li class="text-sm leading-relaxed text-ink-muted">A pre-print checklist, a job queue you can add to while a print runs, and a pause at a chosen layer.</li>
-      <li class="text-sm leading-relaxed text-ink-muted">Lua plugins can add home screen tiles, screens and a settings page. They run in a sandbox and ask before they touch G-code, Moonraker or the network. The HelixPrint plugin adds quick reprints that skip the bed mesh.</li>
-      <li class="text-sm leading-relaxed text-ink-muted">HelixScreen also runs on the BTT K-Touch, a battery-powered 5-inch Wi-Fi screen, as a beta. You <a href="/flash/" class="text-secondary underline underline-offset-2">install it over USB with Chrome or Edge</a>, with nothing to set up on your computer.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">A <a href="/guide/motion/" class={link}>Motion screen</a> with Jog and Move tabs, named bed positions, and tap-to-move on a map of the plate.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">IDEX printers get <a href="/guide/filament/#choosing-a-tool-on-a-multi-head-printer" class={link}>multi-tool screens</a>.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">OpenAMS, several daisy-chained ACE units and, in early support, Bondtech INDX join the <a href="/guide/filament/#supported-filament-systems" class={link}>filament systems</a>.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">A <a href="/guide/printing/#before-the-print-actually-begins" class={link}>pre-print checklist</a>, a <a href="/guide/printing/#queueing-a-print" class={link}>job queue</a> you can add to while a print runs, and a <a href="/guide/printing/#pausing-at-a-layer" class={link}>pause at a chosen layer</a>.</li>
+      <li class="text-sm leading-relaxed text-ink-muted"><a href="/dev/contributing/plugins/" class={link}>Lua plugins</a> can add home screen tiles, screens and a settings page. They run in a sandbox and ask before they touch G-code, Moonraker or the network. The <a href="/guide/helixprint-plugin/" class={link}>HelixPrint plugin</a> adds quick reprints that skip the bed mesh.</li>
+      <li class="text-sm leading-relaxed text-ink-muted">HelixScreen also runs on the BTT K-Touch, a battery-powered 5-inch Wi-Fi screen, as a beta. You <a href="/flash/" class={link}>install it over USB with Chrome or Edge</a>, with nothing to set up on your computer. The <a href="/guide/install-esp32/" class={link}>K-Touch guide</a> has the details.</li>
     </ul>
   </div>
 </section>

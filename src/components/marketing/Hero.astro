@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import heroShot from '../../assets/images/screenshots/hero-print-status.png';
 import StatRow from './StatRow.astro';
+import GuideLinks from './GuideLinks.astro';
 import SpecGrid from './SpecGrid.astro';
 import themes from '../../data/themes.generated.json';
 import printers from '../../data/printers.generated.json';
@@ -58,6 +59,11 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
       pressure advance towers run from the touchscreen. Setup finds your printer and picks a layout for
       your display, and the home screen is a grid of widgets you can rearrange.
     </p>
+    <GuideLinks class="-mt-5 mb-8" links={[
+      { href: '/guide/getting-started/#first-time-setup', label: 'First-Time Setup' },
+      { href: '/guide/supported-printers/', label: 'Supported Printers' },
+      { href: '/guide/', label: 'User Guide' },
+    ]} />
 
     {isLaunch && (
       <p class="text-base leading-relaxed text-ink-muted max-w-[56ch] mb-8 border-l-2 border-l-warn pl-4">

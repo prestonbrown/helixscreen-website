@@ -1,0 +1,15 @@
+---
+// The "Guide:" line under a homepage section or card, pointing at the user
+// guide pages that cover it. Paths are the current docs version's plain URLs.
+interface Props { links: { href: string; label: string }[]; class?: string }
+const { links, class: extra } = Astro.props;
+---
+<p class:list={['ui text-xs text-ink-muted', extra]}>
+  Guide:{' '}
+  {links.map((l, i) => (
+    <>
+      {i > 0 && <span class="mx-1.5" aria-hidden="true">·</span>}
+      <a href={l.href} class="text-secondary underline underline-offset-2">{l.label}</a>
+    </>
+  ))}
+</p>
