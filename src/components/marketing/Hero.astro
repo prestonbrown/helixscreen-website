@@ -46,24 +46,23 @@ const install = 'curl -sSL https://releases.helixscreen.org/install.sh | sh';
       Klipper touch interface{series && ` · ${series}`}
     </p>
     <h1 class="text-4xl md:text-5xl leading-[1.1] max-w-[28ch] mb-5">
-      A modern Klipper touchscreen, built around filament and multi-material.
+      A touchscreen interface for Klipper printers
     </h1>
     <p class="text-lg leading-relaxed text-ink-muted max-w-[56ch] mb-8">
-      It runs {backends.count} filament systems natively, among them Happy Hare, AFC, ACE, CFS
-      and IFS, and tracks every spool with or without Spoolman. It detects your printer
-      and lays out a home screen for your display, which you can then rearrange however
-      you like. It replaces KlipperScreen or the factory screen in about 15 MB of RAM.
+      HelixScreen replaces KlipperScreen or your printer's factory screen, in about 15 MB of
+      RAM and with no X11. It has screens for {backends.count} filament systems, among them
+      Happy Hare, AFC, ACE, CFS and IFS. Input shaper, belt tension and pressure advance run
+      on the touchscreen, with their graphs. Setup finds your printer and picks a layout for
+      your display, and the home screen is a grid of widgets you can rearrange.
     </p>
 
     {isLaunch && (
       <p class="text-base leading-relaxed text-ink-muted max-w-[56ch] mb-8 border-l-2 border-l-warn pl-4">
         <strong class="font-semibold text-ink">HelixScreen 1.1 is out.</strong>{' '}
-        The home screen is now a square-cell grid you arrange
-        yourself, with layouts for ultrawide and portrait panels, and a new Print Status screen
-        is built around your printer's picture. A new spool editor writes to the printer's own
-        filament system, belt tension and pressure advance have guided screens, and OpenAMS,
-        multiple ACE units and Lua plugins are new. Upgrading from 1.0 keeps your settings and
-        converts your home layout.
+        It adds a Print Status screen built around a picture of your printer, a home screen
+        grid with resizable widgets, layouts for portrait and ultrawide panels, guided belt
+        tuning, pressure advance test towers, OpenAMS and multi-unit ACE support, and Lua
+        plugins. Upgrading from 1.0 keeps your settings and converts your home layout.
         <span class="block mt-2">
           <a href="/guide/release-notes-1-1/" class="text-secondary underline underline-offset-2">1.1 release notes</a>
           <span class="mx-2" aria-hidden="true">·</span>
