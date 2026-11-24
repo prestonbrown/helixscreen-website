@@ -310,7 +310,7 @@ test('alert is not used for text anywhere in src', () => {
 });
 
 test('the headline is present exactly once on the landing page', () => {
-  const matches = landing().match(/A touchscreen interface for Klipper printers/g) ?? [];
+  const matches = landing().match(/The Klipper touchscreen for multi-material printers/g) ?? [];
   assert.equal(matches.length, 1);
 });
 
