@@ -1,0 +1,609 @@
+{
+  "sidebar": [
+    {
+      "label": "Installation",
+      "items": [
+        {
+          "label": "Supported Printers",
+          "slug": "guide/supported-printers"
+        },
+        {
+          "label": "Install",
+          "slug": "installation"
+        },
+        {
+          "label": "K-Touch (ESP32)",
+          "slug": "guide/install-esp32"
+        },
+        {
+          "label": "Linux Desktop Window",
+          "slug": "guide/install-linux-desktop"
+        },
+        {
+          "label": "Upgrading",
+          "slug": "upgrading"
+        }
+      ]
+    },
+    {
+      "label": "Platform Guides",
+      "collapsed": true,
+      "items": [
+        {
+          "label": "Creality K1 Series",
+          "slug": "guide/install-k1"
+        },
+        {
+          "label": "Creality K1C Setup",
+          "slug": "guide/creality-k1c-setup"
+        },
+        {
+          "label": "Creality K2 Series",
+          "slug": "guide/install-k2"
+        },
+        {
+          "label": "Adventurer 5M",
+          "slug": "guide/install-ad5m"
+        },
+        {
+          "label": "Adventurer 5X",
+          "slug": "guide/install-ad5x"
+        },
+        {
+          "label": "Centauri Carbon",
+          "slug": "guide/install-cc1"
+        },
+        {
+          "label": "Sonic Pad",
+          "slug": "guide/install-sonicpad"
+        },
+        {
+          "label": "Snapmaker U1",
+          "slug": "guide/install-u1"
+        },
+        {
+          "label": "QIDI",
+          "slug": "guide/install-qidi"
+        },
+        {
+          "label": "Klipper Host (Pi, BTT)",
+          "slug": "guide/install-generic"
+        },
+        {
+          "label": "Easy Installer: Not Yet Supported",
+          "slug": "guide/easy-installer-unsupported"
+        }
+      ]
+    },
+    {
+      "label": "Getting Started",
+      "items": [
+        {
+          "label": "User Guide Overview",
+          "slug": "guide"
+        },
+        {
+          "label": "Getting Started",
+          "slug": "guide/getting-started"
+        }
+      ]
+    },
+    {
+      "label": "Home Screen",
+      "items": [
+        {
+          "label": "Home Panel",
+          "slug": "guide/home-panel"
+        },
+        {
+          "label": "Edit Mode",
+          "slug": "guide/home-edit-mode"
+        },
+        {
+          "label": "Widget Catalog",
+          "collapsed": true,
+          "items": [
+            {
+              "label": "All Widgets",
+              "slug": "guide/home-widgets"
+            },
+            {
+              "label": "Print Widgets",
+              "slug": "guide/home-widgets-print"
+            },
+            {
+              "label": "Filament Widgets",
+              "slug": "guide/home-widgets-filament"
+            },
+            {
+              "label": "Control and System Widgets",
+              "slug": "guide/home-widgets-controls"
+            }
+          ]
+        },
+        {
+          "label": "Printer Manager",
+          "slug": "guide/printer-manager"
+        }
+      ]
+    },
+    {
+      "label": "Printing",
+      "items": [
+        {
+          "label": "Printing",
+          "slug": "guide/printing"
+        },
+        {
+          "label": "Print Monitoring",
+          "slug": "guide/print-monitoring"
+        },
+        {
+          "label": "Camera",
+          "slug": "guide/camera"
+        },
+        {
+          "label": "Screen Sharing",
+          "slug": "guide/screen-sharing"
+        },
+        {
+          "label": "Print History",
+          "slug": "guide/print-history"
+        }
+      ]
+    },
+    {
+      "label": "Filament",
+      "items": [
+        {
+          "label": "Filament Management",
+          "slug": "guide/filament"
+        },
+        {
+          "label": "Filament System Panel",
+          "slug": "guide/filament-ams-panel"
+        },
+        {
+          "label": "Filament Mapping",
+          "slug": "guide/filament-mapping"
+        },
+        {
+          "label": "Creality Filament System (CFS)",
+          "slug": "guide/filament-cfs"
+        },
+        {
+          "label": "Snapmaker U1 and MedusaHC",
+          "slug": "guide/filament-tool-changers"
+        },
+        {
+          "label": "Drying and Humidity",
+          "slug": "guide/filament-drying"
+        },
+        {
+          "label": "Tracking & Spoolman",
+          "slug": "guide/filament-tracking"
+        }
+      ]
+    },
+    {
+      "label": "Printer Control",
+      "items": [
+        {
+          "label": "Temperature",
+          "slug": "guide/temperature"
+        },
+        {
+          "label": "Motion",
+          "slug": "guide/motion"
+        },
+        {
+          "label": "Fans",
+          "slug": "guide/fans"
+        },
+        {
+          "label": "Advanced Features",
+          "slug": "guide/advanced"
+        },
+        {
+          "label": "Calibration & Tuning",
+          "slug": "guide/calibration"
+        }
+      ]
+    },
+    {
+      "label": "Settings & Setup",
+      "items": [
+        {
+          "label": "Settings",
+          "collapsed": true,
+          "items": [
+            {
+              "label": "Overview",
+              "slug": "guide/settings"
+            },
+            {
+              "label": "Display",
+              "slug": "guide/settings/display"
+            },
+            {
+              "label": "Appearance",
+              "slug": "guide/settings/appearance"
+            },
+            {
+              "label": "Touch & Input",
+              "slug": "guide/settings/touch-input"
+            },
+            {
+              "label": "Sound",
+              "slug": "guide/settings/sound"
+            },
+            {
+              "label": "Printing",
+              "slug": "guide/settings/printing"
+            },
+            {
+              "label": "Devices",
+              "slug": "guide/settings/devices"
+            },
+            {
+              "label": "Safety & Alerts",
+              "slug": "guide/settings/safety"
+            },
+            {
+              "label": "Connection",
+              "slug": "guide/settings/connection"
+            },
+            {
+              "label": "Language & Time",
+              "slug": "guide/settings/language-time"
+            },
+            {
+              "label": "System",
+              "slug": "guide/settings/system"
+            },
+            {
+              "label": "Updates",
+              "slug": "guide/settings/updates"
+            },
+            {
+              "label": "Help & About",
+              "slug": "guide/settings/help-about"
+            },
+            {
+              "label": "LED Settings",
+              "slug": "guide/settings/led-settings"
+            }
+          ]
+        },
+        {
+          "label": "Sensors",
+          "slug": "guide/sensors"
+        },
+        {
+          "label": "Security & Screen Lock",
+          "slug": "guide/security"
+        },
+        {
+          "label": "Touch Calibration",
+          "slug": "guide/touch-calibration"
+        },
+        {
+          "label": "HelixPrint Plugin",
+          "slug": "guide/helixprint-plugin"
+        },
+        {
+          "label": "Chamber Heater",
+          "slug": "guide/chamber-heater"
+        },
+        {
+          "label": "Bluetooth Setup",
+          "slug": "guide/bluetooth-setup"
+        },
+        {
+          "label": "Barcode Scanner",
+          "slug": "guide/barcode-scanner"
+        },
+        {
+          "label": "Label Printing",
+          "slug": "guide/label-printing"
+        }
+      ]
+    },
+    {
+      "label": "More",
+      "items": [
+        {
+          "label": "Tips & Tricks",
+          "slug": "guide/tips"
+        },
+        {
+          "label": "Beta Features",
+          "slug": "guide/beta-features"
+        }
+      ]
+    },
+    {
+      "label": "Reference",
+      "items": [
+        {
+          "label": "Configuration",
+          "collapsed": true,
+          "items": [
+            {
+              "label": "Overview",
+              "slug": "reference/configuration"
+            },
+            {
+              "label": "Appearance and Previews",
+              "slug": "reference/configuration/appearance"
+            },
+            {
+              "label": "Display, Language and Time",
+              "slug": "reference/configuration/display"
+            },
+            {
+              "label": "Command Line and Environment Variables",
+              "slug": "reference/configuration/environment"
+            },
+            {
+              "label": "Filament, Multi-Filament Systems and Sensors",
+              "slug": "reference/configuration/filament"
+            },
+            {
+              "label": "Home Screen Layout",
+              "slug": "reference/configuration/home-panel"
+            },
+            {
+              "label": "Touch and Input",
+              "slug": "reference/configuration/input"
+            },
+            {
+              "label": "Label Printer",
+              "slug": "reference/configuration/label-printer"
+            },
+            {
+              "label": "Lights (LEDs)",
+              "slug": "reference/configuration/leds"
+            },
+            {
+              "label": "Printer and Connection",
+              "slug": "reference/configuration/network"
+            },
+            {
+              "label": "Printer Hardware and Motion",
+              "slug": "reference/configuration/printer"
+            },
+            {
+              "label": "Safety, Alerts and Screen Lock",
+              "slug": "reference/configuration/safety-alerts"
+            },
+            {
+              "label": "The Settings File",
+              "slug": "reference/configuration/settings-file"
+            },
+            {
+              "label": "Sound",
+              "slug": "reference/configuration/sound"
+            },
+            {
+              "label": "Logging, Updates, Telemetry and Storage",
+              "slug": "reference/configuration/system"
+            }
+          ]
+        },
+        {
+          "label": "Troubleshooting",
+          "collapsed": true,
+          "items": [
+            {
+              "label": "Overview",
+              "slug": "reference/troubleshooting"
+            },
+            {
+              "label": "Connection and Network",
+              "slug": "reference/troubleshooting/connection"
+            },
+            {
+              "label": "Logs, Debug Bundles and Help",
+              "slug": "reference/troubleshooting/diagnostics"
+            },
+            {
+              "label": "Screen and Touch",
+              "slug": "reference/troubleshooting/display-touch"
+            },
+            {
+              "label": "Filament Systems and Spoolman",
+              "slug": "reference/troubleshooting/filament-systems"
+            },
+            {
+              "label": "Slow Interface and Memory",
+              "slug": "reference/troubleshooting/performance"
+            },
+            {
+              "label": "Printing and Calibration",
+              "slug": "reference/troubleshooting/printing"
+            },
+            {
+              "label": "Settings, Setup Wizard and Model",
+              "slug": "reference/troubleshooting/settings-config"
+            },
+            {
+              "label": "Install, Update and Printer-Specific",
+              "slug": "reference/troubleshooting/updates-install"
+            }
+          ]
+        },
+        {
+          "label": "FAQ",
+          "slug": "reference/faq"
+        }
+      ]
+    },
+    {
+      "label": "Legal",
+      "items": [
+        {
+          "label": "Privacy Policy",
+          "slug": "legal/privacy"
+        },
+        {
+          "label": "Telemetry",
+          "slug": "legal/telemetry"
+        }
+      ]
+    },
+    {
+      "label": "Developer Docs",
+      "collapsed": true,
+      "items": [
+        {
+          "label": "Overview",
+          "slug": "dev"
+        },
+        {
+          "label": "Onboarding",
+          "items": [
+            {
+              "label": "Development Setup",
+              "slug": "dev/onboarding/development"
+            },
+            {
+              "label": "Build System",
+              "slug": "dev/onboarding/build-system"
+            },
+            {
+              "label": "Quick Reference",
+              "slug": "dev/onboarding/quick-reference"
+            },
+            {
+              "label": "Your First Contribution",
+              "slug": "dev/onboarding/first-contribution"
+            },
+            {
+              "label": "Contributor Gotchas",
+              "slug": "dev/onboarding/gotchas"
+            }
+          ]
+        },
+        {
+          "label": "Contributing",
+          "items": [
+            {
+              "label": "UI Contributor Guide",
+              "slug": "dev/contributing/ui"
+            },
+            {
+              "label": "Theme Contributor Guide",
+              "slug": "dev/contributing/themes"
+            },
+            {
+              "label": "Translation Contributor Guide",
+              "slug": "dev/contributing/translations"
+            },
+            {
+              "label": "Plugin Development",
+              "slug": "dev/contributing/plugins"
+            },
+            {
+              "label": "Copyright Headers",
+              "slug": "dev/contributing/copyright"
+            }
+          ]
+        },
+        {
+          "label": "Tutorials",
+          "items": [
+            {
+              "label": "Your First Plugin",
+              "slug": "dev/tutorials/first-plugin"
+            }
+          ]
+        },
+        {
+          "label": "Reference",
+          "items": [
+            {
+              "label": "LVGL9 XML Guide",
+              "slug": "dev/reference/xml-guide"
+            },
+            {
+              "label": "Modal System",
+              "slug": "dev/reference/modals"
+            },
+            {
+              "label": "Logging",
+              "slug": "dev/reference/logging"
+            },
+            {
+              "label": "Testing",
+              "slug": "dev/reference/testing"
+            }
+          ]
+        },
+        {
+          "label": "Printer Platforms",
+          "items": [
+            {
+              "label": "Creality K1 Series",
+              "slug": "dev/printers/creality-k1"
+            },
+            {
+              "label": "Creality K2 Series",
+              "slug": "dev/printers/creality-k2"
+            },
+            {
+              "label": "FlashForge Adventurer 5X",
+              "slug": "dev/printers/flashforge-ad5x"
+            },
+            {
+              "label": "QIDI Printers",
+              "slug": "dev/printers/qidi"
+            },
+            {
+              "label": "Snapmaker U1",
+              "slug": "dev/printers/snapmaker-u1"
+            }
+          ]
+        },
+        {
+          "label": "Process",
+          "items": [
+            {
+              "label": "Release Process",
+              "slug": "dev/process/release"
+            },
+            {
+              "label": "Installer",
+              "slug": "dev/process/installer"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    "dev",
+    "dev/onboarding/development",
+    "dev/onboarding/build-system",
+    "dev/onboarding/quick-reference",
+    "dev/onboarding/first-contribution",
+    "dev/onboarding/gotchas",
+    "dev/contributing/ui",
+    "dev/contributing/themes",
+    "dev/contributing/translations",
+    "dev/contributing/plugins",
+    "dev/contributing/copyright",
+    "dev/tutorials/first-plugin",
+    "dev/reference/xml-guide",
+    "dev/reference/modals",
+    "dev/reference/logging",
+    "dev/reference/testing",
+    "dev/printers/creality-k1",
+    "dev/printers/creality-k2",
+    "dev/printers/flashforge-ad5x",
+    "dev/printers/qidi",
+    "dev/printers/snapmaker-u1",
+    "dev/process/release",
+    "dev/process/installer"
+  ]
+}

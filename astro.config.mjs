@@ -24,6 +24,7 @@ export default defineConfig({
         { icon: 'github', label: 'GitHub', href: 'https://github.com/prestonbrown/helixscreen' },
       ],
       components: {
+        PageTitle: './src/components/DocsPageTitle.astro',
         ThemeProvider: './src/components/DocsThemeProvider.astro',
         ThemeSelect: './src/components/DocsThemeSelect.astro',
       },

@@ -8,6 +8,11 @@
 // tag starts with `tagPrefix` (prereleases count only when `prerelease` is
 // true), or from `fallbackRef` when no such release exists yet.
 //
+// Optional per-version fields: `status` is the short word the site's version
+// picker shows after the slug (default: beta for a prerelease line, else
+// previous); `note` is a sentence shown under the page title on that version's
+// pages.
+//
 // Promoting a line to stable: make it `current` with a "(stable)" label and
 // prerelease: false, and move the previous stable line into `others`, where it
 // is served under /<slug>/ from then on.
@@ -16,6 +21,15 @@ export const DOC_VERSIONS = {
   current: { slug: '1.1', label: '1.1 (stable)', tagPrefix: 'v1.1.', prerelease: false, fallbackRef: 'main' },
   others: [
     { slug: '1.0', label: '1.0 (previous)', tagPrefix: 'v1.0.', prerelease: false, fallbackRef: 'v1.0.11' },
+    {
+      slug: '1.2',
+      label: '1.2 (alpha)',
+      status: 'alpha',
+      note: 'These pages describe the 1.2 alpha, the development build published to the dev update channel. Features can change or be missing, and they can differ from the stable release.',
+      tagPrefix: 'v1.2.',
+      prerelease: true,
+      fallbackRef: 'main',
+    },
   ],
 };
 

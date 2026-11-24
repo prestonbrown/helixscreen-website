@@ -1,0 +1,272 @@
+---
+title: "Filament"
+slug: "1.2/guide/filament"
+sidebar:
+  order: 6
+---
+
+
+---
+
+## External Spool Configuration
+
+If you're not using an AMS or multi-material system, you can tell HelixScreen what filament is loaded by configuring an **external spool**. Tap the spool icon on the Filament panel to set the material, color, and brand. If Spoolman is configured, you can also link to a specific Spoolman spool. To take the spool off again, open it and tap **Clear Spool** below the form. The external spool is saved on the printer, in Moonraker's database, so every screen and slicer connected to the printer sees the same spool, and a change made on one shows on the others within about ten seconds. A spool whose filament carries a tuned pressure advance applies it when it becomes active; see [Pressure advance per filament](/1.2/guide/filament-tracking/#pressure-advance-per-filament).
+
+Once configured, the external spool information is used throughout the UI:
+
+- **Spool preset button**: A dynamic preset button appears in the Filament panel's preset grid, between TPU and Cool Down, with your spool's material name and recommended temperatures. Tap it to pre-heat both the nozzle and bed to the correct temperatures for your loaded filament.
+- **Temperature panel presets**: The Nozzle and Bed temperature panels also show a spool preset button for quick one-tap heating.
+- **Purge temperature**: When you tap **Purge**, HelixScreen passes a nozzle temperature to the purge macro (as the `PURGE_TEMP` parameter): the nozzle's current target or the spool's recommended temperature, whichever is hotter. A temperature at or below your printer's minimum extrusion temperature, or above your hotend's maximum temperature, is never passed; the parameter dialog asks instead.
+
+The spool preset button only appears when the loaded material differs from the standard presets (PLA, PETG, ABS, TPU). For standard materials, just use the built-in preset buttons. Its place in the grid stays empty when it isn't shown, so the other buttons never move.
+
+> **Tip:** The spool preset updates automatically when you change the external spool configuration: no need to close and reopen panels.
+
+> **Tip:** You can change which filament type a preset button controls: long-press it to pick a different material. See [Reassigning a Preset's Filament Type](/1.2/guide/temperature/#reassigning-a-presets-filament-type).
+
+---
+
+## Extrusion Panel
+
+![Extrusion Panel](../../../../assets/images/docs/1.2/controls-extrusion.png)
+
+Manual filament control:
+
+| Button | Action |
+|--------|--------|
+| **Extrude** | Push filament through the nozzle |
+| **Retract** | Pull filament back |
+
+Pick the **Length** to move first: 5mm, 10mm or 25mm. To change a button's length, press and hold it, type a length from 1 to 500 mm and confirm. The button keeps that length for this printer and becomes the chosen one. The circular-arrow key beside the length puts back the button's original length; confirm to keep it. The dropdown at the end of that row sets the speed of Extrude and Retract, from 1 to 50 mm/s. It changes the same setting as **Settings > Printing > Machine Limits > Extrude Speed**, where you can type any whole speed in that range, and the dropdown always shows the speed in use. The speed is remembered for each printer. On the smallest screens the **Length** label is hidden to make room, and the units on the buttons tell the two choices apart.
+
+> **Safety:** Extrusion requires the hotend to be at minimum temperature (usually 180°C for PLA, higher for other materials). If HelixScreen knows what filament is loaded, either from an [external spool](/1.2/guide/filament/#external-spool-configuration) or an active AMS slot, it skips the cold-nozzle safety warning and auto-preheats to the correct temperature instead.
+
+---
+
+## Load / Unload / Purge
+
+The Filament panel has dedicated **Load**, **Unload**, and **Purge** buttons. These run Klipper macros: HelixScreen auto-detects common names like `LOAD_FILAMENT`, `UNLOAD_FILAMENT`, and `PURGE` from your printer config.
+
+**Loading by hand.** On a printer with no filament system and no load macro, **Load** opens one **Load Filament** dialog that does the whole job. It first heats the nozzle to the temperature for the loaded material (or a default load temperature), saying "Heating the nozzle. Have the filament ready to push in." When the nozzle is hot, push the filament into the extruder until it stops; the extruder grips it automatically, or you can tap **Extrude**. HelixScreen then extrudes a short length and asks "Is new filament coming out of the nozzle?". Tap **Extrude more** until it does, then tap **Done**. The heater stays on while you push. **Done** lets it cool down after the usual delay, and **Cancel** or any other way of closing the dialog turns it off at once. It does not open while a job holds the machine, while another filament operation is heating or a cold pull is running, or when the toolhead you picked is not the active one; select that tool first.
+
+If a load, unload or tool change needs the printer homed and it isn't, HelixScreen homes it first and then carries on, without asking. Make sure the bed is clear before you start one on a printer that has been sitting idle with its motors off. When HelixScreen can see that your multi-material system homes on its own (AFC's `auto_home` setting in `AFC.cfg`), it leaves the homing to it.
+
+When the nozzle is too cold to move filament and HelixScreen doesn't know what is loaded, a warning takes the place of the **Operations** heading until the nozzle is hot enough.
+
+### The Filament panel's cards
+
+The Filament panel is laid out in cards, like the Controls panel. In landscape the **Temperature** card, the temperature graph and the **Multi-Filament** card are on the left, and the **Material** and **Operations** cards are on the right. The Temperature card shows the nozzle, bed and chamber rows the Controls panel uses (see [The Temperature Card](/1.2/guide/temperature/#the-temperature-card)), with the nozzle row for the tool the panel acts on; tap a row to open the temperature graph on that heater.
+
+In portrait (such as a 320x480 screen) the cards stack in one column, with the readings side by side on one line and the material presets in one row, **Cool Down** in the Material card's header.
+
+![The Filament panel on a 480x800 portrait screen, its cards stacked in one column](../../../../assets/images/docs/1.2/filament-portrait.png)
+
+### On an ultrawide screen
+
+On a very wide screen (wider than about 2.5:1, such as 1920x480 or 1920x440), a printer with a multi-material system or several toolheads shows its Filament System panel beside the Filament panel instead of over it:
+
+![The Filament panel on a 1920x440 ultrawide screen, with the Filament System panel beside its cards](../../../../assets/images/docs/1.2/filament-ultrawide.png)
+
+1. Tap **Filament** in the navigation bar. The Filament cards fill the left part of the screen, and the Filament System panel, with its slots and filament path, fills the space to their right.
+2. Load, unload or edit a slot on the right while the temperatures and the Operations card stay in view on the left.
+
+The Multi-Filament card has no **Manage** button there, because the panel it opens is already showing. With more than one unit, the right side shows the overview of all your units: tap a unit to see its slots, and tap the back arrow to return to the overview. Opening something over the Filament panel, such as the temperature graph, and coming back keeps the unit you were looking at. Switching to another panel in the navigation bar and coming back starts again at the overview.
+
+A printer with no multi-material system and a single toolhead has nothing to show there, so the Filament cards keep their usual width and the space to the right stays empty.
+
+### Choosing a tool on a multi-head printer
+
+On a printer with more than one toolhead (a tool changer, an IDEX or dual-extruder machine, the Snapmaker U1), the **Operations** card chooses which tool the panel acts on. Its top row has one cell per head, each with its filament color along the bottom: the same cells as the Home screen's tool switcher. The highlighted cell is the tool the panel is aimed at, and the Temperature card's nozzle row names it. The cells name each head as the rest of the screen numbers it (**T3**, **Tool 4** or **4**, following **Settings > Appearance > Tool Numbers** and the room the cells have).
+
+A single-head printer has no tool choice, even when its filament system (Happy Hare, AFC, OpenAMS, CFS, QIDI Box, AD5X IFS) counts each lane as a tool: lanes feeding one hotend are not separate heads. There the Multi-Filament card has a **Manage** button beside the lane bars; tap either to open the Filament System panel, where you load or unload a particular lane. Load and Unload on the Filament panel act on the lane in the toolhead.
+
+Tapping a head only aims the panel at it. Nothing moves, and the printer does not change tools. The panel shares its aimed tool with the Controls Temperature card and the temperature graph screen, so a pick on any of them shows on all three. The tool is picked up when you use a button that needs it: **Load**, **Unload**, **Extrude**, **Retract** or **Purge** first pick up the aimed tool if it is not the mounted one, then carry on. That pick-up follows **Settings > Printing > Confirm tool changes** (on by default, shown only on multi-tool printers): with it on, the printer asks before switching. A paused print always asks, and the switch is refused while printing, while spools lie on the bed, or while the filament system is waiting for you. If the tool does not arrive, the step is dropped and a message says that nothing was sent.
+
+One button at the right end of that row does the tool change by itself. It reads **Pick up** when the aimed tool is not the mounted one, and **Park** (with the same icon as Park on the Home screen's tool switcher) when it is mounted and your printer can park a tool in its dock. When neither applies, the button is hidden.
+
+![The Filament panel's Operations card](../../../../assets/images/docs/1.2/filament-tool-select.png)
+
+1. The row of heads, which aims the panel at a tool and moves nothing.
+
+### Customizing which macro runs
+
+You can override any of these buttons to run a different macro:
+
+1. Go to **Settings > Printing > Macro Buttons**
+2. Scroll to the **Standard Macros** section
+3. Tap the dropdown for **Load Filament**, **Unload Filament**, or **Purge**
+4. Select the **(Auto: ...)** entry, which names the macro HelixScreen detected, to use auto-detection, or pick any macro from your Klipper config
+
+This works whether or not you have an AMS system. If a slot is left empty (no macro detected or configured), the button is disabled.
+
+> **With an AMS system:** by default the Load and Unload buttons drive your filament system directly (slot-based load and unload through the AMS) rather than running a macro. Pick a macro yourself and **your choice wins**: the button runs your macro and the filament system's own handling is skipped for that operation. That is the point of the override, and it is worth knowing what it means, because your macro then owns everything the built-in path would have done, on AFC, for example, `TOOL_UNLOAD` no longer runs, so parking the shuttle and marking the lane are up to your macro. Set the slot back to its **(Auto: ...)** entry to hand the operation back to the filament system.
+>
+> The Purge button always uses your configured macro.
+
+### When no preheat happens first
+
+Loading or unloading normally heats the nozzle to the material's temperature before the operation starts. HelixScreen skips that preheat when something else already handles the heat, so the nozzle is not heated twice:
+
+- your filament system heats on its own when it loads,
+- your configured Load/Unload macro heats the hotend itself, or
+- **Allow cold load/unload** is on (Settings > Printing).
+
+### What happens to the nozzle afterward
+
+Loading or unloading heats the nozzle to material temperature. Two minutes after the operation finishes, HelixScreen turns the extruder heater back off: the delay lets you run several operations in a row without the nozzle cooling in between, and a running print is never touched.
+
+If your filament system already handles this (AFC does), turn off **Settings > Printing > Cool nozzle after filament ops** so only one of them is driving the heater. It's a per-printer setting. See [Printing settings](/1.2/guide/settings/printing/#cool-nozzle-after-filament-ops).
+
+### Loading on a QIDI (M604)
+
+QIDI's own load macro, `M604`, is only the first step of a wizard that QIDI's stock screen walks you through. HelixScreen runs the whole wizard, so a load from the Filament panel finishes on the screen instead of stopping with a hot nozzle and filament that nothing has gripped:
+
+1. Tap **Load**. The printer heats the nozzle and parks over the waste chute.
+2. A **Load Filament** dialog asks you to push the filament into the extruder until it stops. It is gripped as soon as the filament sensor sees it, or tap **Extrude** to feed it yourself.
+3. Once it has fed, the dialog asks **Is new filament coming out of the nozzle?** Tap **Extrude more** to push more through, or **Done** when the new color runs clean.
+
+However the dialog ends, with **Done** or **Cancel**, HelixScreen cools the nozzle and turns the filament sensor back on, which the stock macro leaves off. An unload with QIDI's `M603` turns the sensor back on afterward too. On firmware older than 01.01.02.x, which has no push-in step, the dialog opens straight on the question.
+
+With a QIDI Box, box slots load and unload the way the stock screen does them.
+
+---
+
+---
+
+## AMS / Multi-Material Systems
+
+![AMS Panel](../../../../assets/images/docs/1.2/ams.png)
+
+1. The gear, which opens Multi-Filament System Management.
+2. What is loaded now.
+3. The action buttons: Load, Unload and the others your system offers (a Happy Hare printer shows Home here).
+
+A printer with a multi-material system (Happy Hare, AFC, OpenAMS, ACE, a tool changer, the Snapmaker U1, the Creality CFS, the AD5X IFS, the QIDI Box) gets a Filament System panel that draws your slots and the filament path. Tap the slot bars on the Filament panel's Multi-Filament card to open it (the whole row of bars is one tap target, and **Manage** beside it does the same; with several heads it is a smaller button, and in portrait on a printer with several heads, where the bars sit in the Operations header, they end in a chevron instead). The panel's header has a gear that opens Multi-Filament System Management. The details live on their own pages:
+
+| Topic | Page |
+|-------|------|
+| Slot view, sidebar, load and unload, bypass, the slot menu, the spool editor, Endless Spool, the management screen | [The Filament System Panel](/1.2/guide/filament-ams-panel/) |
+| Which slot feeds which tool, for one print or as a standing table; syncing with OrcaSlicer | [Filament Mapping](/1.2/guide/filament-mapping/) |
+| Creality CFS, tags, auto-refill, the external spool | [Creality Filament System](/1.2/guide/filament-cfs/) |
+| Snapmaker U1 and MedusaHC | [Snapmaker U1 and MedusaHC](/1.2/guide/filament-tool-changers/) |
+| Heated boxes, humidity, drying cycles | [Filament Drying and Humidity](/1.2/guide/filament-drying/) |
+
+### Where each topic lives
+
+The headings below are short pointers, so older links keep working.
+
+- <a id="ams-management-settings-overlay"></a>[Multi-Filament System Management](/1.2/guide/filament-ams-panel/#multi-filament-system-management)
+- <a id="slot-view"></a>[Slot view](/1.2/guide/filament-ams-panel/#slot-view)
+- <a id="assigned-tool"></a>[Assigned tool](/1.2/guide/filament-ams-panel/#assigned-tool)
+- <a id="where-lane-information-comes-from"></a>[Where lane information comes from](/1.2/guide/filament-ams-panel/#where-lane-information-comes-from)
+- <a id="tips"></a>[Tips](/1.2/guide/filament-ams-panel/#tips)
+- <a id="snapmaker-u1-snapswap"></a><a id="runout-and-resume"></a>[Snapmaker U1 and runout](/1.2/guide/filament-tool-changers/#snapmaker-u1-snapswap)
+- <a id="medusahc-hotend-changer"></a>[MedusaHC](/1.2/guide/filament-tool-changers/#medusahc-hotend-changer)
+- <a id="rfid-detection"></a>[RFID detection](/1.2/guide/filament-cfs/#rfid-detection)
+
+#### Sidebar
+
+The loaded-filament strip, the step progress and the action buttons: see [The Filament System Panel](/1.2/guide/filament-ams-panel/#sidebar).
+
+#### Reading Error States
+
+Error dots, buffer tints and recovery steps: see [Reading Error States](/1.2/guide/filament-ams-panel/#reading-error-states).
+
+#### When Bypass Doesn't Appear
+
+Which systems report no bypass, and the **Enable Bypass Controls** setting: see [When Bypass Doesn't Appear](/1.2/guide/filament-ams-panel/#when-bypass-doesnt-appear).
+
+#### Switching Toolheads from the Filament Path
+
+Tap a toolhead that is not mounted on the filament path to switch to it: see [Switching Toolheads from the Filament Path](/1.2/guide/filament-ams-panel/#switching-toolheads-from-the-filament-path).
+
+#### Slot Context Menu
+
+What tapping a slot offers: see [Slot Context Menu](/1.2/guide/filament-ams-panel/#slot-context-menu).
+
+#### Editing Filament Properties
+
+The spool editor: see [Editing Filament Properties](/1.2/guide/filament-ams-panel/#editing-filament-properties).
+
+#### Filament Mapping
+
+Choosing which slot feeds each tool: see [Filament Mapping](/1.2/guide/filament-mapping/#filament-mapping).
+
+#### Printers that map filament by rewriting the file
+
+<a id="printers-that-remap-by-rewriting-the-file"></a>
+
+Printers whose firmware cannot remap a tool, such as a MedusaHC: see [Printers that map filament by rewriting the file](/1.2/guide/filament-mapping/#printers-that-map-filament-by-rewriting-the-file).
+
+#### Syncing with OrcaSlicer (2.3.2 and later)
+
+How slot edits reach OrcaSlicer: see [Syncing with OrcaSlicer](/1.2/guide/filament-mapping/#syncing-with-orcaslicer-232-and-later).
+
+#### Toolhead Offset Calibration
+
+The Snapmaker U1's offset calibration: see [Toolhead Offset Calibration](/1.2/guide/filament-tool-changers/#toolhead-offset-calibration). Other tool changers use [Tool Offsets](/1.2/guide/calibration/#tool-offsets).
+
+#### Creality Filament System (CFS)
+
+See [Creality Filament System](/1.2/guide/filament-cfs/).
+
+#### CFS and the External Spool
+
+See [CFS and the External Spool](/1.2/guide/filament-cfs/#cfs-and-the-external-spool).
+
+#### Filament Drying and Humidity
+
+See [Filament Drying and Humidity](/1.2/guide/filament-drying/).
+
+---
+
+## Supported Filament Systems
+
+HelixScreen shows one filament system per printer. When a printer has more than one kind of hardware, one system covers all of it:
+
+- A filament changer (AFC, Happy Hare, ACE and the others below) is the one shown on a printer that also has a tool changer. AFC set up with a tool changer unit drives the heads itself.
+- A Snapmaker U1 with ACE Pro units through multiACE shows the U1 with the ACE units feeding it.
+- A Snapmaker U1 with Happy Hare or AFC shows that system.
+
+**Supported system types:**
+
+| System | Description |
+|--------|-------------|
+| **CFS** | Creality Filament System (K2 series, plus K1/K1C/K1 Max with the official CFS upgrade) |
+| **Happy Hare** | MMU2, ERCF, 3MS, Tradrack, EMU |
+| **AFC** | Box Turtle, OpenAMS, ViViD |
+| **OpenAMS** | klipper_openams without AFC. Needs a klipper_openams version that publishes its UI API; Load and Unload also need the `OPENAMS_LOAD` / `OPENAMS_UNLOAD` macros from its `oams_macros.cfg` |
+| **ACE** | Anycubic ACE Pro (via ValgACE/BunnyACE/DuckACE Klipper drivers) |
+| **Tool Changer** | Toolchanger-based filament routing |
+| **AD5X IFS** | FlashForge Adventurer 5X Intelligent Filament Switching (requires ZMOD firmware v1.7.0 or newer) |
+| **SnapSwap** | Snapmaker U1 4-toolhead changer (parallel, one independent toolhead per slot) |
+
+Each system displays its own logo in the AMS panel header. Happy Hare and AFC show their firmware logos; specific hardware variants (ERCF, Box Turtle, ViViD, the QIDI Box, etc.) show hardware-specific logos when detected.
+
+---
+
+## Spoolman Integration
+
+Spoolman is an optional filament-inventory server. Once it's connected, the AMS panel shows saved spool data on each slot and lets you assign spools straight from your inventory:
+
+- Spool name and material type shown per slot
+- Remaining filament weight shown
+- Tap a slot's **Select Spool**, or **Edit Spool** and **New Spool** at its top, to put a saved spool in the slot. See [Editing Filament Properties](#editing-filament-properties) and the [Slot Context Menu](#slot-context-menu)
+- Add a slot's spool to Spoolman in one tap, and archive a spool that ran out when you clear its slot. See [Filament Tracking & Spoolman](/1.2/guide/filament-tracking/#adding-a-slots-spool-to-spoolman)
+
+Connecting a server, the full spool-inventory panel, the new-spool wizard, and how remaining weight is tracked all live on their own page: **[Filament Tracking & Spoolman](/1.2/guide/filament-tracking/)**.
+
+---
+
+## See Also
+
+- [Filament Tracking & Spoolman](/1.2/guide/filament-tracking/): How remaining weight is tracked, with and without Spoolman, and how to connect a Spoolman server
+- [Temperature Control](/1.2/guide/temperature/): Preheat presets work with spool material info
+- [Bluetooth Setup](/1.2/guide/bluetooth-setup/): Required for Bluetooth-connected AMS and label printers
+- [Label Printing](/1.2/guide/label-printing/): Print physical spool labels with Spoolman data
+- [Settings: Printing](/1.2/guide/settings/printing/): AMS and Spoolman configuration
+- [Settings: Devices](/1.2/guide/settings/devices/): filament sensor configuration
+
+---
+
+**Next:** [Filament Tracking & Spoolman](/1.2/guide/filament-tracking/) | **Prev:** [Motion & Positioning](/1.2/guide/motion/) | [Back to User Guide](/1.2/guide/)

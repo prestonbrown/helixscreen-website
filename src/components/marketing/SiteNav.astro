@@ -12,7 +12,7 @@ const versionOptions = [
   { href: '/guide/', label: `${whatsnew.version} stable` },
   ...DOC_VERSIONS.others.map((v) => ({
     href: `${docsPrefix(v.slug)}/guide/`,
-    label: `${v.slug} ${v.prerelease ? 'beta' : 'previous'}`,
+    label: `${v.slug} ${v.status ?? (v.prerelease ? 'beta' : 'previous')}`,
   })),
 ];
 ---

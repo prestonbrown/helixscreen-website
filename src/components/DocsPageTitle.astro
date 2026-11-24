@@ -1,0 +1,27 @@
+---
+// Starlight's PageTitle slot: the plugin's version notice, then, on a
+// version that carries a `note` in doc-versions.mjs, one more sentence in the
+// notice's style saying what that version's pages describe.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import VersionNotice from 'starlight-versions/components/VersionNotice.astro';
+import { DOC_VERSIONS } from '../data/doc-versions.mjs';
+
+const id = Astro.locals.starlightRoute.entry.id;
+const note = DOC_VERSIONS.others.find((v) => v.note && id.startsWith(`${v.slug}/`))?.note;
+---
+<VersionNotice />
+{note && <p class="version-note" role="note">{note}</p>}
+<Default><slot /></Default>
+
+<style>
+  .version-note {
+    border: 1px solid var(--sl-color-orange);
+    padding: 0.75em 1em;
+    background-color: var(--sl-color-orange-low);
+    color: var(--sl-color-orange-high);
+    width: max-content;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    font-size: var(--sl-text-sm);
+  }
+</style>

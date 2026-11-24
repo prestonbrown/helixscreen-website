@@ -182,3 +182,54 @@ test('the current version slug redirects to the root, other versions keep their 
   assert.equal(body, '/1.1 / 301\n/1.1/* /:splat 301\n');
   assert.ok(!body.includes('/1.0'));
 });
+
+const ALPHA = DOC_VERSIONS.others.find((v) => v.slug === '1.2');
+const ALPHA_RELEASES = [
+  rel('v1.2.0-alpha.2', '2026-11-26T00:00:00Z'),
+  rel('v1.2.0-alpha.1', '2026-11-24T00:00:00Z'),
+  rel('v1.2.0-alpha.3', '2026-11-28T00:00:00Z', { draft: true }),
+  rel('v1.1.1', '2026-11-27T00:00:00Z'),
+];
+
+test('the 1.2 alpha line is served under /1.2/ with its own env var and a plain-words note', () => {
+  assert.ok(ALPHA, '1.2 is configured');
+  assert.equal(docsPrefix('1.2'), '/1.2');
+  assert.equal(refEnvVar('1.2'), 'HELIX_DOCS_REF_1_2');
+  assert.equal(ALPHA.prerelease, true);
+  assert.match(ALPHA.note, /alpha/);
+  assert.match(ALPHA.note, /dev update channel/);
+});
+
+test('1.2 tracks the newest published alpha tag, ignores drafts and other lines, else main', () => {
+  assert.equal(pickDocRef(ALPHA_RELEASES, ALPHA), 'v1.2.0-alpha.2');
+  assert.equal(pickDocRef([rel('v1.1.1', '2026-11-27T00:00:00Z')], ALPHA), 'main');
+  assert.equal(pickDocRef([], DOC_VERSIONS.current), 'main');
+});
+
+test('a 1.2 override resolves to its env var and the plain URLs stay 1.1', () => {
+  const refs = Object.fromEntries(resolveDocRefs(ALPHA_RELEASES, { '1.2': 'origin/main' }));
+  assert.equal(refs.HELIX_DOCS_REF_1_2, 'origin/main');
+  assert.equal(DOC_VERSIONS.current.slug, '1.1');
+  assert.ok(!currentSlugRedirects().includes('/1.2'));
+});
+
+const DIST_ALPHA = join('dist', '1.2');
+
+test('1.2 pages carry the alpha note, other versions do not', { skip: !existsSync(DIST_ALPHA) }, () => {
+  const alpha = readFileSync(join(DIST_ALPHA, 'guide', 'printing', 'index.html'), 'utf8');
+  assert.match(alpha, /class="version-note/);
+  assert.match(alpha, /dev update channel/);
+  for (const f of [join('dist', 'guide', 'printing', 'index.html'), join('dist', '1.0', 'guide', 'printing', 'index.html')]) {
+    if (existsSync(f)) assert.doesNotMatch(readFileSync(f, 'utf8'), /class="version-note/, f);
+  }
+});
+
+test('the nav version picker lists stable, previous and alpha', { skip: !existsSync(DIST_ALPHA) }, () => {
+  const html = readFileSync(join('dist', 'index.html'), 'utf8');
+  const opts = [...html.matchAll(/<option value="([^"]*)"[^>]*>([^<]*)/g)].map((m) => [m[1], m[2].trim()]);
+  assert.deepEqual(
+    opts.filter(([v]) => v.endsWith('/guide/')).map(([v]) => v),
+    ['/guide/', '/1.0/guide/', '/1.2/guide/'],
+  );
+  assert.ok(opts.some(([v, l]) => v === '/1.2/guide/' && /alpha/.test(l)));
+});
