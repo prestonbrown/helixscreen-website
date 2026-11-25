@@ -66,7 +66,32 @@ const rel = (tag, date, assets, extra = {}) => ({
   ...extra,
 });
 
-test('finds the newest release carrying the zip, prereleases included', () => {
+test('prefers the newest stable release with the zip over a newer prerelease', () => {
+  // 2026-11-24: v1.2.0-alpha.1 published after v1.1.0 and became "newest with the zip".
+  const releases = [
+    rel('v1.2.0-alpha.1', '2026-11-24T16:17:00Z', ['helixscreen-esp32-ktouch-v1.2.0-alpha.1.zip'], { prerelease: true }),
+    rel('v1.1.0', '2026-11-24T03:20:00Z', ['helixscreen-esp32-ktouch-v1.1.0.zip']),
+    rel('v1.1.0-rc.6', '2026-11-23T02:18:00Z', ['helixscreen-esp32-ktouch-v1.1.0-rc.6.zip'], { prerelease: true }),
+  ];
+  assert.deepEqual(pickRelease(releases), {
+    tag: 'v1.1.0',
+    asset: 'helixscreen-esp32-ktouch-v1.1.0.zip',
+  });
+});
+
+test('picks the newest stable release with the zip, not the newest stable without one', () => {
+  // A stable release whose firmware build failed ships without the zip; the previous
+  // stable build is served rather than jumping to a prerelease.
+  const releases = [
+    rel('v1.1.1', '2026-12-01T00:00:00Z', ['helixscreen-pi-v1.1.1.tar.gz']),
+    rel('v1.1.0', '2026-11-24T03:20:00Z', ['helixscreen-esp32-ktouch-v1.1.0.zip']),
+    rel('v1.2.0-alpha.1', '2026-11-24T16:17:00Z', ['helixscreen-esp32-ktouch-v1.2.0-alpha.1.zip'], { prerelease: true }),
+  ];
+  assert.equal(pickRelease(releases).tag, 'v1.1.0');
+});
+
+test('falls back to the newest prerelease with the zip when no stable release has one', () => {
+  // The situation before 1.1.0: every K-Touch zip lives on a prerelease.
   const releases = [
     rel('v1.0.3', '2026-10-04T00:00:00Z', ['helixscreen-pi-v1.0.3.tar.gz']),
     rel('v1.1.0-beta.4', '2026-10-01T00:00:00Z', ['helixscreen-esp32-ktouch-v1.1.0-beta.4.zip'], { prerelease: true }),

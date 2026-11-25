@@ -49,13 +49,22 @@ export function buildManifest(version, parts) {
 }
 
 /**
- * The newest non-draft release, prereleases included, that carries the K-Touch
- * zip. `releases/latest` cannot answer this: it skips prereleases, and a release
- * whose beta firmware build failed ships without the zip. Returns { tag, asset } or null.
+ * The newest stable (non-prerelease, non-draft) release that carries the K-Touch
+ * zip. A prerelease is only served when no stable release has the zip yet, as
+ * before 1.1.0 shipped. `releases/latest` cannot answer this either way: a
+ * release whose firmware build failed ships without the zip and must be passed
+ * over. Returns { tag, asset } or null.
  */
 export function pickRelease(releases) {
-  for (const r of publishedNewestFirst(releases)) {
-    const asset = (r.assets ?? []).find((a) => ASSET_RE.test(a.name));
+  const published = publishedNewestFirst(releases);
+  const zipOf = (r) => (r.assets ?? []).find((a) => ASSET_RE.test(a.name));
+  for (const r of published) {
+    if (r.prerelease) continue;
+    const asset = zipOf(r);
+    if (asset) return { tag: r.tag_name, asset: asset.name };
+  }
+  for (const r of published) {
+    const asset = zipOf(r);
     if (asset) return { tag: r.tag_name, asset: asset.name };
   }
   return null;
@@ -87,7 +96,7 @@ function unpack(zip, work) {
 
 function download(work) {
   // Release bodies are long changelogs; keep only what pickRelease reads.
-  const slim = '[.[] | {tag_name, draft, published_at, created_at, assets: [.assets[] | {name}]}]';
+  const slim = '[.[] | {tag_name, draft, prerelease, published_at, created_at, assets: [.assets[] | {name}]}]';
   const json = execFileSync('gh', ['api', `repos/${REPO}/releases?per_page=30`, '--jq', slim], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
