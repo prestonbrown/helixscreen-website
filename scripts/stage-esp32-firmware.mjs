@@ -5,7 +5,6 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from 'node:os';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REPO, publishedNewestFirst } from './releases.mjs';
 
 // Stages the K-Touch firmware for the /flash/ page: the part images flash_args
 // names, plus an ESP Web Tools manifest. The browser fetches them from this
@@ -14,26 +13,28 @@ import { REPO, publishedNewestFirst } from './releases.mjs';
 //
 // Usage: node scripts/stage-esp32-firmware.mjs [--zip path/to/helixscreen-esp32-ktouch-<tag>.zip]
 //                                               [--pubkey path/to/release-minisign.pub]
-// Without --zip it asks `gh` for the newest release carrying the zip, then checks
-// that zip against the release's signed channel manifest before staging anything:
-// the manifest must carry a valid signature by the release key, name the same tag,
-// and list the zip's sha256 under `esp32-ktouch`. Any failure exits non-zero, so
-// the deploy fails and the site keeps the firmware it already serves.
+// Without --zip the release comes from the signed channel manifests the app's
+// updater reads: the stable manifest, or the beta one when stable lists no K-Touch
+// zip. Each must carry a valid prehashed minisign signature by the release key with
+// a trusted comment naming its channel. The zip is downloaded from the URL that
+// manifest lists and staged only when its sha256 matches the listing. When neither
+// manifest lists a zip, nothing is staged and the page says no build is published.
+// Any other failure (a refused signature, a wrong hash, an unreachable manifest or
+// download) exits non-zero with the staged firmware untouched, so the deploy fails
+// and the site keeps the firmware it already serves.
 //
 // The release key is HelixScreen's `.github/release-minisign.pub`, the key the app's
-// updater and the easy installer trust; its `.github/release-minisign-dev.pub` is
-// trusted on the dev channel only, as the app does. The deploy job checks the
-// HelixScreen repo out beside this one (`../helixscreen`), and both keys are read
-// from there; --pubkey names another release key and trusts no dev key. A zip given
-// with --zip is a local build and is not checked.
+// updater and the easy installer trust. The deploy job checks the HelixScreen repo
+// out beside this one (`../helixscreen`) and the key is read from there; --pubkey
+// names another copy. Dev-channel builds are not served here, so the dev key is not
+// trusted. A zip given with --zip is a local build and is not checked.
 
 export const ASSET_RE = /^helixscreen-esp32-ktouch-(.+)\.zip$/;
 // Cloudflare Pages refuses any single file above 25 MiB.
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 export const MANIFEST_BASE = 'https://releases.helixscreen.org';
-// The channels whose manifests can name a release the flasher serves: a stable
-// release is on stable, a prerelease on beta or dev.
-export const CHANNELS = ['stable', 'beta', 'dev'];
+// The channels the flasher serves from, in order of preference.
+export const CHANNELS = ['stable', 'beta'];
 export const MANIFEST_ASSET_KEY = 'esp32-ktouch';
 
 // DER prefix of an Ed25519 SubjectPublicKeyInfo; the raw 32-byte key follows it.
@@ -90,18 +91,11 @@ export function verifyMinisign(message, minisigText, publicKeyText) {
 
 /**
  * Parses @p manifestBytes after its signature checks out for @p channel, by the rule
- * the app's updater applies: signed by keys.release on any channel, or by keys.dev on
- * the dev channel only, with a trusted comment exactly
- * `file:manifest.json channel:<channel>`. Throws on any failure.
+ * the app's updater applies to stable and beta: signed by the release key, with a
+ * trusted comment exactly `file:manifest.json channel:<channel>`. Throws on any failure.
  */
-export function verifyChannelManifest(manifestBytes, minisigText, channel, keys) {
-  let trusted;
-  try {
-    trusted = verifyMinisign(manifestBytes, minisigText, keys.release);
-  } catch (err) {
-    if (channel !== 'dev' || !keys.dev) throw err;
-    trusted = verifyMinisign(manifestBytes, minisigText, keys.dev);
-  }
+export function verifyChannelManifest(manifestBytes, minisigText, channel, publicKeyText) {
+  const trusted = verifyMinisign(manifestBytes, minisigText, publicKeyText);
   if (trusted !== `file:manifest.json channel:${channel}`) {
     throw new Error(`manifest signature: trusted comment ${JSON.stringify(trusted)} is not for the ${channel} channel`);
   }
@@ -109,17 +103,24 @@ export function verifyChannelManifest(manifestBytes, minisigText, channel, keys)
 }
 
 /**
- * Whether a verified channel manifest vouches for this zip: the same release tag,
- * and the zip's sha256 listed under `esp32-ktouch`. Returns a reason it does not,
- * or null when it does.
+ * The K-Touch zip to serve, from verified channel manifests given in CHANNELS order
+ * as [{ channel, manifest }]: the first that lists an `esp32-ktouch` asset with a
+ * url and a sha256. Returns { channel, tag, url, sha256 } or null when none does.
  */
-export function manifestRefusesZip(manifest, tag, zipBytes) {
-  if (manifest?.tag !== tag) return `it lists ${manifest?.tag ?? 'no tag'}, not ${tag}`;
-  const listed = manifest.assets?.[MANIFEST_ASSET_KEY]?.sha256;
-  if (!listed) return `it lists no ${MANIFEST_ASSET_KEY} asset`;
-  const actual = createHash('sha256').update(zipBytes).digest('hex');
-  if (listed.toLowerCase() !== actual) return `the zip's sha256 ${actual} is not the listed ${listed}`;
+export function pickFromManifests(verified) {
+  for (const { channel, manifest } of verified) {
+    const asset = manifest?.assets?.[MANIFEST_ASSET_KEY];
+    if (asset?.url && /^[0-9a-f]{64}$/i.test(asset.sha256 ?? '')) {
+      return { channel, tag: manifest.tag, url: asset.url, sha256: asset.sha256.toLowerCase() };
+    }
+  }
   return null;
+}
+
+/** Throws unless @p zipBytes hash to the sha256 the manifest listed. */
+export function checkZipHash(zipBytes, sha256) {
+  const actual = createHash('sha256').update(zipBytes).digest('hex');
+  if (actual !== sha256) throw new Error(`the zip's sha256 ${actual} is not the listed ${sha256}`);
 }
 
 /**
@@ -152,28 +153,6 @@ export function buildManifest(version, parts) {
   };
 }
 
-/**
- * The newest stable (non-prerelease, non-draft) release that carries the K-Touch
- * zip. A prerelease is only served when no stable release has the zip yet, as
- * before 1.1.0 shipped. `releases/latest` cannot answer this either way: a
- * release whose firmware build failed ships without the zip and must be passed
- * over. Returns { tag, asset } or null.
- */
-export function pickRelease(releases) {
-  const published = publishedNewestFirst(releases);
-  const zipOf = (r) => (r.assets ?? []).find((a) => ASSET_RE.test(a.name));
-  for (const r of published) {
-    if (r.prerelease) continue;
-    const asset = zipOf(r);
-    if (asset) return { tag: r.tag_name, asset: asset.name };
-  }
-  for (const r of published) {
-    const asset = zipOf(r);
-    if (asset) return { tag: r.tag_name, asset: asset.name };
-  }
-  return null;
-}
-
 /** Copies the parts out of an unpacked package and writes the manifest. */
 export function stagePackage(pkgDir, outDir) {
   const version = basename(pkgDir).match(/^helixscreen-esp32-ktouch-(.+)$/)?.[1];
@@ -198,54 +177,21 @@ function unpack(zip, work) {
   return join(work, dirs[0]);
 }
 
-function download(work) {
-  // Release bodies are long changelogs; keep only what pickRelease reads.
-  const slim = '[.[] | {tag_name, draft, prerelease, published_at, created_at, assets: [.assets[] | {name}]}]';
-  const json = execFileSync('gh', ['api', `repos/${REPO}/releases?per_page=30`, '--jq', slim], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  const pick = pickRelease(JSON.parse(json));
-  if (!pick) return null;
-  execFileSync('gh', ['release', 'download', pick.tag, '-R', REPO, '-p', pick.asset, '-D', work], {
-    stdio: ['ignore', 'ignore', 'pipe'],
-  });
-  return { zip: join(work, pick.asset), tag: pick.tag };
-}
-
 async function fetchBytes(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return Buffer.from(await res.arrayBuffer());
 }
 
-/**
- * Throws unless a channel manifest signed by the release key vouches for the zip.
- * The first channel whose manifest names @p tag decides; a channel that cannot be
- * fetched or names another release is passed over.
- */
-async function verifyZip(zip, tag, keys) {
-  const zipBytes = readFileSync(zip);
-  const tried = [];
+/** Fetches and verifies each channel's manifest, in CHANNELS order. Throws on any failure. */
+async function verifiedManifests(publicKeyText) {
+  const verified = [];
   for (const channel of CHANNELS) {
-    let manifestBytes, minisig;
-    try {
-      manifestBytes = await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json`);
-      minisig = (await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json.minisig`)).toString('utf8');
-    } catch (err) {
-      tried.push(`${channel}: ${err.message}`);
-      continue;
-    }
-    const manifest = verifyChannelManifest(manifestBytes, minisig, channel, keys);
-    if (manifest.tag !== tag) {
-      tried.push(`${channel}: lists ${manifest.tag}`);
-      continue;
-    }
-    const why = manifestRefusesZip(manifest, tag, zipBytes);
-    if (why) throw new Error(`the ${channel} manifest does not vouch for ${basename(zip)}: ${why}`);
-    return channel;
+    const manifestBytes = await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json`);
+    const minisig = (await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json.minisig`)).toString('utf8');
+    verified.push({ channel, manifest: verifyChannelManifest(manifestBytes, minisig, channel, publicKeyText) });
   }
-  throw new Error(`no signed channel manifest names ${tag} (${tried.join('; ')})`);
+  return verified;
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
@@ -253,9 +199,6 @@ const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.arg
 if (isMain) {
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   const outDir = join(root, 'public', 'flash', 'esp32', 'ktouch');
-  // A previous run's parts must never sit beside a newer manifest.
-  rmSync(outDir, { recursive: true, force: true });
-
   const work = mkdtempSync(join(tmpdir(), 'helix-esp32-'));
   try {
     const zipArg = process.argv.indexOf('--zip');
@@ -265,34 +208,33 @@ if (isMain) {
       if (!zip || !existsSync(zip)) throw new Error(`--zip needs an existing file, got ${zip}`);
       console.warn('[stage-esp32-firmware] --zip is a local build: its signature is not checked.');
     } else {
-      let picked;
-      try {
-        picked = download(work);
-      } catch (err) {
-        // A failed lookup still builds the site; the page then says no build is published.
-        const detail = String(err.stderr ?? '').trim().split('\n').pop() || err.message;
-        console.warn(`[stage-esp32-firmware] release lookup failed (${detail}); staging nothing.`);
-        process.exit(0);
-      }
-      if (!picked) {
-        console.log('[stage-esp32-firmware] no release carries an ESP32 K-Touch zip yet; staging nothing.');
-        process.exit(0);
-      }
       const keyArg = process.argv.indexOf('--pubkey');
-      const keyDir = join(root, '..', 'helixscreen', '.github');
-      const keyPath = keyArg !== -1 ? process.argv[keyArg + 1] : join(keyDir, 'release-minisign.pub');
+      const keyPath =
+        keyArg !== -1 ? process.argv[keyArg + 1] : join(root, '..', 'helixscreen', '.github', 'release-minisign.pub');
       if (!keyPath || !existsSync(keyPath)) throw new Error(`no release public key at ${keyPath}`);
-      const devKeyPath = join(keyDir, 'release-minisign-dev.pub');
-      const keys = {
-        release: readFileSync(keyPath, 'utf8'),
-        dev: keyArg === -1 && existsSync(devKeyPath) ? readFileSync(devKeyPath, 'utf8') : null,
-      };
-      const channel = await verifyZip(picked.zip, picked.tag, keys);
-      console.log(`[stage-esp32-firmware] ${basename(picked.zip)} matches the signed ${channel} manifest.`);
-      zip = picked.zip;
+      const pick = pickFromManifests(await verifiedManifests(readFileSync(keyPath, 'utf8')));
+      if (!pick) {
+        console.log('[stage-esp32-firmware] no signed manifest lists an ESP32 K-Touch zip; staging nothing.');
+        rmSync(outDir, { recursive: true, force: true });
+        process.exit(0);
+      }
+      const name = basename(new URL(pick.url).pathname);
+      if (!ASSET_RE.test(name)) throw new Error(`the ${pick.channel} manifest lists ${name}, not a K-Touch zip`);
+      const bytes = await fetchBytes(pick.url);
+      checkZipHash(bytes, pick.sha256);
+      zip = join(work, name);
+      writeFileSync(zip, bytes);
+      console.log(`[stage-esp32-firmware] ${name} (${pick.tag}) matches the signed ${pick.channel} manifest.`);
     }
-    mkdirSync(outDir, { recursive: true });
-    const m = stagePackage(unpack(zip, join(work, 'pkg')), outDir);
+    // Staged beside the live folder and swapped in whole, so a failure leaves the
+    // firmware already staged in place and a previous run's parts never sit beside
+    // a newer manifest.
+    const next = join(work, 'stage');
+    mkdirSync(next, { recursive: true });
+    const m = stagePackage(unpack(zip, join(work, 'pkg')), next);
+    rmSync(outDir, { recursive: true, force: true });
+    mkdirSync(dirname(outDir), { recursive: true });
+    cpSync(next, outDir, { recursive: true });
     const list = m.builds[0].parts.map((p) => `0x${p.offset.toString(16)} ${p.path}`).join(', ');
     console.log(`[stage-esp32-firmware] staged ${m.version}: ${list}`);
   } finally {

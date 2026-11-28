@@ -92,10 +92,10 @@ jobs:
       - name: Stage the ESP32 K-Touch firmware for /flash/
         # The browser flasher fetches the part images from this site: GitHub
         # release downloads and releases.helixscreen.org send no CORS headers.
-        # With no release carrying the zip, this stages nothing and the page
-        # says so.
-        env:
-          GH_TOKEN: ${{ github.token }}
+        # The zip comes from the signed stable (else beta) channel manifest and
+        # is checked against it with ../helixscreen/.github/release-minisign.pub;
+        # a refused signature or hash fails the deploy. With no manifest listing
+        # a zip, this stages nothing and the page says so.
         run: node scripts/stage-esp32-firmware.mjs
 
       - name: Build site (prebuild runs sync-docs.sh)

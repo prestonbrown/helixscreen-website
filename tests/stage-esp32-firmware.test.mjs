@@ -7,10 +7,10 @@ import { createHash, generateKeyPairSync, randomBytes, sign as cryptoSign } from
 import {
   parseFlashArgs,
   buildManifest,
-  pickRelease,
   stagePackage,
   verifyChannelManifest,
-  manifestRefusesZip,
+  pickFromManifests,
+  checkZipHash,
 } from '../scripts/stage-esp32-firmware.mjs';
 
 const FLASH_ARGS = `--flash_mode dout --flash_freq 80m --flash_size 16MB
@@ -63,73 +63,6 @@ test('manifest has the ESP Web Tools shape with erase offered on a new install',
   assert.equal(m.builds[0].chipFamily, 'ESP32-S3');
   assert.deepEqual(m.builds[0].parts[0], { path: 'bootloader/bootloader.bin', offset: 0 });
   assert.equal(typeof m.builds[0].parts[0].offset, 'number');
-});
-
-const rel = (tag, date, assets, extra = {}) => ({
-  tag_name: tag,
-  published_at: date,
-  draft: false,
-  prerelease: false,
-  assets: assets.map((name) => ({ name })),
-  ...extra,
-});
-
-test('prefers the newest stable release with the zip over a newer prerelease', () => {
-  // 2026-11-24: v1.2.0-alpha.1 published after v1.1.0 and became "newest with the zip".
-  const releases = [
-    rel('v1.2.0-alpha.1', '2026-11-24T16:17:00Z', ['helixscreen-esp32-ktouch-v1.2.0-alpha.1.zip'], { prerelease: true }),
-    rel('v1.1.0', '2026-11-24T03:20:00Z', ['helixscreen-esp32-ktouch-v1.1.0.zip']),
-    rel('v1.1.0-rc.6', '2026-11-23T02:18:00Z', ['helixscreen-esp32-ktouch-v1.1.0-rc.6.zip'], { prerelease: true }),
-  ];
-  assert.deepEqual(pickRelease(releases), {
-    tag: 'v1.1.0',
-    asset: 'helixscreen-esp32-ktouch-v1.1.0.zip',
-  });
-});
-
-test('picks the newest stable release with the zip, not the newest stable without one', () => {
-  // A stable release whose firmware build failed ships without the zip; the previous
-  // stable build is served rather than jumping to a prerelease.
-  const releases = [
-    rel('v1.1.1', '2026-12-01T00:00:00Z', ['helixscreen-pi-v1.1.1.tar.gz']),
-    rel('v1.1.0', '2026-11-24T03:20:00Z', ['helixscreen-esp32-ktouch-v1.1.0.zip']),
-    rel('v1.2.0-alpha.1', '2026-11-24T16:17:00Z', ['helixscreen-esp32-ktouch-v1.2.0-alpha.1.zip'], { prerelease: true }),
-  ];
-  assert.equal(pickRelease(releases).tag, 'v1.1.0');
-});
-
-test('falls back to the newest prerelease with the zip when no stable release has one', () => {
-  // The situation before 1.1.0: every K-Touch zip lives on a prerelease.
-  const releases = [
-    rel('v1.0.3', '2026-10-04T00:00:00Z', ['helixscreen-pi-v1.0.3.tar.gz']),
-    rel('v1.1.0-beta.4', '2026-10-01T00:00:00Z', ['helixscreen-esp32-ktouch-v1.1.0-beta.4.zip'], { prerelease: true }),
-    rel('v1.1.0-beta.3', '2026-09-20T00:00:00Z', ['helixscreen-esp32-ktouch-v1.1.0-beta.3.zip'], { prerelease: true }),
-  ];
-  assert.deepEqual(pickRelease(releases), {
-    tag: 'v1.1.0-beta.4',
-    asset: 'helixscreen-esp32-ktouch-v1.1.0-beta.4.zip',
-  });
-});
-
-test('orders by publish date, not by list position', () => {
-  const releases = [
-    rel('v1.1.0-beta.3', '2026-09-20T00:00:00Z', ['helixscreen-esp32-ktouch-v1.1.0-beta.3.zip']),
-    rel('v1.1.0-beta.4', '2026-10-01T00:00:00Z', ['helixscreen-esp32-ktouch-v1.1.0-beta.4.zip']),
-  ];
-  assert.equal(pickRelease(releases).tag, 'v1.1.0-beta.4');
-});
-
-test('skips drafts', () => {
-  const releases = [
-    rel('v1.1.0-beta.5', null, ['helixscreen-esp32-ktouch-v1.1.0-beta.5.zip'], { draft: true, created_at: '2026-10-05T00:00:00Z' }),
-    rel('v1.1.0-beta.4', '2026-10-01T00:00:00Z', ['helixscreen-esp32-ktouch-v1.1.0-beta.4.zip']),
-  ];
-  assert.equal(pickRelease(releases).tag, 'v1.1.0-beta.4');
-});
-
-test('returns null when no release has the zip, as with 1.0.x only', () => {
-  assert.equal(pickRelease([rel('v1.0.3', '2026-10-04T00:00:00Z', ['helixscreen-pi-v1.0.3.tar.gz'])]), null);
-  assert.equal(pickRelease([]), null);
 });
 
 test('stages the parts and manifest, and leaves the factory image behind', (t) => {
@@ -194,7 +127,7 @@ const channelManifest = (tag, sha = ZIP_SHA) =>
 test('a manifest signed by the release key for its channel is accepted', () => {
   const { pub, sign } = minisignPair();
   const m = channelManifest('v1.1.1');
-  const parsed = verifyChannelManifest(m, sign(m, 'file:manifest.json channel:stable'), 'stable', { release: pub });
+  const parsed = verifyChannelManifest(m, sign(m, 'file:manifest.json channel:stable'), 'stable', pub);
   assert.equal(parsed.tag, 'v1.1.1');
 });
 
@@ -202,7 +135,7 @@ test('a manifest changed after signing is refused', () => {
   const { pub, sign } = minisignPair();
   const sig = sign(channelManifest('v1.1.1'), 'file:manifest.json channel:stable');
   assert.throws(
-    () => verifyChannelManifest(channelManifest('v1.1.1', 'f'.repeat(64)), sig, 'stable', { release: pub }),
+    () => verifyChannelManifest(channelManifest('v1.1.1', 'f'.repeat(64)), sig, 'stable', pub),
     /does not match the manifest/,
   );
 });
@@ -211,7 +144,7 @@ test('a manifest signed for another channel is refused', () => {
   const { pub, sign } = minisignPair();
   const m = channelManifest('v1.1.1');
   assert.throws(
-    () => verifyChannelManifest(m, sign(m, 'file:manifest.json channel:beta'), 'stable', { release: pub }),
+    () => verifyChannelManifest(m, sign(m, 'file:manifest.json channel:beta'), 'stable', pub),
     /not for the stable channel/,
   );
 });
@@ -220,7 +153,7 @@ test('a trusted comment swapped after signing is refused', () => {
   const { pub, sign } = minisignPair();
   const m = channelManifest('v1.1.1');
   const sig = sign(m, 'file:manifest.json channel:beta').replace('channel:beta', 'channel:stable');
-  assert.throws(() => verifyChannelManifest(m, sig, 'stable', { release: pub }), /trusted comment does not match/);
+  assert.throws(() => verifyChannelManifest(m, sig, 'stable', pub), /trusted comment does not match/);
 });
 
 test('a signature by another key is refused', () => {
@@ -228,7 +161,7 @@ test('a signature by another key is refused', () => {
   const other = minisignPair();
   const m = channelManifest('v1.1.1');
   assert.throws(
-    () => verifyChannelManifest(m, other.sign(m, 'file:manifest.json channel:stable'), 'stable', { release: pub }),
+    () => verifyChannelManifest(m, other.sign(m, 'file:manifest.json channel:stable'), 'stable', pub),
     /other than the release key/,
   );
 });
@@ -237,24 +170,38 @@ test('a legacy signature over the raw file is refused', () => {
   const { pub, sign } = minisignPair();
   const m = channelManifest('v1.1.1');
   assert.throws(
-    () => verifyChannelManifest(m, sign(m, 'file:manifest.json channel:stable', { alg: 'Ed' }), 'stable', { release: pub }),
+    () => verifyChannelManifest(m, sign(m, 'file:manifest.json channel:stable', { alg: 'Ed' }), 'stable', pub),
     /legacy/,
   );
 });
 
-test('the dev key is trusted on the dev channel and nowhere else', () => {
-  const release = minisignPair();
-  const dev = minisignPair();
-  const keys = { release: release.pub, dev: dev.pub };
-  const m = channelManifest('v1.2.0-alpha.2');
-  assert.equal(verifyChannelManifest(m, dev.sign(m, 'file:manifest.json channel:dev'), 'dev', keys).tag, 'v1.2.0-alpha.2');
-  assert.throws(() => verifyChannelManifest(m, dev.sign(m, 'file:manifest.json channel:stable'), 'stable', keys), /other than the release key/);
+test('serves stable when stable lists the zip, whatever beta lists', () => {
+  const stable = JSON.parse(channelManifest('v1.1.1').toString());
+  const beta = JSON.parse(channelManifest('v1.2.0-beta.1', 'b'.repeat(64)).toString());
+  assert.deepEqual(pickFromManifests([{ channel: 'stable', manifest: stable }, { channel: 'beta', manifest: beta }]), {
+    channel: 'stable',
+    tag: 'v1.1.1',
+    url: 'u',
+    sha256: ZIP_SHA,
+  });
 });
 
-test('the manifest vouches for the zip only with its tag and its sha256', () => {
-  const manifest = JSON.parse(channelManifest('v1.1.1').toString());
-  assert.equal(manifestRefusesZip(manifest, 'v1.1.1', ZIP), null);
-  assert.match(manifestRefusesZip(manifest, 'v1.1.1', Buffer.from('another zip')), /sha256/);
-  assert.match(manifestRefusesZip(manifest, 'v1.1.0', ZIP), /not v1.1.0/);
-  assert.match(manifestRefusesZip({ tag: 'v1.1.1', assets: {} }, 'v1.1.1', ZIP), /no esp32-ktouch/);
+test('falls back to beta only when stable lists no zip, as for a release whose firmware build failed', () => {
+  const stable = { tag: 'v1.1.2', assets: { pi: { url: 'p', sha256: 'c'.repeat(64) } } };
+  const beta = JSON.parse(channelManifest('v1.2.0-beta.1').toString());
+  assert.equal(
+    pickFromManifests([{ channel: 'stable', manifest: stable }, { channel: 'beta', manifest: beta }]).tag,
+    'v1.2.0-beta.1',
+  );
+});
+
+test('picks nothing when no manifest lists a zip, or lists one without a usable hash', () => {
+  const noZip = { tag: 'v1.0.9', assets: {} };
+  const badHash = { tag: 'v1.1.1', assets: { 'esp32-ktouch': { url: 'u', sha256: 'not-a-hash' } } };
+  assert.equal(pickFromManifests([{ channel: 'stable', manifest: noZip }, { channel: 'beta', manifest: badHash }]), null);
+});
+
+test('the zip is staged only when its sha256 is the one the manifest listed', () => {
+  assert.doesNotThrow(() => checkZipHash(ZIP, ZIP_SHA));
+  assert.throws(() => checkZipHash(Buffer.from('another zip'), ZIP_SHA), /is not the listed/);
 });
