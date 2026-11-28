@@ -3,7 +3,15 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseFlashArgs, buildManifest, pickRelease, stagePackage } from '../scripts/stage-esp32-firmware.mjs';
+import { createHash, generateKeyPairSync, randomBytes, sign as cryptoSign } from 'node:crypto';
+import {
+  parseFlashArgs,
+  buildManifest,
+  pickRelease,
+  stagePackage,
+  verifyChannelManifest,
+  manifestRefusesZip,
+} from '../scripts/stage-esp32-firmware.mjs';
 
 const FLASH_ARGS = `--flash_mode dout --flash_freq 80m --flash_size 16MB
 0x0 bootloader/bootloader.bin
@@ -154,4 +162,99 @@ test('a missing part fails the stage instead of publishing a partial build', (t)
   mkdirSync(pkg);
   writeFileSync(join(pkg, 'flash_args'), FLASH_ARGS);
   assert.throws(() => stagePackage(pkg, join(tmp, 'out')), /ENOENT/);
+});
+
+// A minisign key pair and signer built from node:crypto, so the signature checks run
+// without the release's secret key or the network.
+function minisignPair() {
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  const raw = publicKey.export({ format: 'der', type: 'spki' }).subarray(-32);
+  const keyId = randomBytes(8);
+  const pub = `untrusted comment: minisign public key\n${Buffer.concat([Buffer.from('Ed'), keyId, raw]).toString('base64')}\n`;
+  const sign = (message, trusted, { alg = 'ED' } = {}) => {
+    const body = alg === 'ED' ? createHash('blake2b512').update(message).digest() : message;
+    const sig = cryptoSign(null, body, privateKey);
+    const global = cryptoSign(null, Buffer.concat([sig, Buffer.from(trusted)]), privateKey);
+    return [
+      'untrusted comment: signature from minisign secret key',
+      Buffer.concat([Buffer.from(alg), keyId, sig]).toString('base64'),
+      `trusted comment: ${trusted}`,
+      global.toString('base64'),
+      '',
+    ].join('\n');
+  };
+  return { pub, sign };
+}
+
+const ZIP = Buffer.from('a K-Touch zip');
+const ZIP_SHA = createHash('sha256').update(ZIP).digest('hex');
+const channelManifest = (tag, sha = ZIP_SHA) =>
+  Buffer.from(JSON.stringify({ version: tag.slice(1), tag, assets: { 'esp32-ktouch': { url: 'u', sha256: sha, size: 13 } } }));
+
+test('a manifest signed by the release key for its channel is accepted', () => {
+  const { pub, sign } = minisignPair();
+  const m = channelManifest('v1.1.1');
+  const parsed = verifyChannelManifest(m, sign(m, 'file:manifest.json channel:stable'), 'stable', { release: pub });
+  assert.equal(parsed.tag, 'v1.1.1');
+});
+
+test('a manifest changed after signing is refused', () => {
+  const { pub, sign } = minisignPair();
+  const sig = sign(channelManifest('v1.1.1'), 'file:manifest.json channel:stable');
+  assert.throws(
+    () => verifyChannelManifest(channelManifest('v1.1.1', 'f'.repeat(64)), sig, 'stable', { release: pub }),
+    /does not match the manifest/,
+  );
+});
+
+test('a manifest signed for another channel is refused', () => {
+  const { pub, sign } = minisignPair();
+  const m = channelManifest('v1.1.1');
+  assert.throws(
+    () => verifyChannelManifest(m, sign(m, 'file:manifest.json channel:beta'), 'stable', { release: pub }),
+    /not for the stable channel/,
+  );
+});
+
+test('a trusted comment swapped after signing is refused', () => {
+  const { pub, sign } = minisignPair();
+  const m = channelManifest('v1.1.1');
+  const sig = sign(m, 'file:manifest.json channel:beta').replace('channel:beta', 'channel:stable');
+  assert.throws(() => verifyChannelManifest(m, sig, 'stable', { release: pub }), /trusted comment does not match/);
+});
+
+test('a signature by another key is refused', () => {
+  const { pub } = minisignPair();
+  const other = minisignPair();
+  const m = channelManifest('v1.1.1');
+  assert.throws(
+    () => verifyChannelManifest(m, other.sign(m, 'file:manifest.json channel:stable'), 'stable', { release: pub }),
+    /other than the release key/,
+  );
+});
+
+test('a legacy signature over the raw file is refused', () => {
+  const { pub, sign } = minisignPair();
+  const m = channelManifest('v1.1.1');
+  assert.throws(
+    () => verifyChannelManifest(m, sign(m, 'file:manifest.json channel:stable', { alg: 'Ed' }), 'stable', { release: pub }),
+    /legacy/,
+  );
+});
+
+test('the dev key is trusted on the dev channel and nowhere else', () => {
+  const release = minisignPair();
+  const dev = minisignPair();
+  const keys = { release: release.pub, dev: dev.pub };
+  const m = channelManifest('v1.2.0-alpha.2');
+  assert.equal(verifyChannelManifest(m, dev.sign(m, 'file:manifest.json channel:dev'), 'dev', keys).tag, 'v1.2.0-alpha.2');
+  assert.throws(() => verifyChannelManifest(m, dev.sign(m, 'file:manifest.json channel:stable'), 'stable', keys), /other than the release key/);
+});
+
+test('the manifest vouches for the zip only with its tag and its sha256', () => {
+  const manifest = JSON.parse(channelManifest('v1.1.1').toString());
+  assert.equal(manifestRefusesZip(manifest, 'v1.1.1', ZIP), null);
+  assert.match(manifestRefusesZip(manifest, 'v1.1.1', Buffer.from('another zip')), /sha256/);
+  assert.match(manifestRefusesZip(manifest, 'v1.1.0', ZIP), /not v1.1.0/);
+  assert.match(manifestRefusesZip({ tag: 'v1.1.1', assets: {} }, 'v1.1.1', ZIP), /no esp32-ktouch/);
 });

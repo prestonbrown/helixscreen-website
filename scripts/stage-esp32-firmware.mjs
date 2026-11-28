@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
+import { createHash, createPublicKey, verify as cryptoVerify } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, basename } from 'node:path';
@@ -12,11 +13,114 @@ import { REPO, publishedNewestFirst } from './releases.mjs';
 // answer cross-origin requests.
 //
 // Usage: node scripts/stage-esp32-firmware.mjs [--zip path/to/helixscreen-esp32-ktouch-<tag>.zip]
-// Without --zip it asks `gh` for the newest release carrying the zip.
+//                                               [--pubkey path/to/release-minisign.pub]
+// Without --zip it asks `gh` for the newest release carrying the zip, then checks
+// that zip against the release's signed channel manifest before staging anything:
+// the manifest must carry a valid signature by the release key, name the same tag,
+// and list the zip's sha256 under `esp32-ktouch`. Any failure exits non-zero, so
+// the deploy fails and the site keeps the firmware it already serves.
+//
+// The release key is HelixScreen's `.github/release-minisign.pub`, the key the app's
+// updater and the easy installer trust; its `.github/release-minisign-dev.pub` is
+// trusted on the dev channel only, as the app does. The deploy job checks the
+// HelixScreen repo out beside this one (`../helixscreen`), and both keys are read
+// from there; --pubkey names another release key and trusts no dev key. A zip given
+// with --zip is a local build and is not checked.
 
 export const ASSET_RE = /^helixscreen-esp32-ktouch-(.+)\.zip$/;
 // Cloudflare Pages refuses any single file above 25 MiB.
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export const MANIFEST_BASE = 'https://releases.helixscreen.org';
+// The channels whose manifests can name a release the flasher serves: a stable
+// release is on stable, a prerelease on beta or dev.
+export const CHANNELS = ['stable', 'beta', 'dev'];
+export const MANIFEST_ASSET_KEY = 'esp32-ktouch';
+
+// DER prefix of an Ed25519 SubjectPublicKeyInfo; the raw 32-byte key follows it.
+const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
+
+function decodeLine(text, what) {
+  const lines = String(text).split(/\r?\n/).map((l) => l.trim());
+  return { lines, fail: (why) => new Error(`${what}: ${why}`) };
+}
+
+/** The key id and raw Ed25519 key of a minisign public key (.pub text or its key line). */
+export function parseMinisignPublicKey(text) {
+  const { lines, fail } = decodeLine(text, 'release public key');
+  const line = lines.find((l) => l && !l.startsWith('untrusted comment:'));
+  if (!line) throw fail('no key line');
+  const raw = Buffer.from(line, 'base64');
+  if (raw.length !== 42 || raw.subarray(0, 2).toString('latin1') !== 'Ed') throw fail('not a minisign Ed25519 key');
+  return { keyId: raw.subarray(2, 10), key: raw.subarray(10) };
+}
+
+function ed25519Verify(publicKey, message, signature) {
+  const key = createPublicKey({ key: Buffer.concat([ED25519_SPKI_PREFIX, publicKey]), format: 'der', type: 'spki' });
+  return cryptoVerify(null, message, key, signature);
+}
+
+/**
+ * Checks a minisign signature over @p message by @p publicKeyText, as the app's
+ * release_signature::verify does: only a prehashed signature (algorithm "ED",
+ * Ed25519 over the BLAKE2b-512 of the file) is accepted, and the trusted comment's
+ * global signature must hold too. Returns the trusted comment; throws on any failure.
+ */
+export function verifyMinisign(message, minisigText, publicKeyText) {
+  const pub = parseMinisignPublicKey(publicKeyText);
+  const { lines, fail } = decodeLine(minisigText, 'manifest signature');
+  if (lines.length < 4 || !lines[0].startsWith('untrusted comment:') || !lines[2].startsWith('trusted comment: ')) {
+    throw fail('not the four-line .minisig layout');
+  }
+  const sig = Buffer.from(lines[1], 'base64');
+  const globalSig = Buffer.from(lines[3], 'base64');
+  if (sig.length !== 74 || globalSig.length !== 64) throw fail('malformed');
+  const alg = sig.subarray(0, 2).toString('latin1');
+  if (alg === 'Ed') throw fail('signed without -H (a legacy signature); refused');
+  if (alg !== 'ED') throw fail(`unknown algorithm ${JSON.stringify(alg)}`);
+  if (!sig.subarray(2, 10).equals(pub.keyId)) throw fail('signed by a key other than the release key');
+  const signature = sig.subarray(10);
+  const prehash = createHash('blake2b512').update(message).digest();
+  if (!ed25519Verify(pub.key, prehash, signature)) throw fail('does not match the manifest');
+  const trusted = lines[2].slice('trusted comment: '.length);
+  if (!ed25519Verify(pub.key, Buffer.concat([signature, Buffer.from(trusted, 'utf8')]), globalSig)) {
+    throw fail('the trusted comment does not match the signature');
+  }
+  return trusted;
+}
+
+/**
+ * Parses @p manifestBytes after its signature checks out for @p channel, by the rule
+ * the app's updater applies: signed by keys.release on any channel, or by keys.dev on
+ * the dev channel only, with a trusted comment exactly
+ * `file:manifest.json channel:<channel>`. Throws on any failure.
+ */
+export function verifyChannelManifest(manifestBytes, minisigText, channel, keys) {
+  let trusted;
+  try {
+    trusted = verifyMinisign(manifestBytes, minisigText, keys.release);
+  } catch (err) {
+    if (channel !== 'dev' || !keys.dev) throw err;
+    trusted = verifyMinisign(manifestBytes, minisigText, keys.dev);
+  }
+  if (trusted !== `file:manifest.json channel:${channel}`) {
+    throw new Error(`manifest signature: trusted comment ${JSON.stringify(trusted)} is not for the ${channel} channel`);
+  }
+  return JSON.parse(Buffer.from(manifestBytes).toString('utf8'));
+}
+
+/**
+ * Whether a verified channel manifest vouches for this zip: the same release tag,
+ * and the zip's sha256 listed under `esp32-ktouch`. Returns a reason it does not,
+ * or null when it does.
+ */
+export function manifestRefusesZip(manifest, tag, zipBytes) {
+  if (manifest?.tag !== tag) return `it lists ${manifest?.tag ?? 'no tag'}, not ${tag}`;
+  const listed = manifest.assets?.[MANIFEST_ASSET_KEY]?.sha256;
+  if (!listed) return `it lists no ${MANIFEST_ASSET_KEY} asset`;
+  const actual = createHash('sha256').update(zipBytes).digest('hex');
+  if (listed.toLowerCase() !== actual) return `the zip's sha256 ${actual} is not the listed ${listed}`;
+  return null;
+}
 
 /**
  * flash_args is one options line, then "<offset> <relative path>" per image.
@@ -106,7 +210,42 @@ function download(work) {
   execFileSync('gh', ['release', 'download', pick.tag, '-R', REPO, '-p', pick.asset, '-D', work], {
     stdio: ['ignore', 'ignore', 'pipe'],
   });
-  return join(work, pick.asset);
+  return { zip: join(work, pick.asset), tag: pick.tag };
+}
+
+async function fetchBytes(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+/**
+ * Throws unless a channel manifest signed by the release key vouches for the zip.
+ * The first channel whose manifest names @p tag decides; a channel that cannot be
+ * fetched or names another release is passed over.
+ */
+async function verifyZip(zip, tag, keys) {
+  const zipBytes = readFileSync(zip);
+  const tried = [];
+  for (const channel of CHANNELS) {
+    let manifestBytes, minisig;
+    try {
+      manifestBytes = await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json`);
+      minisig = (await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json.minisig`)).toString('utf8');
+    } catch (err) {
+      tried.push(`${channel}: ${err.message}`);
+      continue;
+    }
+    const manifest = verifyChannelManifest(manifestBytes, minisig, channel, keys);
+    if (manifest.tag !== tag) {
+      tried.push(`${channel}: lists ${manifest.tag}`);
+      continue;
+    }
+    const why = manifestRefusesZip(manifest, tag, zipBytes);
+    if (why) throw new Error(`the ${channel} manifest does not vouch for ${basename(zip)}: ${why}`);
+    return channel;
+  }
+  throw new Error(`no signed channel manifest names ${tag} (${tried.join('; ')})`);
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
@@ -124,19 +263,33 @@ if (isMain) {
     if (zipArg !== -1) {
       zip = process.argv[zipArg + 1];
       if (!zip || !existsSync(zip)) throw new Error(`--zip needs an existing file, got ${zip}`);
+      console.warn('[stage-esp32-firmware] --zip is a local build: its signature is not checked.');
     } else {
+      let picked;
       try {
-        zip = download(work);
+        picked = download(work);
       } catch (err) {
         // A failed lookup still builds the site; the page then says no build is published.
         const detail = String(err.stderr ?? '').trim().split('\n').pop() || err.message;
         console.warn(`[stage-esp32-firmware] release lookup failed (${detail}); staging nothing.`);
         process.exit(0);
       }
-      if (!zip) {
+      if (!picked) {
         console.log('[stage-esp32-firmware] no release carries an ESP32 K-Touch zip yet; staging nothing.');
         process.exit(0);
       }
+      const keyArg = process.argv.indexOf('--pubkey');
+      const keyDir = join(root, '..', 'helixscreen', '.github');
+      const keyPath = keyArg !== -1 ? process.argv[keyArg + 1] : join(keyDir, 'release-minisign.pub');
+      if (!keyPath || !existsSync(keyPath)) throw new Error(`no release public key at ${keyPath}`);
+      const devKeyPath = join(keyDir, 'release-minisign-dev.pub');
+      const keys = {
+        release: readFileSync(keyPath, 'utf8'),
+        dev: keyArg === -1 && existsSync(devKeyPath) ? readFileSync(devKeyPath, 'utf8') : null,
+      };
+      const channel = await verifyZip(picked.zip, picked.tag, keys);
+      console.log(`[stage-esp32-firmware] ${basename(picked.zip)} matches the signed ${channel} manifest.`);
+      zip = picked.zip;
     }
     mkdirSync(outDir, { recursive: true });
     const m = stagePackage(unpack(zip, join(work, 'pkg')), outDir);
