@@ -103,16 +103,33 @@ export function verifyChannelManifest(manifestBytes, minisigText, channel, publi
 }
 
 /**
- * The K-Touch zip to serve, from verified channel manifests given in CHANNELS order
- * as [{ channel, manifest }]: the first that lists an `esp32-ktouch` asset with a
- * url and a sha256. Returns { channel, tag, url, sha256 } or null when none does.
+ * The K-Touch zip a verified channel manifest lists: { channel, tag, url, sha256 },
+ * or null when it lists none. An entry that is there but unusable (a sha256 that is
+ * not 64 hex digits, a url off MANIFEST_BASE) throws rather than passing to the
+ * next channel.
  */
-export function pickFromManifests(verified) {
-  for (const { channel, manifest } of verified) {
-    const asset = manifest?.assets?.[MANIFEST_ASSET_KEY];
-    if (asset?.url && /^[0-9a-f]{64}$/i.test(asset.sha256 ?? '')) {
-      return { channel, tag: manifest.tag, url: asset.url, sha256: asset.sha256.toLowerCase() };
-    }
+export function zipEntry(channel, manifest) {
+  const asset = manifest?.assets?.[MANIFEST_ASSET_KEY];
+  if (!asset) return null;
+  if (!/^[0-9a-f]{64}$/i.test(asset.sha256 ?? '')) {
+    throw new Error(`the ${channel} manifest lists ${MANIFEST_ASSET_KEY} with a malformed sha256`);
+  }
+  if (typeof asset.url !== 'string' || !asset.url.startsWith(`${MANIFEST_BASE}/`)) {
+    throw new Error(`the ${channel} manifest lists ${MANIFEST_ASSET_KEY} at ${asset.url}, outside ${MANIFEST_BASE}`);
+  }
+  return { channel, tag: manifest.tag, url: asset.url, sha256: asset.sha256.toLowerCase() };
+}
+
+/**
+ * The K-Touch zip to serve: the first channel in CHANNELS order whose verified
+ * manifest lists one. @p loadVerified(channel) returns that channel's verified
+ * manifest and is called only as far as needed, so a later channel is not fetched
+ * while an earlier one decides. Returns null when no channel lists a zip.
+ */
+export async function pickFromManifests(loadVerified) {
+  for (const channel of CHANNELS) {
+    const entry = zipEntry(channel, await loadVerified(channel));
+    if (entry) return entry;
   }
   return null;
 }
@@ -183,60 +200,61 @@ async function fetchBytes(url) {
   return Buffer.from(await res.arrayBuffer());
 }
 
-/** Fetches and verifies each channel's manifest, in CHANNELS order. Throws on any failure. */
-async function verifiedManifests(publicKeyText) {
-  const verified = [];
-  for (const channel of CHANNELS) {
-    const manifestBytes = await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json`);
-    const minisig = (await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json.minisig`)).toString('utf8');
-    verified.push({ channel, manifest: verifyChannelManifest(manifestBytes, minisig, channel, publicKeyText) });
+/** Fetches @p channel's manifest and returns it once verified. Throws on any failure. */
+async function loadVerifiedManifest(channel, publicKeyText) {
+  const manifestBytes = await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json`);
+  const minisig = (await fetchBytes(`${MANIFEST_BASE}/${channel}/manifest.json.minisig`)).toString('utf8');
+  return verifyChannelManifest(manifestBytes, minisig, channel, publicKeyText);
+}
+
+/** Stages the firmware; returns without staging when no signed manifest lists a zip. */
+async function main(root, outDir, work) {
+  const zipArg = process.argv.indexOf('--zip');
+  let zip;
+  if (zipArg !== -1) {
+    zip = process.argv[zipArg + 1];
+    if (!zip || !existsSync(zip)) throw new Error(`--zip needs an existing file, got ${zip}`);
+    console.warn('[stage-esp32-firmware] --zip is a local build: its signature is not checked.');
+  } else {
+    const keyArg = process.argv.indexOf('--pubkey');
+    const keyPath =
+      keyArg !== -1 ? process.argv[keyArg + 1] : join(root, '..', 'helixscreen', '.github', 'release-minisign.pub');
+    if (!keyPath || !existsSync(keyPath)) throw new Error(`no release public key at ${keyPath}`);
+    const key = readFileSync(keyPath, 'utf8');
+    const pick = await pickFromManifests((channel) => loadVerifiedManifest(channel, key));
+    if (!pick) {
+      console.log('[stage-esp32-firmware] no signed manifest lists an ESP32 K-Touch zip; staging nothing.');
+      rmSync(outDir, { recursive: true, force: true });
+      return;
+    }
+    const name = basename(new URL(pick.url).pathname);
+    if (!ASSET_RE.test(name)) throw new Error(`the ${pick.channel} manifest lists ${name}, not a K-Touch zip`);
+    const bytes = await fetchBytes(pick.url);
+    checkZipHash(bytes, pick.sha256);
+    zip = join(work, name);
+    writeFileSync(zip, bytes);
+    console.log(`[stage-esp32-firmware] ${name} (${pick.tag}) matches the signed ${pick.channel} manifest.`);
   }
-  return verified;
+  // Staged beside the live folder and swapped in whole, so a failure leaves the
+  // firmware already staged in place and a previous run's parts never sit beside
+  // a newer manifest.
+  const next = join(work, 'stage');
+  mkdirSync(next, { recursive: true });
+  const m = stagePackage(unpack(zip, join(work, 'pkg')), next);
+  rmSync(outDir, { recursive: true, force: true });
+  mkdirSync(dirname(outDir), { recursive: true });
+  cpSync(next, outDir, { recursive: true });
+  const list = m.builds[0].parts.map((p) => `0x${p.offset.toString(16)} ${p.path}`).join(', ');
+  console.log(`[stage-esp32-firmware] staged ${m.version}: ${list}`);
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 
 if (isMain) {
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-  const outDir = join(root, 'public', 'flash', 'esp32', 'ktouch');
   const work = mkdtempSync(join(tmpdir(), 'helix-esp32-'));
   try {
-    const zipArg = process.argv.indexOf('--zip');
-    let zip;
-    if (zipArg !== -1) {
-      zip = process.argv[zipArg + 1];
-      if (!zip || !existsSync(zip)) throw new Error(`--zip needs an existing file, got ${zip}`);
-      console.warn('[stage-esp32-firmware] --zip is a local build: its signature is not checked.');
-    } else {
-      const keyArg = process.argv.indexOf('--pubkey');
-      const keyPath =
-        keyArg !== -1 ? process.argv[keyArg + 1] : join(root, '..', 'helixscreen', '.github', 'release-minisign.pub');
-      if (!keyPath || !existsSync(keyPath)) throw new Error(`no release public key at ${keyPath}`);
-      const pick = pickFromManifests(await verifiedManifests(readFileSync(keyPath, 'utf8')));
-      if (!pick) {
-        console.log('[stage-esp32-firmware] no signed manifest lists an ESP32 K-Touch zip; staging nothing.');
-        rmSync(outDir, { recursive: true, force: true });
-        process.exit(0);
-      }
-      const name = basename(new URL(pick.url).pathname);
-      if (!ASSET_RE.test(name)) throw new Error(`the ${pick.channel} manifest lists ${name}, not a K-Touch zip`);
-      const bytes = await fetchBytes(pick.url);
-      checkZipHash(bytes, pick.sha256);
-      zip = join(work, name);
-      writeFileSync(zip, bytes);
-      console.log(`[stage-esp32-firmware] ${name} (${pick.tag}) matches the signed ${pick.channel} manifest.`);
-    }
-    // Staged beside the live folder and swapped in whole, so a failure leaves the
-    // firmware already staged in place and a previous run's parts never sit beside
-    // a newer manifest.
-    const next = join(work, 'stage');
-    mkdirSync(next, { recursive: true });
-    const m = stagePackage(unpack(zip, join(work, 'pkg')), next);
-    rmSync(outDir, { recursive: true, force: true });
-    mkdirSync(dirname(outDir), { recursive: true });
-    cpSync(next, outDir, { recursive: true });
-    const list = m.builds[0].parts.map((p) => `0x${p.offset.toString(16)} ${p.path}`).join(', ');
-    console.log(`[stage-esp32-firmware] staged ${m.version}: ${list}`);
+    await main(root, join(root, 'public', 'flash', 'esp32', 'ktouch'), work);
   } finally {
     rmSync(work, { recursive: true, force: true });
   }

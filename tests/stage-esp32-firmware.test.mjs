@@ -175,30 +175,38 @@ test('a legacy signature over the raw file is refused', () => {
   );
 });
 
-test('serves stable when stable lists the zip, whatever beta lists', () => {
-  const stable = JSON.parse(channelManifest('v1.1.1').toString());
-  const beta = JSON.parse(channelManifest('v1.2.0-beta.1', 'b'.repeat(64)).toString());
-  assert.deepEqual(pickFromManifests([{ channel: 'stable', manifest: stable }, { channel: 'beta', manifest: beta }]), {
-    channel: 'stable',
-    tag: 'v1.1.1',
-    url: 'u',
-    sha256: ZIP_SHA,
-  });
+const loader = (byChannel, seen = []) => (channel) => {
+  seen.push(channel);
+  if (!(channel in byChannel)) throw new Error(`${channel}: HTTP 404`);
+  return byChannel[channel];
+};
+const URL_OK = 'https://releases.helixscreen.org/releases/v1.1.1/helixscreen-esp32-ktouch-v1.1.1.zip';
+const withZip = (tag, extra = {}) => ({ tag, assets: { 'esp32-ktouch': { url: URL_OK, sha256: ZIP_SHA, ...extra } } });
+
+test('serves stable when stable lists the zip, and never fetches beta', async () => {
+  const seen = [];
+  const pick = await pickFromManifests(loader({ stable: withZip('v1.1.1') }, seen));
+  assert.deepEqual(pick, { channel: 'stable', tag: 'v1.1.1', url: URL_OK, sha256: ZIP_SHA });
+  assert.deepEqual(seen, ['stable']);
 });
 
-test('falls back to beta only when stable lists no zip, as for a release whose firmware build failed', () => {
+test('falls back to beta only when stable lists no zip, as for a release whose firmware build failed', async () => {
   const stable = { tag: 'v1.1.2', assets: { pi: { url: 'p', sha256: 'c'.repeat(64) } } };
-  const beta = JSON.parse(channelManifest('v1.2.0-beta.1').toString());
-  assert.equal(
-    pickFromManifests([{ channel: 'stable', manifest: stable }, { channel: 'beta', manifest: beta }]).tag,
-    'v1.2.0-beta.1',
-  );
+  const pick = await pickFromManifests(loader({ stable, beta: withZip('v1.2.0-beta.1') }));
+  assert.equal(pick.tag, 'v1.2.0-beta.1');
 });
 
-test('picks nothing when no manifest lists a zip, or lists one without a usable hash', () => {
-  const noZip = { tag: 'v1.0.9', assets: {} };
-  const badHash = { tag: 'v1.1.1', assets: { 'esp32-ktouch': { url: 'u', sha256: 'not-a-hash' } } };
-  assert.equal(pickFromManifests([{ channel: 'stable', manifest: noZip }, { channel: 'beta', manifest: badHash }]), null);
+test('picks nothing when no manifest lists a zip', async () => {
+  assert.equal(await pickFromManifests(loader({ stable: { tag: 'v1.0.9', assets: {} }, beta: { tag: 'v1.0.9', assets: {} } })), null);
+});
+
+test('a listed zip with a malformed sha256 or a url off the release host fails instead of falling through', async () => {
+  const beta = withZip('v1.2.0-beta.1');
+  await assert.rejects(pickFromManifests(loader({ stable: withZip('v1.1.1', { sha256: 'not-a-hash' }), beta })), /malformed sha256/);
+  await assert.rejects(
+    pickFromManifests(loader({ stable: withZip('v1.1.1', { url: 'https://example.com/helixscreen-esp32-ktouch-v1.1.1.zip' }), beta })),
+    /outside https:\/\/releases.helixscreen.org/,
+  );
 });
 
 test('the zip is staged only when its sha256 is the one the manifest listed', () => {
